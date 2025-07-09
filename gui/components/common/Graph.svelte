@@ -136,7 +136,7 @@
           new_data[last].alarm_max + Math.abs(new_data[last].alarm_max === 0 ? 20 : new_data[last].alarm_max * 0.2);
         graphOpts.scales.y.ticks.includeBounds = false;
       }
-      if (settings.show_min_max_gauge) {
+      if (settings.graph_show_min_max_gauge) {
         let values = new_data.map((point) => {
           return point.value;
         });
@@ -158,6 +158,10 @@
       graphOpts.scales.x.time.unit = 'hour';
       graphOpts.scales.x.time.displayFormats.hour = 'D/M LT';
     } else if ($graphs[id].period === 'year') {
+      graphOpts.scales.x.time.unit = 'day';
+      graphOpts.scales.x.time.displayFormats.day = 'D/M LT';
+    } else if ($graphs[id].period === 'custom') {
+      // Choose an appropriate unit for custom ranges (e.g., 'day' or 'hour')
       graphOpts.scales.x.time.unit = 'day';
       graphOpts.scales.x.time.displayFormats.day = 'D/M LT';
     }
@@ -185,7 +189,27 @@
     const interval = setInterval(async () => {
       if (!loading) {
         let new_data;
-        await fetchGraphData(mode, id, $graphs[id].period, (data) => (new_data = convertTimestamps(data)));
+        
+        // Determine params to pass to API based on period
+        let fetchPeriod = $graphs[id].period;
+        let customDates = null;
+
+        if (fetchPeriod === 'custom' && $graphs[id].customStart && $graphs[id].customEnd) {
+          customDates = {
+            start: $graphs[id].customStart,
+            end: $graphs[id].customEnd,
+          };
+        }
+
+        // Assume fetchGraphData can accept an options param with start and end dates
+        await fetchGraphData(
+          mode,
+          id,
+          fetchPeriod,
+          (data) => (new_data = convertTimestamps(data)),
+          customDates
+        );
+
         nodata = new_data.length === 0;
 
         if (!nodata) {
@@ -205,7 +229,26 @@
         $graphs[id].changed = false;
         loading = true;
         let new_data;
-        await fetchGraphData(mode, id, $graphs[id].period, (data) => (new_data = convertTimestamps(data)));
+        
+        // Determine params to pass to API based on period
+        let fetchPeriod = $graphs[id].period;
+        let customDates = null;
+
+        if (fetchPeriod === 'custom' && $graphs[id].customStart && $graphs[id].customEnd) {
+          customDates = {
+            start: $graphs[id].customStart,
+            end: $graphs[id].customEnd,
+          };
+        }
+
+        await fetchGraphData(
+          mode,
+          id,
+          fetchPeriod,
+          (data) => (new_data = convertTimestamps(data)),
+          customDates
+        );
+
         nodata = new_data.length === 0;
 
         if (!nodata) {

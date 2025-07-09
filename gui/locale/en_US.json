@@ -816,7 +816,7 @@
         "humidity": "Humidity",
         "lights": "Lights",
         "main_lights": "Main lights",
-        "watertank": "Water tank"
+        "watertank": "Watertank"
       }
     },
     "areas": {
@@ -942,7 +942,8 @@
       "month": "Month",
       "replaced": "Replaced",
       "week": "Week",
-      "year": "Year"
+      "year": "Year",
+      "custom": "Custom"
     },
     "settings": {
       "export": "Export"

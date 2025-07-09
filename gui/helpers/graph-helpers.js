@@ -36,11 +36,22 @@ export const smoothing = (data, smoothingValue) => {
   return new_data;
 };
 
-export const toggleGraphPeriod = (graph, period) => {
+export const toggleGraphPeriod = (graph, period, customDates = null) => {
   period = period || 'day';
 
   const store = get(graphs);
   store[graph].period = period;
+
+  if (period === 'custom' && customDates) {
+    // Save custom start and end dates as ISO strings
+    store[graph].customStart = customDates.start;
+    store[graph].customEnd = customDates.end;
+  } else {
+    // Clear custom dates when not custom period
+    store[graph].customStart = null;
+    store[graph].customEnd = null;
+  }
+  
   store[graph].changed = true;
   graphs.set(store);
 };

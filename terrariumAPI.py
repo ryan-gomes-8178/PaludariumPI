@@ -447,14 +447,14 @@ class terrariumAPI(object):
         # Sensors API
         all_sensor_types = "|".join(terrariumSensor.sensor_types)
         bottle_app.route(
-            f"/api/sensors/<filter:re:({all_sensor_types})>/<action:re:(history)>/<period:re:(day|week|month|year)>/",
+            f"/api/sensors/<filter:re:({all_sensor_types})>/<action:re:(history)>/<period:re:(day|week|month|year|custom)>/",
             "GET",
             self.sensor_history,
             apply=self.authentication(False),
             name="api:sensor_type_history_period",
         )
         bottle_app.route(
-            f"/api/sensors/<filter:re:({all_sensor_types})>/<action:re:(export)>/<period:re:(day|week|month|year)>/",
+            f"/api/sensors/<filter:re:({all_sensor_types})>/<action:re:(export)>/<period:re:(day|week|month|year|custom)>/",
             "GET",
             self.sensor_history,
             apply=self.authentication(),
@@ -482,14 +482,14 @@ class terrariumAPI(object):
             name="api:sensor_list_filtered",
         )
         bottle_app.route(
-            "/api/sensors/<filter:path>/<action:re:(history)>/<period:re:(day|week|month|year)>/",
+            "/api/sensors/<filter:path>/<action:re:(history)>/<period:re:(day|week|month|year|custom)>/",
             "GET",
             self.sensor_history,
             apply=self.authentication(False),
             name="api:sensor_history_period",
         )
         bottle_app.route(
-            "/api/sensors/<filter:path>/<action:re:(export)>/<period:re:(day|week|month|year)>/",
+            "/api/sensors/<filter:path>/<action:re:(export)>/<period:re:(day|week|month|year|custom)>/",
             "GET",
             self.sensor_history,
             apply=self.authentication(),
@@ -1539,14 +1539,36 @@ class terrariumAPI(object):
     def sensor_history(self, filter=None, action="history", period="day"):
         if "day" == period:
             period = 1
+            use_custom = False
         elif "week" == period:
             period = 7
+            use_custom = False
         elif "month" == period:
             period = 31
+            use_custom = False
         elif "year" == period:
             period = 365
+            use_custom = False
+        elif "custom" == period:
+            start_date_str = request.query.get('start_date')
+            end_date_str = request.query.get('end_date')
+            if not start_date_str or not end_date_str:
+                return {"error": "start_date and end_date are required for custom period"}, 400
+            try:
+                start_date = datetime.strptime(start_date_str, "%Y-%m-%d")
+                # Include the entire end date by adding one day minus one second
+                end_date = datetime.strptime(end_date_str, "%Y-%m-%d") + timedelta(days=1) - timedelta(seconds=1)
+            except ValueError:
+                return {"error": "Invalid date format. Use YYYY-MM-DD"}, 400
+            use_custom = True
         else:
             period = 1
+            use_custom = False
+
+        now = datetime.now()
+        if not use_custom:
+            start_date = now - timedelta(days=period)
+            end_date = now
 
         if isinstance(filter, list):
             # Get history based on selected sensor IDs
@@ -1562,7 +1584,8 @@ class terrariumAPI(object):
                 for sh in SensorHistory
                 if sh.sensor.id in filter
                 and sh.exclude_avg == False
-                and sh.timestamp >= datetime.now() - timedelta(days=period)
+                and sh.timestamp >= start_date
+                and sh.timestamp <= end_date
             )
 
         elif filter in terrariumSensor.sensor_types:
@@ -1577,15 +1600,17 @@ class terrariumAPI(object):
                 )
                 for sh in SensorHistory
                 if sh.sensor.type == filter
-                and sh.exclude_avg == False
-                and sh.timestamp >= datetime.now() - timedelta(days=period)
+                and sh.timestamp >= start_date
+                and sh.timestamp <= end_date
             )
 
         else:
             query = orm.select(
                 (sh.timestamp, sh.value, sh.alarm_min, sh.alarm_max, sh.limit_min, sh.limit_max)
                 for sh in SensorHistory
-                if sh.sensor.id == filter and sh.timestamp >= datetime.now() - timedelta(days=period)
+                if sh.sensor.id == filter
+                and sh.timestamp >= start_date
+                and sh.timestamp <= end_date
             )
 
         data = []
