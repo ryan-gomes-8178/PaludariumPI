@@ -1553,7 +1553,7 @@
             "description": "Period",
             "required": true,
             "type": "string",
-            "enum": ["day", "week", "month", "year", "replaced"]
+            "enum": ["day", "week", "month", "year", "replaced", "custom"]
           }
         ],
         "responses": {
@@ -1634,7 +1634,7 @@
             "description": "Period",
             "required": true,
             "type": "string",
-            "enum": ["day", "week", "month", "year", "replaced"]
+            "enum": ["day", "week", "month", "year", "replaced", "custom"]
           }
         ],
         "responses": {

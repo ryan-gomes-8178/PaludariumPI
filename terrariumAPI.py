@@ -363,7 +363,7 @@ class terrariumAPI(object):
 
         # Relays API
         bottle_app.route(
-            "/api/relays/<relay:path>/<action:re:(history)>/<period:re:(day|week|month|year|replaced)>/",
+            "/api/relays/<relay:path>/<action:re:(history)>/<period:re:(day|week|month|year|replaced|custom)>/",
             "GET",
             self.relay_history,
             apply=self.authentication(False),
@@ -378,7 +378,7 @@ class terrariumAPI(object):
         )
 
         bottle_app.route(
-            "/api/relays/<relay:path>/<action:re:(export)>/<period:re:(day|week|month|year|replaced)>/",
+            "/api/relays/<relay:path>/<action:re:(export)>/<period:re:(day|week|month|year|replaced|custom)>/",
             "GET",
             self.relay_history,
             apply=self.authentication(),
@@ -1414,17 +1414,36 @@ class terrariumAPI(object):
 
             if "day" == period:
                 period = 1
+                use_custom = False
             elif "week" == period:
                 period = 7
+                use_custom = False
             elif "month" == period:
                 period = 31
+                use_custom = False
             elif "year" == period:
                 period = 365
-            elif "replaced" == period:
-                # We need to calculate back to days...
-                period = (datetime.now() - relay.replacement).total_seconds() / (24.0 * 3600.0)
+                use_custom = False
+            elif "custom" == period:
+                start_date_str = request.query.get('start_date')
+                end_date_str = request.query.get('end_date')
+                if not start_date_str or not end_date_str:
+                    return {"error": "start_date and end_date are required for custom period"}, 400
+                try:
+                    start_date = datetime.strptime(start_date_str, "%Y-%m-%d")
+                    # Include the entire end date by adding one day minus one second
+                    end_date = datetime.strptime(end_date_str, "%Y-%m-%d") + timedelta(days=1) - timedelta(seconds=1)
+                except ValueError:
+                    return {"error": "Invalid date format. Use YYYY-MM-DD"}, 400
+                use_custom = True
             else:
                 period = 1
+                use_custom = False
+
+            now = datetime.now()
+            if not use_custom:
+                start_date = now - timedelta(days=period)
+                end_date = now
 
             history = [
                 {
@@ -1433,7 +1452,7 @@ class terrariumAPI(object):
                     "wattage": item.wattage,
                     "flow": item.flow,
                 }
-                for item in relay.history.filter(lambda h: h.timestamp >= datetime.now() - timedelta(days=period))
+                for item in relay.history.filter(lambda h: h.timestamp >= start_date and h.timestamp <= end_date)
             ]
 
             if "export" == action:
