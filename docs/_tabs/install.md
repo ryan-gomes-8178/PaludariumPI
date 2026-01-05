@@ -15,13 +15,19 @@ Here we will install Raspberry PI and TerrariumPI software step by step.
 
 ![Raspberry PI Logo](/assets/img/RaspberryPI_Logo.webp){: .right width="100" }
 In order to run TerrariumPI you first need a working Raspberry PI with the
-'[Raspberry Pi OS Lite (Legacy)](https://www.raspberrypi.com/software/operating-systems/#raspberry-pi-os-legacy)'
-image. Make sure you are using the **Legacy** version! This is Debian Buster.
-This is very important, as the Desktop and/or the new OS version will not work
-well with the GPIO pins and Raspberry PI cameras.
+**32bit**
+'[Raspberry Pi OS **Lite**](https://www.raspberrypi.com/software/operating-systems/)'
+image. Make sure you are using the **Lite** version! This is very important as
+the Desktop version will not work well with the GPIO pins and Raspberry PI
+cameras.
 
-Also **64bit is not supported** due to missing mmal code which is needed for the
+TerrariumPI is tested on Raspbian OS Bookworm, Bullseye and Buster.
+
+<!-- prettier-ignore-start -->
+> **64bit is not supported** due to missing mmal code which is needed for the
 webcams.
+{: .prompt-danger }
+<!-- prettier-ignore-end -->
 
 ### Creating SD Card
 
@@ -29,8 +35,8 @@ webcams.
 Download and instal the
 [Raspberry Pi Imager](https://www.raspberrypi.org/software/) to prepare your SD
 card. Make sure you have a SD card of at least 4GB of size. Bigger is better
-:smile: Make sure you select **Raspberry Pi OS Lite (legacy)** from the other
-Raspberry Pi OS images.
+:smile: Make sure you select **Raspberry Pi OS Lite** from the other Raspberry
+Pi OS images.
 
 ![Raspberry PI Imager settings icon](/assets/img/RPI_Imager_settings.webp){:
 .left width="50"}In order to enable SSH, Wifi and other settings, click on the
@@ -59,6 +65,27 @@ run TerrariumPI. When you run it in Docker, you can skip the rest of the page.
 Only the migration could be followed if you want to restore your current relay
 history.
 
+#### Versions
+
+There are multiple docker images available. Make sure you are **matching** the
+**docker image** with your Raspberry PI **host OS**. \
+So if you have installed **Bookworm** OS on your Raspberry PI, make sure you use
+the `:-bookworm` container tag.
+
+<!-- prettier-ignore-start -->
+> As of version 4.13.0 there is **no** `:latest` tag anymore!
+{: .prompt-warning }
+<!-- prettier-ignore-end -->
+
+It was unadvisable to use the `:latest` tag. That was from the early days when
+there was just one container. And this was the very old Buster OS which is
+unsupported now.
+
+Than there are also images with `:-java` in the tag name. Those images contains
+Java for [Java related hardware]({% link _hardware/denkovi_relay.md %}).
+
+#### Setup
+
 Install docker according to:
 [https://docs.docker.com/engine/install/debian/](https://docs.docker.com/engine/install/debian/)
 Just follow the installation steps. And to run the docker commands as a normal
@@ -72,21 +99,21 @@ starting point:
 ```yaml
 services:
   terrariumpi:
-    image: theyosh/terrariumpi:latest # Or use a specific version
+    image: theyosh/terrariumpi:[X]-[OS]-[?Java]
     volumes:
       - /opt/terrariumpi/logs:/TerrariumPI/log
       - /opt/terrariumpi/data:/TerrariumPI/data
       - /opt/terrariumpi/media:/TerrariumPI/media
       - /opt/terrariumpi/scripts:/TerrariumPI/scripts
       - /opt/terrariumpi/webcam-archive:/TerrariumPI/webcam/archive
-      - /opt/terrariumpi/DenkoviRelayCommandLineTool:/TerrariumPI/3rdparty/DenkoviRelayCommandLineTool
+      - /opt/terrariumpi/DenkoviRelayCommandLineTool:/TerrariumPI/3rdparty/DenkoviRelayCommandLineTool # Only needed when using Java container
 
-      - /boot/config.txt:/boot/config.txt # For Buster and Bullseye
-      - /boot/cmdline.txt:/boot/cmdline.txt # For Buster and Bullseye
+      - /boot/config.txt:/boot/config.txt # For OS Buster and Bullseye
+      - /boot/cmdline.txt:/boot/cmdline.txt # For OS Buster and Bullseye
 
-      - /boot/firmware/config.txt:/boot/firmware/config.txt # For Bookworm
-      - /boot/firmware/cmdline.txt:/boot/firmware/cmdline.txt # For Bookworm
-      - /run/udev:/run/udev # For Bookworm
+      - /boot/firmware/config.txt:/boot/firmware/config.txt # For OS Bookworm
+      - /boot/firmware/cmdline.txt:/boot/firmware/cmdline.txt # For OS Bookworm
+      - /run/udev:/run/udev # For OS Bookworm
 
       - /etc/modules:/etc/modules
       - /dev:/dev
@@ -122,7 +149,7 @@ hardware that is connected to the Raspberry PI.
 The network mode needs to be at `host`. Else bluetooth with not work, and you
 can't use bluetooth sensors.
 
-then you can run `docker compose up -d` to start the docker image. It could be
+Then you can run `docker compose up -d` to start the docker image. It could be
 that it needs a reboot. After that, you should be able to access TerrariumPI on
 the url `http://[raspberrypi]:8090`. [Continue with the
 setup]({% link _tabs/setup.md %})

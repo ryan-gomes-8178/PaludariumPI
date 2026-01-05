@@ -3,9 +3,12 @@ import terrariumLogging
 
 logger = terrariumLogging.logging.getLogger(__name__)
 
+import json
+import types
+from functools import partial
 from datetime import datetime, timezone, timedelta
 from pony import orm
-from bottle import request, response, static_file, HTTPError
+from bottle import request, response, static_file, HTTPError, JSONPlugin
 from json import dumps
 from pathlib import Path
 from ffprobe import FFProbe
@@ -37,11 +40,24 @@ from hardware.display import terrariumDisplay
 from hardware.relay import terrariumRelay
 from hardware.sensor import terrariumSensor
 from hardware.webcam import terrariumWebcam
+from weather import terrariumWeather
 
 from terrariumUtils import terrariumUtils
 
 # Set to false in production, else every API call that uses DB will produce a logline
 DEBUG = False
+
+
+def json_serial(obj):
+    """JSON serializer for objects not serializable by default json code"""
+
+    if isinstance(obj, (types.GeneratorType,)):
+        return list(obj)
+
+    if isinstance(obj, (datetime,)):
+        return obj.timestamp()
+
+    raise TypeError(f"Type {type(obj)} not serializable")
 
 
 class terrariumAPI(object):
@@ -53,6 +69,8 @@ class terrariumAPI(object):
         return self.webserver.authenticate(force)
 
     def routes(self, bottle_app):
+        bottle_app.install(JSONPlugin(json_dumps=partial(json.dumps, default=json_serial)))
+
         # Area API
         bottle_app.route(
             "/api/areas/types/", "GET", self.area_types, apply=self.authentication(False), name="api:area_types"
@@ -109,7 +127,7 @@ class terrariumAPI(object):
 
         # Buttons API
         bottle_app.route(
-            "/api/buttons/<button:path>/history/<period:re:(day|week|month|year)>/",
+            "/api/buttons/<button:path>/history/<period:re:(hour|day|week|month|year)>/",
             "GET",
             self.button_history,
             apply=self.authentication(False),
@@ -363,7 +381,7 @@ class terrariumAPI(object):
 
         # Relays API
         bottle_app.route(
-            "/api/relays/<relay:path>/<action:re:(history)>/<period:re:(day|week|month|year|replaced|custom)>/",
+            "/api/relays/<relay:path>/<action:re:(history)>/<period:re:(hour|day|week|month|year|replaced|custom)>/",
             "GET",
             self.relay_history,
             apply=self.authentication(False),
@@ -378,7 +396,7 @@ class terrariumAPI(object):
         )
 
         bottle_app.route(
-            "/api/relays/<relay:path>/<action:re:(export)>/<period:re:(day|week|month|year|replaced|custom)>/",
+            "/api/relays/<relay:path>/<action:re:(export)>/<period:re:(hour|day|week|month|year|replaced|custom)>/",
             "GET",
             self.relay_history,
             apply=self.authentication(),
@@ -447,14 +465,14 @@ class terrariumAPI(object):
         # Sensors API
         all_sensor_types = "|".join(terrariumSensor.sensor_types)
         bottle_app.route(
-            f"/api/sensors/<filter:re:({all_sensor_types})>/<action:re:(history)>/<period:re:(day|week|month|year|custom)>/",
+            f"/api/sensors/<filter:re:({all_sensor_types})>/<action:re:(history)>/<period:re:(hour|day|week|month|year|custom)>/",
             "GET",
             self.sensor_history,
             apply=self.authentication(False),
             name="api:sensor_type_history_period",
         )
         bottle_app.route(
-            f"/api/sensors/<filter:re:({all_sensor_types})>/<action:re:(export)>/<period:re:(day|week|month|year|custom)>/",
+            f"/api/sensors/<filter:re:({all_sensor_types})>/<action:re:(export)>/<period:re:(hour|day|week|month|year|custom)>/",
             "GET",
             self.sensor_history,
             apply=self.authentication(),
@@ -482,14 +500,14 @@ class terrariumAPI(object):
             name="api:sensor_list_filtered",
         )
         bottle_app.route(
-            "/api/sensors/<filter:path>/<action:re:(history)>/<period:re:(day|week|month|year|custom)>/",
+            "/api/sensors/<filter:path>/<action:re:(history)>/<period:re:(hour|day|week|month|year|custom)>/",
             "GET",
             self.sensor_history,
             apply=self.authentication(False),
             name="api:sensor_history_period",
         )
         bottle_app.route(
-            "/api/sensors/<filter:path>/<action:re:(export)>/<period:re:(day|week|month|year|custom)>/",
+            "/api/sensors/<filter:path>/<action:re:(export)>/<period:re:(hour|day|week|month|year|custom)>/",
             "GET",
             self.sensor_history,
             apply=self.authentication(),
@@ -598,7 +616,13 @@ class terrariumAPI(object):
             apply=self.authentication(False),
             name="api:weather_forecast",
         )
-
+        bottle_app.route(
+            "/api/weather/hardware/",
+            "GET",
+            self.weather_hardware,
+            apply=self.authentication(False),
+            name="api:weather_hardware",
+        )
         # Webcam API
         bottle_app.route(
             "/api/webcams/<webcam:path>/archive/<period:path>",
@@ -842,8 +866,9 @@ class terrariumAPI(object):
     def button_history(self, button, action="history", period="day"):
         try:
             button = Button[button]
-
-            if "day" == period:
+            if "hour" == period:
+                period = 1 / 24
+            elif "day" == period:
                 period = 1
             elif "week" == period:
                 period = 7
@@ -1411,8 +1436,9 @@ class terrariumAPI(object):
     def relay_history(self, relay, action="history", period="day"):
         try:
             relay = Relay[relay]
-
-            if "day" == period:
+            if "hour" == period:
+                period = 1 / 24
+            elif "day" == period:
                 period = 1
                 use_custom = False
             elif "week" == period:
@@ -1556,7 +1582,9 @@ class terrariumAPI(object):
     # Sensors
     @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
     def sensor_history(self, filter=None, action="history", period="day"):
-        if "day" == period:
+        if "hour" == period:
+            period = 1 / 24
+        elif "day" == period:
             period = 1
             use_custom = False
         elif "week" == period:
@@ -1728,6 +1756,26 @@ class terrariumAPI(object):
             sensor = Sensor[sensor]
             sensor.set(**request.json)
             orm.commit()
+            sensor_data = sensor.to_dict()
+            # Send websocket message
+            self.webserver.websocket_message(
+                "sensor",
+                {
+                    field: sensor_data[field]
+                    for field in [
+                        "id",
+                        "value",
+                        "error",
+                        "alarm_min",
+                        "alarm_max",
+                        "limit_min",
+                        "limit_max",
+                        "alarm",
+                        "type",
+                        "name",
+                    ]
+                },
+            )
 
             self.webserver.engine.update(terrariumSensor, **request.json)
             if "chirp" == sensor.hardware.lower():
@@ -1877,23 +1925,27 @@ class terrariumAPI(object):
         return data
 
     # Weather
+    def weather_hardware(self):
+        return {"data": terrariumWeather.get_available_types()}
+
     def weather_detail(self):
         weather = {}
 
         if self.webserver.engine.weather:
             weather = {
-                "location": self.webserver.engine.weather.location,
+                "current": self.webserver.engine.weather.current,
                 "sun": {
-                    "rise": self.webserver.engine.weather.sunrise.timestamp(),
-                    "set": self.webserver.engine.weather.sunset.timestamp(),
+                    "rise": self.webserver.engine.weather.sunrise,
+                    "set": self.webserver.engine.weather.sunset,
                 },
                 "is_day": self.webserver.engine.weather.is_day,
                 "indicators": {
                     "wind": self.webserver.engine.units["windspeed"],
                     "temperature": self.webserver.engine.units["temperature"],
                 },
+                "location": self.webserver.engine.weather.location,
+                "days": self.webserver.engine.weather.short_forecast,
                 "credits": self.webserver.engine.weather.credits,
-                "forecast": self.webserver.engine.weather.short_forecast,
             }
 
         return weather

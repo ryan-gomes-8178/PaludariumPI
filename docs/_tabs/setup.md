@@ -33,7 +33,7 @@ title. Click on it to get more information about the form fields.
 
 ## Required fields
 
-All fields with a red star (<span style="color:red;font-weight:bold">\*</span>)
+All fields with a red star ({% include required_input.html %})
 are required to fill out. Some fields can be come required based on selected
 options.
 
@@ -48,24 +48,24 @@ are related to each other.
 
 In the system group you setup the minimal settings to get TerrariumPI running.
 
-Pi power usage
+Pi power usage {% include required_input.html %}
 : Enter the amount of total power in watts used by the Raspberry
 PI including attached USB devices.
 
-IP number
+IP number {% include required_input.html %}
 : Enter the IP to listen for connections. Default 0.0.0.0
 
-Port number
+Port number {% include required_input.html %}
 : Enter the port number to listen for connections. Default 8090
 
-Authentication mode
+Authentication mode {% include required_input.html %}
 : There are 3 authentication options.
 
 - Full authentication: For all actions you need to be logged in.
 - Only for changes: Only adding and updating needs authentication.
 - No authentication: No authentication at all. **Be very careful with this!**
 
-User name
+User name {% include required_input.html %}
 : Enter the user name for authentication. Default admin
 
 New password
@@ -83,36 +83,36 @@ remove it from this list, and it will be used again.
 
 In the locale group you can setup your locales that are custom to.
 
-Language
+Language {% include required_input.html %}
 : Select the interface language. This will also change number and
 currency formatting.
 
-Temperature type
+Temperature type {% include required_input.html %}
 : Select the temperature indicator. Only affects the current
 values.
 
-Distance type
+Distance type {% include required_input.html %}
 : Select the distance indicator. Only affects the current values.
 
-Liquid volume type
+Liquid volume type {% include required_input.html %}
 : Select the water volume indicator. Only affects the current
 values.
 
-Wind speed type
+Wind speed type {% include required_input.html %}
 : Select the wind speed indicator. Only affects the current
 values.
 
-Power price
+Power price {% include required_input.html %}
 : Enter the price per kWh.
 
-Water price
+Water price {% include required_input.html %}
 : Enter the price per L/Gallon.
 
 ### Gui
 
 In the Gui group you can tune the web interface.
 
-Title
+Title {% include required_input.html %}
 : Enter a custom title. If it contains the letters PI, it will turn red on
 the MOTD
 
@@ -174,39 +174,72 @@ adding/updating the weather source_
 
 With the weather data you can schedule your light system based on the **sun
 rise** and **sun set**. This can either be at your home location, or any other
-location. The sun rise and set times will be shifted to your home location
-times. So when it is day at 08:00 at the given location, TerrariumPI will thread
-that as 08:00 local time. This way, you can have seasons with shorter and longer
+location. And the historical weather data is used for [climate mirroring]({% link _tabs/features.md %}#local-weather-and-climate-mirroring).
+
+### Timezones
+
+The weather data is loaded in such a way that timezones are 'ignored'. So when
+it is day at 08:00 at the given location, TerrariumPI will thread
+that as 08:00 local time. Even when the location is at the other side of the world. \
+This way, you can have seasons with shorter and longer
 days, based on day of the year.
 
-Other weather data is just for show. Does not have a function.
+### Sources
 
-### Setup
+TerrariumPI can handle two weather sources at the moment. Those are:
 
-In order to use the weather system, you need to create a free account at
-[OpenWeatherMap](https://home.openweathermap.org/users/sign_up).
+- [OpenWeatherMap.org](#openweathermaporg)
+- [Open-Meteo.com](#open-meteoorg)
+
+#### OpenWeatherMap.org
+
+![Logo OpenweatherMap](/assets/img/logo_openweather_map.png){: .right width="200" }In
+order to use the weather system with Openweathermap.org, you need to create a
+free account at [OpenWeatherMap](https://home.openweathermap.org/users/sign_up).
+
+Than use one of the two supported API urls: \
+`https://api.openweathermap.org/data/2.5/weather?q=[City],[Country]&appid=[API_KEY]` \
+or \
+`https://api.openweathermap.org/data/2.5/weather?id=[CityID]&appid=[API_KEY]`
+
+Do **not** add the `&metric=` part in the url. And keep the value of **2.5** in
+the url!
+
+TerrariumPI will auto detect with API version you have an account for. TerrariumPI
+should stay within the free 1000 API calls per day.
+
+**important** This OpenWeatherMap url will be encrypted in the database. So the
+API_KEY value cannot be read out of the database directly.
+
+##### API Change
 
 As from October 2022 they changed the conditions to a free account. Which means
 that we have fewer data to work with. This also means no history data for
-climate mirroring out of the box. If you have created an account before that
-date, you should still be able to use the One call API 2.5 which does hold all
-the needed information. With One call API 3.0, you need an extra (free)
-subscription which needs credit card data.
+climate mirroring out of the box. \
+If you have created an account before that date, you should still be able to
+use the One call API 2.5 which does hold all the needed information. With One
+call API 3.0, you need an extra (free) subscription which needs credit card
+data.
 
-For everybody that is registed with OpenWeatherMap after October, will have less
-data or you have to subscribe for the
+For everybody that is registered with OpenWeatherMap after October, will have
+less data or you have to subscribe for the
 [One call API 3.0](https://openweathermap.org/price)
 
-The url format needs to be
-`https://api.openweathermap.org/data/2.5/weather?q=[City],[Country]&appid=[API_KEY]`.
-Do **not** add the `&metric=` part in the url.
+**TerrariumPI will self test which API version you have. It will first test for
+version 3.0 and if that fails, it will fallback to the (old free) 2.5 version.
+So the API url for TerrariumPI is always as described below including the 2.5
+in the url!**
 
-TerrariumPI does about 6-10 calls on the One call API per day, what would result
-in 300 calls max per month. And it can detect which API is available with your
-OpenWeatherMap account.
+#### Open-Meteo.org
 
-**important** This openweathermap url will be encrypted in the database. So the
-API_KEY value cannot be read out of the database directly.
+![Logo OpenMeteo](/assets/img/OpenMeteo.com.svg){: .right.invert width="100" }This
+is a [free service](https://open-meteo.com) which does not need an account. You
+need to know the latitude and longitude of your location. And than construct the
+following url below:
+
+`https://api.open-meteo.com/v1/forecast?latitude=[LAT]&longitude=[LONG]`
+
+That is all, and you have all the weather data that is required.
 
 ## Relays
 
@@ -214,20 +247,20 @@ API_KEY value cannot be read out of the database directly.
 updating relays - Calibration is only available for dimmers_ Adding and changing
 relays is done with the above relay form.
 
-Hardware
+Hardware {% include required_input.html %}
 : The hardware type of the relay. [A full list of supported relays]({% link _tabs/hardware.md %}#relays)
 
-Address
+Address {% include required_input.html %}
 : Enter the address of the relay. This is specific for each
 [relay]({% link _tabs/hardware.md %}#relays).
 
-Name
+Name {% include required_input.html %}
 : The name of the relay. Use an easy to remember name.
 
-Wattage
+Wattage {% include required_input.html %}
 : The amount of power that is used when on or at full power (dimmer)
 
-Water flow
+Water flow {% include required_input.html %}
 : The amount of water that is used when on or at full power (dimmer)
 in Liter/Gallon per minute
 
@@ -261,40 +294,40 @@ for dimming. This only works on GPIO pin **12, 32, 33 and 35**
 adding/updating the sensors_ Adding and changing sensors is done with the above
 sensor form.
 
-Hardware
+Hardware {% include required_input.html %}
 : The hardware type of the sensor. [A full list of supported sensors]({% link _tabs/hardware.md %}#sensors)
 
-Type
+Type {% include required_input.html %}
 : Select what kind of sensor it is.
 
-Address
+Address {% include required_input.html %}
 : Enter the address of the sensor. This is specific for each
 [sensor]({% link _tabs/hardware.md %}#sensors).
 
-Name
+Name {% include required_input.html %}
 : The name of the sensor. Use an easy to remember name.
 
-Alarm min
+Alarm min {% include required_input.html %}
 : The lower alarm value. When the sensor gets below this value, the
 **low** alarm will be triggered
 
-Alarm max
+Alarm max {% include required_input.html %}
 : The high alarm value. When the sensor gets higher then this value,
 the **hight** alarm will be triggered
 
-Limit min
+Limit min {% include required_input.html %}
 : The minimum value that is valid for this sensor. Values measured
 below this value will be ignored.
 
-Limit max
+Limit max {% include required_input.html %}
 : The maximum value that is valid for this sensor. Values measured
 higher then this value will be ignored.
 
-Max diff
+Max diff {% include required_input.html %}
 : The maximum difference between two measurements that is valid. Enter
 **0** to disable.
 
-Exclude average
+Exclude average {% include required_input.html %}
 : Exclude this sensor from the average calculation and graphs on
 the dashboard.
 
@@ -318,14 +351,14 @@ Maximum moist value
 updating buttons - Calibration is only available for light sensors_ Adding and
 changing buttons is done with the above button form.
 
-Hardware
+Hardware {% include required_input.html %}
 : The hardware type of the button. [A full list of supported buttons]({% link _tabs/hardware.md %}#buttons)
 
-Address
+Address {% include required_input.html %}
 : Enter the address of the button. This is specific for each
 [button]({% link _tabs/hardware.md %}#buttons).
 
-Name
+Name {% include required_input.html %}
 : The name of the button. Use an easy to remember name.
 
 Current
@@ -346,24 +379,24 @@ updating webcams_
 
 Adding and changing webcams is done with the above button form.
 
-Hardware
+Hardware {% include required_input.html %}
 : The hardware type of the webcam. [A full list of supported webcams]({% link _tabs/hardware.md %}#webcams)
 
-Address
+Address {% include required_input.html %}
 : Enter the address of the webcam. This is specific for each
 [webcam]({% link _tabs/hardware.md %}#webcams).
 
-Name
+Name {% include required_input.html %}
 : The name of the webcam. Use an easy to remember name.
 
-Resolution
+Resolution {% include required_input.html %}
 : Enter the maximum resolution of the webcam in width x height
 pixels.
 
-Rotation
+Rotation {% include required_input.html %}
 : Select the rotation of the webcam.
 
-White balance
+White balance {% include required_input.html %}
 : Select the white balance correction option.
 
 Archiving
@@ -419,7 +452,7 @@ In order to update or delete an existing marker, double click the marker.
 updating playlists_ Adding and changing playlists is done with the above button
 form.
 
-Name
+Name {% include required_input.html %}
 : The name of the playlist. Use an easy to remember name.
 
 Volume
@@ -432,7 +465,7 @@ Repeat
 : Repeat the playlist. If shuffle is enabled, it will be shuffled every
 repeat action.
 
-Audio files
+Audio files {% include required_input.html %}
 : List of audio files. The order of adding is order or playing.
 
 ## Enclosures
@@ -441,7 +474,7 @@ Audio files
 and updating enclosures_ Adding and changing enclosures is done with the above
 button form.
 
-Name
+Name {% include required_input.html %}
 : The name of the enclosure. Use an easy to remember name.
 
 Image
@@ -476,14 +509,14 @@ software.
 
 Three fields are always required and shared in all the area types:
 
-Enclosure
+Enclosure {% include required_input.html %}
 : Select the enclosure to which this area belongs.
 
-Type
+Type {% include required_input.html %}
 : Select the type of area. Depending on the type, new/different options are
 available.
 
-Name
+Name {% include required_input.html %}
 : The name of the area. Use an easy to remember name.
 
 ### Main Lights
@@ -491,7 +524,7 @@ Name
 ![Area form](/assets/img/Area_Settings.webp) _Popup form for adding and updating
 areas_
 
-Mode
+Mode {% include required_input.html %}
 : Select the operating mode of this area. Use timer for custom on and off
 times. Weather is using your [configured weather data](#weather)
 
@@ -583,7 +616,7 @@ area where you use a sprayer. When the water tank is (near) empty the low alarm
 of the water tank will go on, and this humidity area will then not toggle on.
 Protect against dry running the water sprayer.
 
-Mode
+Mode {% include required_input.html %}
 : [Same as lights area](#main-lights)
 
 Sensors
@@ -591,11 +624,10 @@ Sensors
 will use the average values of the current, min and max alarm values.
 
 Day/night difference
-: Enter the a value that the sensors should raise or lower
-when it become night. Enter a negative value for lowering the temperature. When
-it become day again, the sensor values will go the opposite direction and return
-to normal. Leave it **0** if you are planning to use the
-[variation tab](#variation)
+: Enter a value that the sensors should raise or lower when it become night.
+Enter a negative value for lowering the sensors. When it become day again, the
+sensor values will go the opposite direction and return to normal. Leave it
+**0** if you are planning to use the [variation tab](#variation)
 
 Day/night source
 : Select the day and night source. This can either be the main
@@ -690,10 +722,10 @@ wanted current value.
 ![Area Audio form](/assets/img/Area_Audio.webp) _Popup form for adding and
 updating audio areas_
 
-Mode
+Mode {% include required_input.html %}
 : [Same as lights area](#main-lights)
 
-Sound card
+Sound card {% include required_input.html %}
 : Select the sound card you want to use to play the audio.
 
 Playlists
@@ -708,21 +740,21 @@ and updating water tank areas_
 The water tank area is a bit special. This can be used to measure your water
 levels in a tank. This is done by using [HC-SR04 ultrasonic ranging sensor]({% link _hardware/hc-sr04_sensor.md %}).
 
-Mode
+Mode {% include required_input.html %}
 : [Same as lights area](#main-lights)
 
 Sensors
 : Select the sensors you want to use with this type of area. Only
 distance sensors can be used here.
 
-Water volume
+Water volume {% include required_input.html %}
 : Enter the total amount of water that the tank can hold in
 **litres**
 
-Height
+Height {% include required_input.html %}
 : Enter the height of the water tank in **centimeters**
 
-Offset
+Offset {% include required_input.html %}
 : Enter the distance between the sensor and the top of the water level in
 **centimeters**
 

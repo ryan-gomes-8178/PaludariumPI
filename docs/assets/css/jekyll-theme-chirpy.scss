@@ -2,14 +2,14 @@
 ---
 
 /* prettier-ignore */
-@import 'main
+@use 'main
 {%- if jekyll.environment == 'production' -%}
   .bundle
 {%- endif -%}
 ';
 
 /* append your custom style below */
-@import 'swagger';
+@use 'swagger';
 
 /* Hide duplicate title ?? */
 h1.dynamic-title {
@@ -47,7 +47,8 @@ div.content .share-icons a.external::after {
   html:not([data-mode]),
   html[data-mode='dark'] {
     img.is_dimmer,
-    a.invert img {
+    a.invert img,
+    img.invert {
       filter: invert(100%);
     }
   }
@@ -116,4 +117,16 @@ table.timertable {
 table.timertable input {
   width: 120px;
   margin: 0px auto;
+}
+
+/* Sticky header / progress bar */
+#progress-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 3px;
+  z-index: 99;
+  background: linear-gradient(to right, rgba(138, 180, 248, 1) 90%, rgba(138, 180, 248, 0.1));
+  transition: width 1s;
 }

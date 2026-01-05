@@ -1,4 +1,4 @@
-# TerrariumPI 4.12.3
+# TerrariumPI 4.14.0
 
 ![Latest release](https://img.shields.io/github/v/release/theyosh/terrariumpi?label=Latest%20release)
 ![GitHub Release Date](https://img.shields.io/github/release-date/theyosh/TerrariumPI)
@@ -26,7 +26,7 @@ boards or door sensors. The usage can be endless. All power switches have
 support for timers to trigger based on a time pattern.
 
 Running now stable for more than
-[10 years](https://theyosh.github.io/TerrariumPI/posts/2024/08/01/10-year-anniversary/)!!!
+[**10 years**](https://theyosh.github.io/TerrariumPI/posts/2024/08/01/10-year-anniversary/)!!!
 
 If you are using this software for your animals or plants,
 **[please post some pictures](https://github.com/theyosh/TerrariumPI/issues/210)**
@@ -60,8 +60,7 @@ And all this is controlled with a nice web interface with
 7. [Contributors](#contributors)
 8. [Star history](#star-history)
 9. [Screenshots](#screenshots)
-10. [Testing](#testing)
-11. [About](#about)
+10. [About](#about)
 
 ## Features
 
@@ -160,10 +159,10 @@ Your language not in the list or not up to date?
 ### Base
 
 The installation expects a Pi with working network and ssh. It is tested with
-[Raspberry Pi OS Lite **Legacy**](https://www.raspberrypi.com/software/operating-systems/#raspberry-pi-os-legacy).
-Desktop images will not work. Installation seems to work, but it will not work
-stable. So make sure you download the correct image for the Pi. It is possible
-to use USB or SSD drives to speed things up:
+[Raspberry Pi OS **Lite** 32bit](https://www.raspberrypi.com/software/operating-systems/#raspberry-pi-os-32-bit).
+Desktop images will **not** work. Installation seems to work, but it will not
+work stable. So make sure you download the correct image for the Pi. \
+It is possible to use USB or SSD drives to speed things up:
 <https://www.tomshardware.com/how-to/boot-raspberry-pi-4-usb>
 
 ### Docker
@@ -189,8 +188,11 @@ You can skip the manual installation part.
    `sudo ./install.sh`
 6. Reboot Raspberry PI to get all the needed modules loaded \
    `sudo reboot` (if done manual)
-7. Go to the web interface at <http://[raspberry_ip]>:8090 (login:
-   **admin/password**)
+
+### Login
+
+After either [docker](#docker) or [manual](#manual) installation, you should
+have a web interface at <http://[raspberry_ip]>:8090 (login: **admin/password**)
 
 All needed options and modules are setup by the installer script. This means
 that I2C and 1Wire overlay are enabled by default.
@@ -232,14 +234,16 @@ This software requires a Raspberry Pi and some extra hardware in order to run
 and work. The bare minimum and tested hardware is
 
 - Raspberry PI with at least **4GB SD card** running
-  [Raspberry Pi OS Lite](https://www.raspberrypi.org/software/operating-systems/).
+  [Raspberry Pi OS **Lite** 32bit](https://www.raspberrypi.com/software/operating-systems/#raspberry-pi-os-32-bit).
   - Zero (Should work/At own risk/limited support)
   - [Zero 2W](https://github.com/theyosh/TerrariumPI/issues/823#issuecomment-1693236850)
     (Should work/At own risk/limited support)
   - Pi 2 (Should work/At own risk/limited support)
   - Pi 3 (Works/full support)
   - Pi 4 (Works/full support)
-  - Pi 5 **does NOT work** (Due to changes in the hardware on the Pi)
+  - Pi 5 **does partly work** (At own risk/limited support. Due to changes in
+    the hardware on the Pi PWM dimming is not working. And RPI cam is not
+    supported)
 - Power relay board
   - USB versions (Serial and Bitbang)
   - GPIO versions
@@ -332,13 +336,6 @@ more information is here:
 More screenshots can be found
 [here](https://github.com/theyosh/TerrariumPI/tree/main/screenshots)
 
-## Testing
-
-[Free tested with BrowserStack for open source](https://browserstack.com)
-[![BrowserStack](screenshots/BrowserStack.webp)](https://browserstack.com)
-
 ## About
 
-A live version is running at: <https://terrarium.theyosh.nl/index.html>. Go to
-'About' menu for more information about used hardware, software and how to
-setup.
+A live version is running at: <https://terrarium.theyosh.nl/index.html>.

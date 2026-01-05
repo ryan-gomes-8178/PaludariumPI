@@ -939,6 +939,7 @@
     "no-data": "Nessun dato ...",
     "period": {
       "day": "Giorno",
+      "hour": "Ora",
       "month": "Mese",
       "replaced": "Sostituito",
       "week": "Settimana",
@@ -1290,6 +1291,20 @@
         "help": "Immettere il flusso d'acqua (max) quando acceso.",
         "invalid": "Contiene il nome del sensore.",
         "label": "Flusso d'acqua in L/m"
+      },
+      "gauge_values": {
+        "alarm": {
+          "help": "",
+          "label": ""
+        },
+        "limit": {
+          "help": "",
+          "label": ""
+        },
+        "measurements": {
+          "help": "",
+          "label": ""
+        }
       },
       "hardware": {
         "help": "Contiene la scheda audio utilizzata per la riproduzione audio.",
@@ -1809,6 +1824,15 @@
           "on": ""
         }
       },
+      "auto_discovery": {
+        "help": "",
+        "invalid": "",
+        "label": "",
+        "options": {
+          "no": "NO",
+          "yes": ""
+        }
+      },
       "currency": {
         "help": "Seleziona la valuta dell'interfaccia.",
         "invalid": "Si prega di fare una scelta.",
@@ -1835,6 +1859,11 @@
       },
       "graph_limit_min_max": {
         "help": "",
+        "label": ""
+      },
+      "graph_period": {
+        "help": "",
+        "invalid": "",
         "label": ""
       },
       "graph_smooth_value": {
@@ -2020,12 +2049,20 @@
         "error": "I campi richiesti sono segnati con '%s'."
       },
       "information": "Per utilizzare il sistema meteorologico, devi creare un account gratuito su {source_link}.",
+      "open_meteo": {
+        "information": ""
+      },
       "save": {
         "ok": {
           "message": "L'impostazione meteo viene salvata."
         }
       },
       "title": "Impostazioni meteo",
+      "weather_provider": {
+        "help": "",
+        "label": "",
+        "placeholder": ""
+      },
       "weather_source": {
         "help": "Inserisci l'URL completo dell'API di OpenWeatherMap come: {api_url_example}.",
         "invalid": "La url inserita non è valida.",

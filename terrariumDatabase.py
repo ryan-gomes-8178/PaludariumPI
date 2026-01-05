@@ -71,7 +71,6 @@ def create_defaults(version):
         {"id": "temperature_indicator", "value": "celsius"},
         {"id": "distance_indicator", "value": "cm"},
         {"id": "water_volume_indicator", "value": "l"},
-        {"id": "show_min_max_gauge", "value": "false"},
         {"id": "dashboard_mode", "value": "0"},
         {"id": "all_gauges_on_single_page", "value": "false"},
         {"id": "graph_smooth_value", "value": "0"},
@@ -79,7 +78,11 @@ def create_defaults(version):
         {"id": "graph_limit_min_max", "value": "false"},
         {"id": "unsplash_access_key", "value": ""},
         {"id": "unsplash_query", "value": ""},
-        {"id": "show_gauge_values", "value": "0"},
+        {"id": "gauge_values_alarm", "value": "false"},
+        {"id": "gauge_values_limit", "value": "false"},
+        {"id": "gauge_values_measurements", "value": "false"},
+        {"id": "graph_period", "value": "day"},
+        {"id": "auto_discovery", "value": "1"},
     ]
 
     for setting in setting_defaults:
@@ -89,7 +92,8 @@ def create_defaults(version):
         except orm.core.TransactionIntegrityError:
             # Setting is already in the database. Ignore except version. Update that.
             if "version" == setting["id"]:
-                Setting[setting["id"]].value = setting["value"]
+                Setting["version"].value = f"{version}"
+                orm.commit()
 
     # Clear old obsolete settings
     settings = [setting["id"] for setting in setting_defaults]
@@ -415,6 +419,10 @@ class Relay(db.Entity):
     def type(self):
         return "dimmer" if self.is_dimmer else "relay"
 
+    @property
+    def areas(self):
+        return Area.select(lambda a: orm.raw_sql('"a"."setup" LIKE "%' + self.id + '%"'))[:]
+
     def to_dict(self, only=None, exclude=None, with_collections=False, with_lazy=False, related_objects=False):
         data = copy.deepcopy(super().to_dict(only, exclude, with_collections, with_lazy, related_objects))
 
@@ -508,6 +516,10 @@ class Sensor(db.Entity):
     @property
     def error(self):
         return True if self.value is None else False
+
+    @property
+    def areas(self):
+        return Area.select(lambda a: orm.raw_sql('"a"."setup" LIKE "%' + self.id + '%"'))[:]
 
     def to_dict(self, only=None, exclude=None, with_collections=False, with_lazy=False, related_objects=False):
         data = copy.deepcopy(super().to_dict(only, exclude, with_collections, with_lazy, related_objects))
