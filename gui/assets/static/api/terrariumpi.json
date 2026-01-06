@@ -1553,7 +1553,7 @@
             "description": "Period",
             "required": true,
             "type": "string",
-            "enum": ["day", "week", "month", "year", "replaced", "custom"]
+            "enum": ["hour", "day", "week", "month", "year", "replaced", "custom"]
           }
         ],
         "responses": {
@@ -1634,7 +1634,7 @@
             "description": "Period",
             "required": true,
             "type": "string",
-            "enum": ["day", "week", "month", "year", "replaced", "custom"]
+            "enum": ["hour", "day", "week", "month", "year", "replaced", "custom"]
           }
         ],
         "responses": {
@@ -2016,7 +2016,7 @@
             "description": "Period",
             "required": true,
             "type": "string",
-            "enum": ["day", "week", "month", "year", "custom"]
+            "enum": ["hour", "day", "week", "month", "year", "custom"]
           }
         ],
         "responses": {
@@ -2095,7 +2095,7 @@
             "description": "Period",
             "required": true,
             "type": "string",
-            "enum": ["day", "week", "month", "year", "custom"]
+            "enum": ["hour", "day", "week", "month", "year", "custom"]
           }
         ],
         "responses": {

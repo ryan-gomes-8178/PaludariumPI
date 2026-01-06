@@ -1438,6 +1438,7 @@ class terrariumAPI(object):
             relay = Relay[relay]
             if "hour" == period:
                 period = 1 / 24
+                use_custom = False
             elif "day" == period:
                 period = 1
                 use_custom = False
@@ -1584,6 +1585,7 @@ class terrariumAPI(object):
     def sensor_history(self, filter=None, action="history", period="day"):
         if "hour" == period:
             period = 1 / 24
+            use_custom = False
         elif "day" == period:
             period = 1
             use_custom = False
