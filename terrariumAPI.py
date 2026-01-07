@@ -86,7 +86,6 @@ class terrariumAPI(object):
         bottle_app.route(
             "/api/areas/<area:path>/", "GET", self.area_detail, apply=self.authentication(False), name="api:area_detail"
         )
-
         bottle_app.route(
             "/api/areas/<area:path>/", "PUT", self.area_update, apply=self.authentication(), name="api:area_update"
         )
@@ -1456,12 +1455,22 @@ class terrariumAPI(object):
                 end_date_str = request.query.get('end_date')
                 if not start_date_str or not end_date_str:
                     return {"error": "start_date and end_date are required for custom period"}, 400
+
                 try:
-                    start_date = datetime.strptime(start_date_str, "%Y-%m-%d")
-                    # Include the entire end date by adding one day minus one second
-                    end_date = datetime.strptime(end_date_str, "%Y-%m-%d") + timedelta(days=1) - timedelta(seconds=1)
-                except ValueError:
-                    return {"error": "Invalid date format. Use YYYY-MM-DD"}, 400
+                    # Accept either date-only (YYYY-MM-DD) or ISO datetime (YYYY-MM-DDTHH:MM[:SS])
+                    if "T" in start_date_str:
+                        start_date = datetime.fromisoformat(start_date_str)
+                    else:
+                        start_date = datetime.strptime(start_date_str, "%Y-%m-%d")
+
+                    if "T" in end_date_str:
+                        end_date = datetime.fromisoformat(end_date_str)
+                    else:
+                        # Include the entire end date when a date-only is supplied
+                        end_date = datetime.strptime(end_date_str, "%Y-%m-%d") + timedelta(days=1) - timedelta(seconds=1)
+                except Exception:
+                    return {"error": "Invalid date format. Use YYYY-MM-DD or YYYY-MM-DDTHH:MM"}, 400
+
                 use_custom = True
             else:
                 period = 1
@@ -1604,11 +1613,20 @@ class terrariumAPI(object):
             if not start_date_str or not end_date_str:
                 return {"error": "start_date and end_date are required for custom period"}, 400
             try:
-                start_date = datetime.strptime(start_date_str, "%Y-%m-%d")
-                # Include the entire end date by adding one day minus one second
-                end_date = datetime.strptime(end_date_str, "%Y-%m-%d") + timedelta(days=1) - timedelta(seconds=1)
-            except ValueError:
-                return {"error": "Invalid date format. Use YYYY-MM-DD"}, 400
+                # Accept either date-only (YYYY-MM-DD) or ISO datetime (YYYY-MM-DDTHH:MM[:SS])
+                if "T" in start_date_str:
+                    start_date = datetime.fromisoformat(start_date_str)
+                else:
+                    start_date = datetime.strptime(start_date_str, "%Y-%m-%d")
+
+                if "T" in end_date_str:
+                    end_date = datetime.fromisoformat(end_date_str)
+                else:
+                    # Include the entire end date when a date-only is supplied
+                    end_date = datetime.strptime(end_date_str, "%Y-%m-%d") + timedelta(days=1) - timedelta(seconds=1)
+            except Exception:
+                return {"error": "Invalid date format. Use YYYY-MM-DD or YYYY-MM-DDTHH:MM"}, 400
+
             use_custom = True
         else:
             period = 1

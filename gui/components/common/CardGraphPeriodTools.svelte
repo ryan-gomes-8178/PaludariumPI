@@ -11,24 +11,53 @@
   let customEnd = '';
   let showCustom = false;
   let customStartInput;
+  let includeTime = false;
 
-  // When clicking Custom, initialize local dates from store and show inputs
-  async function onCustomClick(event) {
-    // stopPropagation to prevent Bootstrap from closing the dropdown
-    event.stopPropagation();
+  function populateFromStore() {
     const graph = $graphs[id];
     customStart = graph.customStart || '';
     customEnd = graph.customEnd || '';
+    includeTime = (customStart && customStart.includes('T')) || (customEnd && customEnd.includes('T'));
+  }
+
+  // Called when calendar icon is clicked (dropdown opens) — always show custom inputs prefilled
+  function onCalendarClick() {
+    populateFromStore();
+    showCustom = true;
+  }
+
+  // When clicking Custom button (keeps dropdown open)
+  async function onCustomClick(event) {
+    event.stopPropagation();
+    populateFromStore();
     showCustom = true;
     await tick();
     if (customStartInput) customStartInput.focus();
   }
 
-  // Handle custom date change and trigger fetch only when both dates are valid
-  function onCustomDateChange(event) {
-    // stopPropagation to keep dropdown open while interacting with inputs
+  // Toggle include time and convert current values sensibly
+  function toggleIncludeTime(event) {
     event.stopPropagation();
-    if (customStart && customEnd && customStart <= customEnd) {
+    // includeTime already updated by bind:checked, convert values
+    if (includeTime) {
+      if (customStart && !customStart.includes('T')) customStart = `${customStart}T00:00`;
+      if (customEnd && !customEnd.includes('T')) customEnd = `${customEnd}T23:59`;
+    } else {
+      if (customStart && customStart.includes('T')) customStart = customStart.split('T')[0];
+      if (customEnd && customEnd.includes('T')) customEnd = customEnd.split('T')[0];
+    }
+  }
+
+  // Only submit when both are present and valid
+  function onCustomDateChange(event) {
+    event.stopPropagation();
+    if (!customStart || !customEnd) return;
+
+    // Compare strings: normalize to comparable Date objects
+    const a = new Date(customStart);
+    const b = new Date(customEnd);
+    if (isNaN(a.getTime()) || isNaN(b.getTime())) return;
+    if (a <= b) {
       toggleGraphPeriod(id, 'custom', { start: customStart, end: customEnd });
       showCustom = false;
     }
@@ -36,15 +65,22 @@
 </script>
 
 <div class="btn-group">
-  <button type="button" class="btn btn-tool dropdown-toggle" data-toggle="dropdown">
+  <button
+    type="button"
+    class="btn btn-tool dropdown-toggle"
+    data-toggle="dropdown"
+    on:click={onCalendarClick}
+  >
     <i class="fas fa-calendar-alt"></i>
   </button>
+
   <div class="dropdown-menu dropdown-menu-right" role="menu" style="min-width: auto !important;">
     <button
       class="dropdown-item"
       class:active="{$graphs[id].period === 'hour'}"
-      on:click={() => toggleGraphPeriod(id, 'hour')}>{$_('graph.period.hour', { default: 'Hour' })}</button
-    >
+      on:click={() => toggleGraphPeriod(id, 'hour')}
+    >{$_('graph.period.hour', { default: 'Hour' })}</button>
+
     <button
       class="dropdown-item"
       class:active="{$graphs[id].period === 'day'}"
@@ -77,8 +113,7 @@
       >{$_('graph.period.replaced', { default: 'Replaced' })}</button>
     {/if}
 
-    <!-- Custom period option: initialize and show date inputs.
-         Use stopPropagation on the click so Bootstrap does not auto-close the dropdown -->
+    <!-- Keep Custom available and show inputs when opened -->
     <button
       class="dropdown-item"
       class:active="{$graphs[id].period === 'custom'}"
@@ -86,10 +121,43 @@
     >Custom</button>
 
     {#if showCustom}
-      <!-- stopPropagation on this container keeps the menu open while interacting with inputs -->
-      <div class="dropdown-item" style="white-space: nowrap; display: flex; gap: 0.5rem;" on:click|stopPropagation role="presentation">
-        <input type="date" bind:this={customStartInput} bind:value={customStart} on:change={onCustomDateChange} />
-        <input type="date" bind:value={customEnd} on:change={onCustomDateChange} />
+      <div class="dropdown-item" style="white-space: nowrap; display:flex; flex-direction:column; gap:0.5rem;" on:click|stopPropagation role="presentation">
+        <div style="display:flex; gap:0.5rem; align-items:center;">
+          {#if includeTime}
+            <input
+              bind:this={customStartInput}
+              type="datetime-local"
+              bind:value={customStart}
+              on:change={onCustomDateChange}
+            />
+          {:else}
+            <input
+              bind:this={customStartInput}
+              type="date"
+              bind:value={customStart}
+              on:change={onCustomDateChange}
+            />
+          {/if}
+          <span style="align-self:center;">—</span>
+          {#if includeTime}
+            <input
+              type="datetime-local"
+              bind:value={customEnd}
+              on:change={onCustomDateChange}
+            />
+          {:else}
+            <input
+              type="date"
+              bind:value={customEnd}
+              on:change={onCustomDateChange}
+            />
+          {/if}
+        </div>
+
+        <div style="display:flex; gap:0.5rem; align-items:center;">
+          <input id="include-time-{id}" type="checkbox" bind:checked={includeTime} on:change={toggleIncludeTime} />
+          <label for="include-time-{id}" style="font-size:0.85rem; margin:0;">Include time</label>
+        </div>
       </div>
     {/if}
   </div>
