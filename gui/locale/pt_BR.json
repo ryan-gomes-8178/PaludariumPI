@@ -1249,6 +1249,14 @@
         "invalid": "Insira um número mínimo de {value}.",
         "label": "Fluxo d'água"
       },
+      "gauge_values": {
+        "limit": {
+          "help": ""
+        },
+        "measurements": {
+          "label": ""
+        }
+      },
       "hardware": {
         "help": "Selecione o hardware usado para este botão.",
         "invalid": "Selecione um tipo de hardware.",
@@ -1767,6 +1775,13 @@
           "on": ""
         }
       },
+      "auto_discovery": {
+        "help": "",
+        "options": {
+          "no": "Não",
+          "yes": ""
+        }
+      },
       "currency": {
         "help": "Selecione a moeda da interface.",
         "invalid": "Por favor, faça uma escolha.",
@@ -1794,6 +1809,10 @@
       "graph_limit_min_max": {
         "help": "",
         "label": ""
+      },
+      "graph_period": {
+        "help": "",
+        "invalid": ""
       },
       "graph_smooth_value": {
         "help": "Insira a quantidade de pontos de dados utilizados para o cálculo da média. Insira 0 para desabilitar esta função.",

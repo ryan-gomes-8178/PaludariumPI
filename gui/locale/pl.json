@@ -939,6 +939,7 @@
     "no-data": "Brak danych ...",
     "period": {
       "day": "Dzień",
+      "hour": "Godzina",
       "month": "Miesiąc",
       "replaced": "Zastąpiony",
       "week": "Tydzień",
@@ -1290,6 +1291,20 @@
         "help": "Wprowadź (maksymalny) przepływ wody po włączeniu.",
         "invalid": "Podaj wartość w zakresie pomiędzy {value} i %s.",
         "label": "Przepływ wody"
+      },
+      "gauge_values": {
+        "alarm": {
+          "help": "",
+          "label": ""
+        },
+        "limit": {
+          "help": "",
+          "label": ""
+        },
+        "measurements": {
+          "help": "",
+          "label": ""
+        }
       },
       "hardware": {
         "help": "Wybierz typ sprzętu dla tego przekaźnika.",
@@ -1809,6 +1824,15 @@
           "on": ""
         }
       },
+      "auto_discovery": {
+        "help": "",
+        "invalid": "",
+        "label": "",
+        "options": {
+          "no": "NIE",
+          "yes": ""
+        }
+      },
       "currency": {
         "help": "Wybierz walutę interfejsu.",
         "invalid": "Dokonaj wyboru.",
@@ -1835,6 +1859,11 @@
       },
       "graph_limit_min_max": {
         "help": "",
+        "label": ""
+      },
+      "graph_period": {
+        "help": "",
+        "invalid": "",
         "label": ""
       },
       "graph_smooth_value": {
@@ -2020,12 +2049,20 @@
         "error": "Nie wszystkie wymagane pola są wprowadzane poprawnie."
       },
       "information": "Aby użyć systemu pogodowego, musisz utworzyć bezpłatne konto w {source_link}.",
+      "open_meteo": {
+        "information": ""
+      },
       "save": {
         "ok": {
           "message": "Ustawienie pogody zostanie zapisane."
         }
       },
       "title": "Ustawienia pogody",
+      "weather_provider": {
+        "help": "",
+        "label": "",
+        "placeholder": ""
+      },
       "weather_source": {
         "help": "Wprowadź pełny adres URL API OpenWeatherMap Like: {api_url_example}.",
         "invalid": "Wprowadzony adres URL jest nieprawidłowy.",

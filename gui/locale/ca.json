@@ -939,6 +939,7 @@
     "no-data": "No hi ha dades ...",
     "period": {
       "day": "Dia",
+      "hour": "Hora",
       "month": "Mes",
       "replaced": "Reemplaçat",
       "week": "Setmana",
@@ -1290,6 +1291,20 @@
         "help": "Introduïu el flux d'aigua (màxim) quan s'encén.",
         "invalid": "Introduïu un valor mínim de {value}.",
         "label": "Flux d'aigua"
+      },
+      "gauge_values": {
+        "alarm": {
+          "help": "",
+          "label": ""
+        },
+        "limit": {
+          "help": "",
+          "label": ""
+        },
+        "measurements": {
+          "help": "",
+          "label": ""
+        }
       },
       "hardware": {
         "help": "Seleccioneu el tipus de maquinari per a aquest relé.",
@@ -1809,6 +1824,15 @@
           "on": ""
         }
       },
+      "auto_discovery": {
+        "help": "",
+        "invalid": "",
+        "label": "",
+        "options": {
+          "no": "No",
+          "yes": ""
+        }
+      },
       "currency": {
         "help": "Seleccioneu la moneda de la interfície.",
         "invalid": "Feu una tria.",
@@ -1835,6 +1859,11 @@
       },
       "graph_limit_min_max": {
         "help": "",
+        "label": ""
+      },
+      "graph_period": {
+        "help": "",
+        "invalid": "",
         "label": ""
       },
       "graph_smooth_value": {
@@ -2020,12 +2049,20 @@
         "error": "No tots els camps obligatoris s’introdueixen correctament."
       },
       "information": "Per utilitzar el sistema meteorològic, heu de crear un compte gratuït a {source_link}.",
+      "open_meteo": {
+        "information": ""
+      },
       "save": {
         "ok": {
           "message": "La configuració del temps es desada."
         }
       },
       "title": "Configuració meteorològica",
+      "weather_provider": {
+        "help": "",
+        "label": "",
+        "placeholder": ""
+      },
       "weather_source": {
         "help": "Introduïu l'URL de l'API d'OpenWeathermap complet com: {api_url_example}.",
         "invalid": "L'URL introduït no és vàlid.",

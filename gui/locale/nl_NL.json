@@ -98,7 +98,7 @@
             "label": "Offset"
           },
           "period": {
-            "help": "Na x minuten wijzigen naar waarde of precies op een tijdstip.",
+            "help": "Wijzigen naar waarde na x minuten of op een specifiek tijdstip.",
             "label": "Periode/duur"
           },
           "remote": {
@@ -939,6 +939,7 @@
     "no-data": "Geen gegevens ...",
     "period": {
       "day": "Dag",
+      "hour": "Uur",
       "month": "Maand",
       "replaced": "Vervangen",
       "week": "Week",
@@ -1290,6 +1291,20 @@
         "help": "Voer de (max) waterstroom in wanneer ingeschakeld.",
         "invalid": "Voer een minimale waarde in van {value}.",
         "label": "Waterstroom"
+      },
+      "gauge_values": {
+        "alarm": {
+          "help": "Toon alarm waardes.",
+          "label": "Alarm waarden"
+        },
+        "limit": {
+          "help": "Toon limiet waardes.",
+          "label": "Limit waarden"
+        },
+        "measurements": {
+          "help": "Toon min en max waardes.",
+          "label": "Meetingen"
+        }
       },
       "hardware": {
         "help": "Selecteer het hardwaretype voor deze schakelaar.",
@@ -1809,6 +1824,15 @@
           "on": "Gebaseerd op dag/nacht"
         }
       },
+      "auto_discovery": {
+        "help": "Schakel automatische detectie in voor sensoren en schakelaars tijdens het opstarten.",
+        "invalid": "Maak een keuze.",
+        "label": "Automatische detectie",
+        "options": {
+          "no": "Nee",
+          "yes": "Ja"
+        }
+      },
       "currency": {
         "help": "Selecteer de interfacevaluta.",
         "invalid": "Maak een keuze.",
@@ -1836,6 +1860,11 @@
       "graph_limit_min_max": {
         "help": "Beperk grafiekwaarden tot 20% van de alarmwaarden.",
         "label": "Beperk grafiek waarden"
+      },
+      "graph_period": {
+        "help": "Kies de standaard grafiek periode.",
+        "invalid": "Maak een keuze.",
+        "label": "Standaard grafiek periode"
       },
       "graph_smooth_value": {
         "help": "Voer het aantal gegevenspunten in dat moet worden gemiddeld. 0 schakelt deze functie uit.",
@@ -2020,12 +2049,20 @@
         "error": "Niet alle verplichte velden zijn correct ingevuld."
       },
       "information": "Om het weer systeem te gebruiken, moet u een gratis account aanmaken op {source_link}.",
+      "open_meteo": {
+        "information": "Ontvang je API-url gratis op {source_link} zonder een account."
+      },
       "save": {
         "ok": {
           "message": "De weerinstelling is opgeslagen."
         }
       },
       "title": "Weer instellingen",
+      "weather_provider": {
+        "help": "Selecteer provider voor meer informatie.",
+        "label": "Provider",
+        "placeholder": "Selecteer een provider"
+      },
       "weather_source": {
         "help": "Voer de volledige OpenWeatherMap api URL in, zoals: {api_url_example}.",
         "invalid": "De ingevoerde url is niet geldig.",

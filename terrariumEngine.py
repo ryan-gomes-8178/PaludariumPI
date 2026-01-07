@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from hardware.webcam.rpilive_webcam import terrariumRPILiveWebcam
 import terrariumLogging
 
 logger = terrariumLogging.logging.getLogger(__name__)
@@ -107,8 +106,12 @@ class terrariumEngine(object):
         self.latest_version = None
         self.update_available = False
         self.weather = None
-        # Dirty hack... :(
+        # Dirty hack for device info ... :(
         self.device = Path("/proc/device-tree/model").read_text().rstrip("\x00")
+        os_version = re.search(r"VERSION_CODENAME=(?P<os_version>.*)", Path("/etc/os-release").read_text())
+        if os_version:
+            self.os_version = os_version.groupdict()["os_version"].title()
+
         init_db(self.version)
 
         # Send message that startup is ready..... else the startup will wait until done.... can take more then 1 minute
@@ -118,7 +121,7 @@ class terrariumEngine(object):
         # Make the first round of logging visible to the console, as this is the startup
         old_log_level = terrariumLogging.logging.getLogger().handlers[0].level
         terrariumLogging.logging.getLogger().handlers[0].setLevel(terrariumLogging.logging.INFO)
-        startup_message = f"Starting up TerrariumPI {self.version} on a {self.device} ..."
+        startup_message = f"Starting up TerrariumPI {self.version} on a {self.device} running OS {self.os_version}..."
         logger.info(startup_message)
 
         # Load settings. This will also load the weather data if available
@@ -148,11 +151,12 @@ class terrariumEngine(object):
         logger.info("Loading existing sensors from database.")
         self.__load_existing_sensors()
 
-        logger.info("Scanning for new sensors ...")
-        try:
-            func_timeout(30, self.scan_new_sensors)
-        except FunctionTimedOut:
-            logger.warning("Scanning for new sensors timed out after 30 seconds.")
+        if self.settings.get("auto_discovery", 0):
+            logger.info("Scanning for new sensors ...")
+            try:
+                func_timeout(30, self.scan_new_sensors)
+            except FunctionTimedOut:
+                logger.warning("Scanning for new sensors timed out after 30 seconds.")
 
         logger.info(f"Loaded {len(self.sensors)} sensors in {time.time()-start:.2f} seconds.")
 
@@ -161,11 +165,12 @@ class terrariumEngine(object):
         logger.info("Loading existing relays from database.")
         self.__load_existing_relays()
 
-        logger.info("Scanning for new relays ...")
-        try:
-            func_timeout(30, self.scan_new_relays)
-        except FunctionTimedOut:
-            logger.warning("Scanning for new relays timed out after 30 seconds.")
+        if self.settings.get("auto_discovery", 0):
+            logger.info("Scanning for new relays ...")
+            try:
+                func_timeout(30, self.scan_new_relays)
+            except FunctionTimedOut:
+                logger.warning("Scanning for new relays timed out after 30 seconds.")
 
         logger.info(f"Loaded {len(self.relays)} relays in {time.time()-start:.2f} seconds.")
 
@@ -496,12 +501,11 @@ class terrariumEngine(object):
             self.webcams[data["id"]].rotation = data["rotation"]
             self.webcams[data["id"]].awb = data["awb"]
 
-            if isinstance(self.webcams[data["id"]], terrariumRPILiveWebcam):
-                logger.info(f'Stopping webcam {self.webcams[data["id"]].name}')
-                self.webcams[data["id"]].stop()
-                sleep(0.2)
-                self.webcams[data["id"]].load_hardware()
-                logger.info(f'Started webcam {self.webcams[data["id"]].name} with new configuration.')
+            logger.info(f'Stopping webcam {self.webcams[data["id"]].name}')
+            self.webcams[data["id"]].stop()
+            sleep(0.2)
+            self.webcams[data["id"]].load_hardware()
+            logger.info(f'Started webcam {self.webcams[data["id"]].name} with new configuration.')
 
             update_ok = True
 
@@ -998,9 +1002,13 @@ class terrariumEngine(object):
 
         # Update enclosure states to reflect the new relay states
         if self.__engine["thread"] is not None and self.__engine["thread"].is_alive() and hasattr(self, "enclosures"):
-            self._update_enclosures(True)
+            with orm.db_session():
+                enclosures = [area.enclosure for area in relay.areas]
 
-        orm.commit()
+                if len(enclosures) > 0:
+                    logger.info(f'Updating enclosure(s): {",".join([enclosure.name for enclosure in enclosures])}')
+                    self._update_enclosures(True, [enclosure.id for enclosure in enclosures])
+                    orm.commit()
 
         # Notification message
         self.notification.message("relay_toggle", relay_data)
@@ -1024,7 +1032,7 @@ class terrariumEngine(object):
                             new_button.calibrate(button.calibration)
 
                     except terrariumButtonLoadingException as ex:
-                        buttonLogger.error(f"Error loading {button} with error: {ex.message}.")
+                        buttonLogger.error(f"Error loading {button} with error: {ex}.")
                         continue
 
                 else:
@@ -1142,7 +1150,7 @@ class terrariumEngine(object):
                         )
 
                     except terrariumWebcamLoadingException as ex:
-                        webcamLogger.error(f"Error loading {webcam} with error: {ex.message}.")
+                        webcamLogger.error(f"Error loading {webcam} with error: {ex}.")
                         continue
 
                 else:
@@ -1281,10 +1289,14 @@ class terrariumEngine(object):
                 new_enclosure.update()
                 enclosureLogger.info(f"Loaded {enclosure} in {time.time()-start:.2f} seconds.")
 
-    def _update_enclosures(self, read_only=False):
+    def _update_enclosures(self, read_only=False, ids=None):
         with orm.db_session():
             for enclosure in Enclosure.select():
-                if str(enclosure.id) not in self.enclosures or str(enclosure.id) in self.settings["exclude_ids"]:
+                if (
+                    str(enclosure.id) not in self.enclosures
+                    or str(enclosure.id) in self.settings["exclude_ids"]
+                    or (ids is not None and str(enclosure.id) not in ids)
+                ):
                     continue
 
                 start = time.time()

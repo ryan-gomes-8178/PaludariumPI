@@ -76,8 +76,8 @@
 
   onMount(() => {
     gauge = new Gauge.Gauge(document.getElementById(`gauge_${id}`)).setOptions(opts); // create sexy gauge!
-    gauge.maxValue = $sensors[id]['limit_max']; // set max gauge value
-    gauge.setMinValue($sensors[id]['limit_min']); // set min value
+    gauge.maxValue = $sensors[id].limit_max; // set max gauge value
+    gauge.setMinValue($sensors[id].limit_min); // set min value
     $sensors[id].changed = true; // Trigger draw update
   });
 
@@ -91,23 +91,44 @@
         fractionDigits: 0,
       };
 
-      if (settings.show_gauge_values === 1 && showGaugeValues) {
-        gaugeStaticLabels.labels = [...gaugeStaticLabels.labels, alarm_min, alarm_max];
-      }
+      if (showGaugeValues) {
+        if (settings.gauge_values_alarm || settings.gauge_values_limit || settings.gauge_values_measurements) {
+          gaugeStaticLabels.fractionDigits = 2;
+        }
 
-      if (settings.show_gauge_values === 2 && showGaugeValues) {
-        gaugeStaticLabels.labels = [...gaugeStaticLabels.labels, limit_min, limit_max];
-      }
+        if (settings.gauge_values_alarm) {
+          gaugeStaticLabels.labels = [...gaugeStaticLabels.labels, alarm_min, alarm_max];
+        }
 
-      if (settings.show_min_max_gauge && minmax && $sensors[id].measure_min && $sensors[id].measure_max) {
-        gaugeStaticLabels.labels = [...gaugeStaticLabels.labels, $sensors[id].measure_min, $sensors[id].measure_max];
-        gaugeStaticLabels.fractionDigits = 2;
+        if (settings.gauge_values_limit) {
+          gaugeStaticLabels.labels = [...gaugeStaticLabels.labels, limit_min, limit_max];
+        }
+
+        if (settings.gauge_values_measurements && minmax && $sensors[id].measure_min && $sensors[id].measure_max) {
+          gaugeStaticLabels.labels = [...gaugeStaticLabels.labels, $sensors[id].measure_min, $sensors[id].measure_max];
+        }
       }
 
       if (gaugeStaticLabels.labels.length > 0) {
         gauge.options.staticLabels = gaugeStaticLabels;
       }
 
+      let forceUpdate = false;
+      if (gauge.maxValue !== $sensors[id].limit_max) {
+        gauge.maxValue = $sensors[id].limit_max;
+        forceUpdate = true;
+      }
+
+      if (gauge.minValue !== $sensors[id].limit_min) {
+        gauge.setMinValue($sensors[id].limit_min);
+        forceUpdate = true;
+      }
+
+      if (forceUpdate) {
+        gauge.animationSpeed = 0;
+        gauge.set($sensors[id].value + 1); // Just bump a bit to force update the gauge rendering
+        gauge.animationSpeed = 32; // set animation speed (32 is default value)
+      }
       gauge.set($sensors[id].value); // set actual value
       gauge_value =
         type === 'filesize' || type === 'memory'

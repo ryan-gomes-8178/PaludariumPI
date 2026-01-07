@@ -1553,7 +1553,7 @@
             "description": "Period",
             "required": true,
             "type": "string",
-            "enum": ["day", "week", "month", "year", "replaced", "custom"]
+            "enum": ["hour", "day", "week", "month", "year", "replaced", "custom"]
           }
         ],
         "responses": {
@@ -1634,7 +1634,7 @@
             "description": "Period",
             "required": true,
             "type": "string",
-            "enum": ["day", "week", "month", "year", "replaced", "custom"]
+            "enum": ["hour", "day", "week", "month", "year", "replaced", "custom"]
           }
         ],
         "responses": {
@@ -2016,7 +2016,7 @@
             "description": "Period",
             "required": true,
             "type": "string",
-            "enum": ["day", "week", "month", "year", "custom"]
+            "enum": ["hour", "day", "week", "month", "year", "custom"]
           }
         ],
         "responses": {
@@ -2095,7 +2095,7 @@
             "description": "Period",
             "required": true,
             "type": "string",
-            "enum": ["day", "week", "month", "year", "custom"]
+            "enum": ["hour", "day", "week", "month", "year", "custom"]
           }
         ],
         "responses": {
@@ -2370,6 +2370,27 @@
               "type": "array",
               "items": {
                 "$ref": "#/definitions/WeatherForecast"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/weather/hardware/": {
+      "get": {
+        "tags": ["Weather"],
+        "summary": "Get weather source providers",
+        "description": "Get weather source providers that can be used",
+        "operationId": "weatherProviders",
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "responses": {
+          "200": {
+            "description": "Weather providers data",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/WeatherProviders"
               }
             }
           }

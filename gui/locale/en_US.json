@@ -98,7 +98,7 @@
             "label": "Offset"
           },
           "period": {
-            "help": "After x minutes change to value or at exactly a time stamp.",
+            "help": "Change to value after x minutes or at a specific time.",
             "label": "Period/duration"
           },
           "remote": {
@@ -939,6 +939,7 @@
     "no-data": "No data ...",
     "period": {
       "day": "Day",
+      "hour": "Hour",
       "month": "Month",
       "replaced": "Replaced",
       "week": "Week",
@@ -1291,6 +1292,20 @@
         "help": "Enter the (max) water flow when switched on.",
         "invalid": "Please enter a minimum value of {value}.",
         "label": "Water flow"
+      },
+      "gauge_values": {
+        "alarm": {
+          "help": "Toggle to show alarm values.",
+          "label": "Alarm values"
+        },
+        "limit": {
+          "help": "Toggle to show limit values.",
+          "label": "Limit values"
+        },
+        "measurements": {
+          "help": "Toggle to show min and max measurements.",
+          "label": "Measurements"
+        }
       },
       "hardware": {
         "help": "Select the hardware type for this relay.",
@@ -1810,6 +1825,15 @@
           "on": "Based on day/night"
         }
       },
+      "auto_discovery": {
+        "help": "Enable auto discovery for sensors and relays during startup.",
+        "invalid": "Please make a choice",
+        "label": "Auto discovery",
+        "options": {
+          "no": "No",
+          "yes": "Yes"
+        }
+      },
       "currency": {
         "help": "Select the interface currency.",
         "invalid": "Please make a choice.",
@@ -1837,6 +1861,11 @@
       "graph_limit_min_max": {
         "help": "Limit graph values to 20% of the alarm values.",
         "label": "Limit graph values"
+      },
+      "graph_period": {
+        "help": "Select the default graph period.",
+        "invalid": "Please make a choice.",
+        "label": "Default graph period"
       },
       "graph_smooth_value": {
         "help": "Enter the amount of data points to average. 0 will disable this feature.",
@@ -2021,12 +2050,20 @@
         "error": "Not all required fields are entered correctly."
       },
       "information": "In order to use the weather system, you need to create a free account at {source_link}.",
+      "open_meteo": {
+        "information": "Get your API url at {source_link} for free without an account."
+      },
       "save": {
         "ok": {
           "message": "The weather setting is saved."
         }
       },
       "title": "Weather settings",
+      "weather_provider": {
+        "help": "Select provider to get more information.",
+        "label": "Provider",
+        "placeholder": "Select a provider"
+      },
       "weather_source": {
         "help": "Enter the full OpenWeatherMap api url like: {api_url_example}.",
         "invalid": "The entered url is not valid.",

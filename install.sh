@@ -56,6 +56,7 @@ if [ "${OS}" == "buster" ]; then
 
   PIP_MODULES="${PIP_MODULES//gevent==+([^ ])/gevent==22.10.2}"
   PIP_MODULES="${PIP_MODULES//bcrypt==+([^ ])/bcrypt==4.1.3}"
+  PIP_MODULES="${PIP_MODULES//cryptography==+([^ ])/cryptography==45.0.7}"
 
   PIP_MODULES="${PIP_MODULES//Pillow==+([^ ])/Pillow==9.5.0}"
   PIP_MODULES="${PIP_MODULES//numpy==+([^ ])/numpy==1.21.4}"
@@ -71,6 +72,7 @@ if [ "${OS}" == "buster" ]; then
   PIP_MODULES="${PIP_MODULES//Adafruit-Blinka==+([^ ])/Adafruit-Blinka==8.43.0}"
 
   PIP_MODULES="${PIP_MODULES//icalevents==+([^ ])/icalevents==0.1.25}"
+  PIP_MODULES="${PIP_MODULES//psutil==+([^ ])/psutil==6.0.0}"
   PIP_MODULES="${PIP_MODULES//packaging==+([^ ])/packaging==24.0}"
 
   PIP_MODULES="${PIP_MODULES//pyfiglet==+([^ ])/pyfiglet==0.8.post1}"
@@ -87,18 +89,26 @@ if [ "${OS}" == "buster" ]; then
 
 elif [ "${OS}" == "bullseye" ]; then
   # Python 3.9
+  PIP_MODULES="${PIP_MODULES//gevent==+([^ ])/gevent==25.5.1}"
+  PIP_MODULES="${PIP_MODULES//gevent==+([^ ])/Pillow==11.2.1}"
+
   OPENCV_PACKAGES="libopenexr25 libilmbase25 liblapack3 libatlas3-base"
 
 elif [ "${OS}" == "bookworm" ]; then
   # Python 3.11
-  # We use the python3-opencv from the OS, as piwheels does not provide a compiled package (rpicam-apps-lite does not work on RPI 5)
-  OPENCV_PACKAGES="libopenexr-3-1-30 liblapack3 libatlas3-base python3-opencv libglib2.0-dev libbluetooth-dev rpicam-apps"
-
-  # Python package version difference per OS
-  # On bookworm we use the OS package versions
   PIP_MODULES="${PIP_MODULES//opencv-python-headless==+([^ ])/}"
-  # Need a upgraded bluepy library
-  PIP_MODULES="${PIP_MODULES//git+https:\/\/github.com\/IanHarvey\/bluepy/git+https:\/\/github.com\/Mausy5043\/bluepy3}"
+  # Need a upgraded bluepy library => disabled!
+  # PIP_MODULES="${PIP_MODULES//git+https:\/\/github.com\/IanHarvey\/bluepy/git+https:\/\/github.com\/Mausy5043\/bluepy3}"
+
+  # On bookworm we use the OS package versions
+  # We use the python3-opencv from the OS, as piwheels does not provide a compiled package
+  OPENCV_PACKAGES="libopenexr-3-1-30 liblapack3 libatlas3-base python3-opencv libglib2.0-dev libbluetooth-dev"
+
+else
+
+  whiptail --backtitle "${INSTALLER_TITLE}" --title " TerrariumPI Installer " --msgbox "TerrariumPI is not Raspbian ${OS} OS compatible." 0 60
+
+  exit 0
 
 fi
 
@@ -168,9 +178,9 @@ fi
 
 # Install required packages to get the terrarium software running
 debconf-apt-progress -- apt-get -y autoremove
-debconf-apt-progress -- apt-get -y update
-debconf-apt-progress -- apt-get -y full-upgrade
-debconf-apt-progress -- apt-get -y install ${APT_PACKAGES}
+debconf-apt-progress -- apt-get -y -o Acquire::ForceIPv4=true update
+debconf-apt-progress -- apt-get -y -o Acquire::ForceIPv4=true full-upgrade
+debconf-apt-progress -- apt-get -y -o Acquire::ForceIPv4=true install ${APT_PACKAGES}
 
 # Basic config:
 # Enable 1Wire en I2C during boot
@@ -440,7 +450,7 @@ EOF
 # https://github.com/marcelrv/miflora,
 # https://github.com/IanHarvey/bluepy/issues/218,
 # https://github.com/Mausy5043/bluepy3?tab=readme-ov-file#installation
-find . -name "bluepy*-helper" -exec setcap 'cap_net_raw,cap_net_admin+eip' {} \;
+find venv/ -name "bluepy*-helper" -exec setcap 'cap_net_raw,cap_net_admin+eip' {} \;
 
 PROGRESS=$((PROGRESS + 1))
 cat <<EOF
@@ -468,9 +478,11 @@ EOF
 # Setup logging symlinks
 if [ ! -h log/terrariumpi.log ]; then
   su -c 'ln -s /dev/shm/terrariumpi.log log/terrariumpi.log' -s /bin/bash "${SCRIPT_USER}" 2>/dev/null
+  chown ${SCRIPT_USER}: /dev/shm/terrariumpi.log
 fi
 if [ ! -h log/terrariumpi.access.log ]; then
   su -c 'ln -s /dev/shm/terrariumpi.access.log log/terrariumpi.access.log' -s /bin/bash "${SCRIPT_USER}" 2>/dev/null
+  chown ${SCRIPT_USER}: /dev/shm/terrariumpi.access.log
 fi
 
 PROGRESS=100

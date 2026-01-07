@@ -1,0 +1,505 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2016-2023 TheYOSH
+# Joshua (TheYOSH) Rubingh, <terrariumpi@theyosh.nl>, 2016-2023.
+# Michal Teplan <misoteplan@yahoo.co.uk>, 2025.
+msgid ""
+msgstr ""
+"Project-Id-Version: TerrariumPI 4.6.3\n"
+"POT-Creation-Date: 2023-06-02 22:35+CEST\n"
+"PO-Revision-Date: 2025-09-29 06:31+0000\n"
+"Last-Translator: Michal Teplan <misoteplan@yahoo.co.uk>\n"
+"Language-Team: Slovak <https://weblate.theyosh.nl/projects/terrariumpi/"
+"backend/sk/>\n"
+"Language: sk\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
+"X-Generator: Weblate 5.13.3\n"
+"Generated-By: pygettext.py 1.5\n"
+
+#: terrariumArea.py:32
+msgid "Lighting"
+msgstr "Osvetlenie"
+
+#: terrariumArea.py:38
+msgid "Heating"
+msgstr "Vyhrievanie"
+
+#: terrariumArea.py:44
+msgid "Cooling"
+msgstr "Chladenie"
+
+#: terrariumArea.py:50
+msgid "Humidity"
+msgstr "Vlhkosť"
+
+#: terrariumArea.py:56
+msgid "Water tank"
+msgstr "Vodná nádrž"
+
+#: terrariumArea.py:62
+msgid "Audio"
+msgstr "Zvuk"
+
+#: terrariumArea.py:68
+msgid "CO2"
+msgstr "CO2"
+
+#: terrariumArea.py:74
+msgid "Conductivity"
+msgstr "Vodivosť"
+
+#: terrariumArea.py:80
+msgid "Fertility"
+msgstr "Plodnosť"
+
+#: terrariumArea.py:86
+msgid "Moisture"
+msgstr "Vlhkosť"
+
+#: terrariumArea.py:92
+msgid "pH"
+msgstr "pH"
+
+#: terrariumEngine.py:54
+msgid "temperature"
+msgstr "teplota"
+
+#: terrariumEngine.py:55
+msgid "distance"
+msgstr "vzdialenosť"
+
+#: terrariumEngine.py:56
+msgid "altitude"
+msgstr "nadmorská výška"
+
+#: terrariumEngine.py:57
+msgid "pressure"
+msgstr "tlak"
+
+#: terrariumEngine.py:58
+msgid "humidity"
+msgstr "vlhkosť"
+
+#: terrariumEngine.py:59
+msgid "moisture"
+msgstr "vlhkosť"
+
+#: terrariumEngine.py:60
+msgid "conductivity"
+msgstr "vodivosť"
+
+#: terrariumEngine.py:61
+msgid "ph"
+msgstr "pH"
+
+#: terrariumEngine.py:62
+msgid "light"
+msgstr "svetlo"
+
+#: terrariumEngine.py:63
+msgid "uva"
+msgstr "uva"
+
+#: terrariumEngine.py:64
+msgid "uvb"
+msgstr "uvb"
+
+#: terrariumEngine.py:65
+msgid "uvi"
+msgstr "uvi"
+
+#: terrariumEngine.py:66
+msgid "fertility"
+msgstr "plodnosť"
+
+#: terrariumEngine.py:67
+msgid "co2"
+msgstr "co2"
+
+#: terrariumEngine.py:68
+msgid "volume"
+msgstr "objem"
+
+#: terrariumEngine.py:71
+msgid "water_volume"
+msgstr "Objem vody"
+
+#: terrariumEngine.py:73
+msgid "watertank"
+msgstr "vodná nádrž"
+
+#: terrariumEngine.py:74
+msgid "windspeed"
+msgstr "rýchlosť vetra"
+
+#: terrariumEngine.py:75
+msgid "water_flow"
+msgstr "prietok_vody"
+
+#: terrariumEngine.py:76
+msgid "wattage"
+msgstr "výkon"
+
+#: terrariumEngine.py:77
+msgid "powerusage"
+msgstr "Pi spotreba energie"
+
+#: terrariumEngine.py:1187
+msgid "Up time"
+msgstr "Doba prevádzky"
+
+#: terrariumEngine.py:1193
+msgid "System load"
+msgstr "Systémové zaťaženie"
+
+#: terrariumEngine.py:1199
+msgid "CPU Temperature"
+msgstr "Teplota CPU"
+
+#: terrariumEngine.py:1205
+msgid "Storage"
+msgstr "Úložisko"
+
+#: terrariumEngine.py:1211
+msgid "Memory"
+msgstr "Pamäť"
+
+#: terrariumEngine.py:1232
+msgid "average {sensor_type}"
+msgstr "priemer {sensor_type}"
+
+#: terrariumEngine.py:1316
+msgid "Version"
+msgstr "Verzia"
+
+#: terrariumEngine.py:1326 terrariumWebserver.py:393
+msgid "A new version ({version}) is available!"
+msgstr "Nová verzia ({version}) je dostupná!"
+
+#: terrariumEngine.py:1370 terrariumEngine.py:1400
+msgid "Current active relays"
+msgstr "Aktuálne aktívne relé"
+
+#: terrariumEngine.py:1371
+msgid "Watt"
+msgstr "Watt"
+
+#: terrariumEngine.py:1409
+msgid "last update"
+msgstr "posledná aktualizácia"
+
+#: terrariumNotification.py:41
+msgid "Local date"
+msgstr "Lokálny dátum"
+
+#: terrariumNotification.py:42
+msgid "Local date, day and month"
+msgstr "Miestny dátum, deň a mesiac"
+
+#: terrariumNotification.py:43
+msgid "Local time"
+msgstr "Miestny čas"
+
+#: terrariumNotification.py:44
+msgid "Local time, hours and minutes"
+msgstr "Miestny čas, hodiny a minúty"
+
+#: terrariumNotification.py:45
+msgid "Local date and time"
+msgstr "Miestny dátum a čas"
+
+#: terrariumNotification.py:53
+msgid "Authentication login error"
+msgstr "Chyba prihlásenia"
+
+#: terrariumNotification.py:55
+msgid "IP of the wrong login attempt"
+msgstr "IP adresa nesprávneho pokusu o prihlásenie"
+
+#: terrariumNotification.py:56
+msgid "Used username"
+msgstr "Použité prihlasovacie meno"
+
+#: terrariumNotification.py:57
+msgid "Used password"
+msgstr "Použité heslo"
+
+#: terrariumNotification.py:63
+msgid "System warning"
+msgstr "Systémové upozornenie"
+
+#: terrariumNotification.py:65
+msgid "Warning message"
+msgstr "Výstražná správa"
+
+#: terrariumNotification.py:71
+msgid "System error"
+msgstr "Systémová chyba"
+
+#: terrariumNotification.py:73 terrariumNotification.py:103
+msgid "Error message"
+msgstr "Chybové hlásenie"
+
+#: terrariumNotification.py:79
+msgid "System summary"
+msgstr "Systémový súhrn"
+
+#: terrariumNotification.py:81
+msgid "System uptime in human readable format"
+msgstr "Dostupnosť systému v ľudsky čitateľnom formáte"
+
+#: terrariumNotification.py:82
+msgid "System load last minute"
+msgstr "Zaťaženie systému za poslednú minútu"
+
+#: terrariumNotification.py:83 terrariumNotification.py:85
+#: terrariumNotification.py:90 terrariumNotification.py:133
+msgid "True if there is an alarm"
+msgstr "Pravda ak je spustený alarm"
+
+#: terrariumNotification.py:84
+msgid "System CPU temperature"
+msgstr "Teplota systémového CPU"
+
+#: terrariumNotification.py:86
+msgid "Storage usage"
+msgstr "Využitie úložiska"
+
+#: terrariumNotification.py:87
+msgid "Memory usage"
+msgstr "Využitie pamäte"
+
+#: terrariumNotification.py:88
+msgid "Average of [sensor type] (ex. temperature)"
+msgstr "Priemer [sensor type] (ex. temperature)"
+
+#: terrariumNotification.py:89 terrariumNotification.py:136
+msgid "Sensor type unit value"
+msgstr "Typ senzora jednotka hodnota"
+
+#: terrariumNotification.py:91
+msgid "Current power usage"
+msgstr "Aktuálna spotreba energie"
+
+#: terrariumNotification.py:92
+msgid "Max power usage"
+msgstr "Maximálna spotreba energie"
+
+#: terrariumNotification.py:93
+msgid "Current water flow"
+msgstr "Aktuálny prietok vody"
+
+#: terrariumNotification.py:94 terrariumNotification.py:163
+msgid "Max water flow"
+msgstr "Maximálny prietok vody"
+
+#: terrariumNotification.py:95
+msgid "Number of relays active"
+msgstr "Počet aktívnych relé"
+
+#: terrariumNotification.py:101
+msgid "System to slow with updates (warning)"
+msgstr "Systém je pri aktualizáciách príliš pomalý (upozornenie)"
+
+#: terrariumNotification.py:104
+msgid "Duration in seconds that are short"
+msgstr "Trvanie v krátkych sekundách"
+
+#: terrariumNotification.py:105
+msgid "The update duration in seconds"
+msgstr "Trvanie aktualizácie v sekundách"
+
+#: terrariumNotification.py:106
+msgid "The max update duration"
+msgstr "Maximálna doba trvania aktualizácie"
+
+#: terrariumNotification.py:107
+msgid "Amount of times to late with updates"
+msgstr "Počet oneskorení s aktualizáciami"
+
+#: terrariumNotification.py:113
+msgid "System to slow with updates more then 30 times"
+msgstr "Systém je spomalený pri aktualizáciách viac ako 30-krát"
+
+#: terrariumNotification.py:120
+msgid "Sensor update (every 30 seconds)"
+msgstr "Aktualizácia senzora (každých 30 sekúnd)"
+
+#: terrariumNotification.py:122 terrariumNotification.py:158
+#: terrariumNotification.py:189
+msgid "ID"
+msgstr "ID"
+
+#: terrariumNotification.py:123 terrariumNotification.py:159
+#: terrariumNotification.py:190
+msgid "Hardware type"
+msgstr "Typ hardvéru"
+
+#: terrariumNotification.py:124
+msgid "Sensor type"
+msgstr "Typ senzora"
+
+#: terrariumNotification.py:125 terrariumNotification.py:160
+#: terrariumNotification.py:191
+msgid "Name"
+msgstr "Meno"
+
+#: terrariumNotification.py:126 terrariumNotification.py:161
+#: terrariumNotification.py:192
+msgid "Address"
+msgstr "Adresa"
+
+#: terrariumNotification.py:127
+msgid "Limit min"
+msgstr "Minimálny limit"
+
+#: terrariumNotification.py:128
+msgid "Limit max"
+msgstr "Maximálny limit"
+
+#: terrariumNotification.py:129
+msgid "Alarm min"
+msgstr "Minimálna hodnota alarmu"
+
+#: terrariumNotification.py:130
+msgid "Alarm max"
+msgstr "Maximálna hodnota alarmu"
+
+#: terrariumNotification.py:131
+msgid "Max difference"
+msgstr "Maximálny rozdiel"
+
+#: terrariumNotification.py:132
+msgid "Exclude from average"
+msgstr "Vylúčiť z priemeru"
+
+#: terrariumNotification.py:134
+msgid "Current value"
+msgstr "Aktuálna hodnota"
+
+#: terrariumNotification.py:135 terrariumNotification.py:167
+#: terrariumNotification.py:194
+msgid "True if there is an error"
+msgstr "Pravda ak sa vyskytne chyba"
+
+#: terrariumNotification.py:142
+msgid "Sensor change (only when value is changed)"
+msgstr "Zmena senzora (iba pri zmene hodnoty)"
+
+#: terrariumNotification.py:149
+msgid "Sensor alarm"
+msgstr "Alarm senzora"
+
+#: terrariumNotification.py:156
+msgid "Relay update (every 30 seconds)"
+msgstr "Aktualizácia relé (každých 30 sekúnd)"
+
+#: terrariumNotification.py:162
+msgid "Max wattage"
+msgstr "Maximálny výkon"
+
+#: terrariumNotification.py:164
+msgid "True if in manual mode"
+msgstr "Pravda ak je v manuálnom režime"
+
+#: terrariumNotification.py:165
+msgid "True if it is a dimmer"
+msgstr "Pravda ak je to stmievač"
+
+#: terrariumNotification.py:166 terrariumNotification.py:193
+msgid "Current state"
+msgstr "Súčasný stav"
+
+#: terrariumNotification.py:173
+msgid "Relay change (only when value is changed)"
+msgstr "Zmena relé (iba pri zmene hodnoty)"
+
+#: terrariumNotification.py:180
+msgid "Relay toggle"
+msgstr "Prepínač relé"
+
+#: terrariumNotification.py:187
+msgid "Button update (every 30 seconds)"
+msgstr "Aktualizácia tlačidla (každých 30 sekúnd)"
+
+#: terrariumNotification.py:200
+msgid "Button change (only when value is changed)"
+msgstr "Zmena tlačidla (iba pri zmene hodnoty)"
+
+#: terrariumNotification.py:207
+msgid "Button action"
+msgstr "Funkcia tlačidla"
+
+#: terrariumNotification.py:215
+msgid "Webcam archive"
+msgstr "Archív webkamery"
+
+#: terrariumNotification.py:222
+msgid "Lights area wrong state"
+msgstr "Nesprávny stav oblasti svetiel"
+
+#: terrariumNotification.py:224
+msgid "Current power state"
+msgstr "Aktuálny stav napájania"
+
+#: terrariumNotification.py:225
+msgid "Sensor measure state"
+msgstr "Stav merania senzora"
+
+#: terrariumNotification.py:226
+msgid "Enclosure name"
+msgstr "Názov teraria"
+
+#: terrariumNotification.py:227
+msgid "Enclosure running mode"
+msgstr "Prevádzkový mód terária"
+
+#: terrariumNotification.py:441
+msgid "Display"
+msgstr "Displej"
+
+#: terrariumNotification.py:445
+msgid "Email"
+msgstr "Email"
+
+#: terrariumNotification.py:455
+msgid "Traffic light"
+msgstr "Semafor"
+
+#: terrariumNotification.py:459
+msgid "Web-hook"
+msgstr "Web-hook"
+
+#: terrariumNotification.py:463
+msgid "MQTT"
+msgstr "MQTT"
+
+#: terrariumNotification.py:467
+msgid "Pushover"
+msgstr "Pushover"
+
+#: terrariumNotification.py:471
+msgid "Buzzer"
+msgstr "Bzučiak"
+
+#: terrariumWebserver.py:165 terrariumWebserver.py:253
+msgid "Authenticate to make any changes"
+msgstr "Autentifikácia pre vykonanie akýchkoľvek zmien"
+
+#: terrariumWebserver.py:165 terrariumWebserver.py:253
+msgid "Authentication"
+msgstr "Autentifikácia"
+
+#: terrariumWebserver.py:165 terrariumWebserver.py:253
+msgid "TerrariumPI"
+msgstr "TerrariumPI"
+
+#: terrariumWebserver.py:393
+msgid "Software Update"
+msgstr "Aktualizácia softvéru"
+
+#:  ./terrariumNotification.py:450
+msgid "Telegram"
+msgstr "Telegram"

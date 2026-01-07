@@ -98,7 +98,7 @@
             "label": "Offset"
           },
           "period": {
-            "help": "Etter x minutter endre til verdien eller på nøyaktig tidspunkt.",
+            "help": "Endre til verdi etter x minutter eller på spesifikt tidspunkt.",
             "label": "Periode/varighet"
           },
           "remote": {
@@ -545,7 +545,7 @@
       },
       "settings": {
         "files": {
-          "help": "Viser volumet for denne spillelisten.",
+          "help": "Velg alle lydfilene for denne spillelisten.",
           "invalid": "Slett fil.",
           "label": "Lydfiler",
           "placeholder": "Slett fil"
@@ -586,7 +586,7 @@
     "actions": {
       "delete": "Slett-knapp",
       "export": "Eksportknapp",
-      "ignore": "Legg til ny sensor",
+      "ignore": "Ignorer knapp",
       "settings": "Rediger-knapp"
     },
     "delete": {
@@ -613,7 +613,7 @@
     },
     "menu": {
       "new": {
-        "title": "Legg til ny sensor"
+        "title": "Ny knapp"
       },
       "status": {
         "title": "Status"
@@ -844,7 +844,7 @@
         "title": "Nytt område"
       },
       "new_enclosure": {
-        "title": "Legg til ny sensor"
+        "title": "Nytt kabinett"
       },
       "title": "Vedlegg"
     },
@@ -939,6 +939,7 @@
     "no-data": "Ingen data ...",
     "period": {
       "day": "Dag",
+      "hour": "Time",
       "month": "Måneder",
       "replaced": "Skiftet",
       "week": "Uke",
@@ -1290,6 +1291,20 @@
         "help": "Angi (maks) vannmengde når den er slått på.",
         "invalid": "Skriv inn en minimumsverdi av {value}.",
         "label": "Vannføring"
+      },
+      "gauge_values": {
+        "alarm": {
+          "help": "Skru på for å vise alarmverdier.",
+          "label": "Alarmverdier"
+        },
+        "limit": {
+          "help": "Skru på for å vise grenseverdier.",
+          "label": "Grenseverdier"
+        },
+        "measurements": {
+          "help": "Skru på for å vise min- og maxmål.",
+          "label": "Målinger"
+        }
       },
       "hardware": {
         "help": "Velg maskinvaretype for dette reléet.",
@@ -1669,7 +1684,7 @@
           "placeholder": "I2C-adresse"
         },
         "red": {
-          "help": "Viser volumet for denne spillelisten.",
+          "help": "Skriv inn GPIO pinnen for rødt lys.",
           "invalid": "Den angitte verdien er ikke gyldig. Skriv inn et gyldig tall mellom {min} og {max}.",
           "label": "Ons",
           "placeholder": "Skriv inn rød GPIO-pin"
@@ -1809,6 +1824,15 @@
           "on": "Basert på dag/natt"
         }
       },
+      "auto_discovery": {
+        "help": "Aktiver automatisk oppdagelse for sensorer og reléer under oppstart.",
+        "invalid": "Vennligst velg.",
+        "label": "Automatisk oppdagelse",
+        "options": {
+          "no": "Ingen",
+          "yes": "Ja"
+        }
+      },
       "currency": {
         "help": "Velg grensesnittvalutaen.",
         "invalid": "Vennligst velg.",
@@ -1819,43 +1843,48 @@
         "invalid": "Vennligst velg.",
         "label": "Dashboard-modus",
         "options": {
-          "normal": "Grafer og vedlegg",
-          "only_enclosures": "Kun vedlegg",
+          "normal": "Grafer og kabinetter",
+          "only_enclosures": "Kun kabinetter",
           "only_graphs": "Kun grafer"
         }
       },
       "distance_indicator": {
         "help": "Velg avstandsindikatoren. Påvirker kun gjeldende verdier.",
         "invalid": "Vennligst velg.",
-        "label": "Avstand"
+        "label": "Avstandstype"
       },
       "exclude-ids": {
         "help": "ID-er som er ekskludert.",
-        "label": "Ekskluderte IDer"
+        "label": "Ekskluderte ID-er"
       },
       "graph_limit_min_max": {
         "help": "Begrens grafen til 20% av alarmverdien.",
         "label": "Begrens grafverdiene"
       },
+      "graph_period": {
+        "help": "Velg standard grafperiode.",
+        "invalid": "Vennligst velg.",
+        "label": "Standard grafperiode"
+      },
       "graph_smooth_value": {
         "help": "Angi mengden datapunkter for gjennomsnittet. 0 vil deaktivere denne funksjonen.",
         "invalid": "Skriv inn en minimumsverdi av {value}.",
-        "label": "Grafe utjevning verdi"
+        "label": "Grafutjevning"
       },
       "header": {
         "cloud": "Sky",
         "gui": "GUI",
-        "locale": "Lokal kilde",
+        "locale": "Sted",
         "system": "System"
       },
       "hide_environment_dashboard": {
-        "help": "Skjul miljø oppsummeringen på dashbordet.",
-        "label": "Skjul miljø oppsummeringen på dashbordet"
+        "help": "Skjul kabinettdata på dashbordet.",
+        "label": "Skjul kabinett på dashbordet"
       },
       "host": {
         "help": "Skriv inn IP for å lytte etter tilkoblinger. Standard 0.0.0.0.",
-        "invalid": "Viser epost serverens hostname eller IP.",
-        "label": "Port nummer"
+        "invalid": "Skriv inn en gyldig IP-adresse.",
+        "label": "IP-nummer"
       },
       "language": {
         "help": "Velg grensesnittspråket. Dette vil også endre tall- og valutaformatering.",
@@ -1976,7 +2005,7 @@
   },
   "table": {
     "field": {
-      "range": "Område"
+      "range": "område"
     },
     "header": {
       "actions": "Handling",
@@ -2020,12 +2049,20 @@
         "error": "Obligatoriske felt er merket med ‘%s’."
       },
       "information": "For å bruke værsystemet må du opprette en gratis konto på {source_link}.",
+      "open_meteo": {
+        "information": ""
+      },
       "save": {
         "ok": {
           "message": "Værinnstillingen lagres."
         }
       },
       "title": "Innstillinger for webkamera",
+      "weather_provider": {
+        "help": "",
+        "label": "",
+        "placeholder": ""
+      },
       "weather_source": {
         "help": "Skriv inn hele OpenWeatherMap api-url som: {api_url_example}.",
         "invalid": "Den angitte URL-adressen er ikke gyldig.",
@@ -2055,7 +2092,7 @@
       }
     },
     "controls": {
-      "archive": "Arkiv",
+      "archive": "Arkiver",
       "new_marker": "Legg til markør",
       "save_raw_image": "Lagre RAW-bilde",
       "show_markers": "Vis markører",
@@ -2171,7 +2208,7 @@
         "state": {
           "help": "Velg varigheten mellom arkiverte bilder.",
           "invalid": "Vennligst velg.",
-          "label": "Arkiv",
+          "label": "Arkiverer",
           "placeholder": "Språk"
         }
       },
@@ -2253,7 +2290,7 @@
       "rotation": {
         "help": "Bilderotasjon.",
         "invalid": "Vennligst velg.",
-        "label": "Sted",
+        "label": "Rotasjon",
         "options": {
           "degrees_0": "grader",
           "degrees_180": "grader",
@@ -2280,6 +2317,6 @@
         "label": "Bredde"
       }
     },
-    "title": "Nettkamera"
+    "title": "Webkameraer"
   }
 }

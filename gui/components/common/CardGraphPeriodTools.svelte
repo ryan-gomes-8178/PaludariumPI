@@ -17,6 +17,12 @@
     const graph = $graphs[id];
     customStart = graph.customStart || '';
     customEnd = graph.customEnd || '';
+    includeTime = (customStart && customStart.includes('T')) || (customEnd && customEnd.includes('T'));
+  }
+
+  // Called when calendar icon is clicked (dropdown opens) — always show custom inputs prefilled
+  function onCalendarClick() {
+    populateFromStore();
     showCustom = true;
   }
 
@@ -69,6 +75,12 @@
   </button>
 
   <div class="dropdown-menu dropdown-menu-right" role="menu" style="min-width: auto !important;">
+    <button
+      class="dropdown-item"
+      class:active="{$graphs[id].period === 'hour'}"
+      on:click={() => toggleGraphPeriod(id, 'hour')}
+    >{$_('graph.period.hour', { default: 'Hour' })}</button>
+
     <button
       class="dropdown-item"
       class:active="{$graphs[id].period === 'day'}"

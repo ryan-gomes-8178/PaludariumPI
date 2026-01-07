@@ -872,6 +872,7 @@
     "no-data": "Keine Daten ...",
     "period": {
       "day": "Tag",
+      "hour": "Stunde",
       "month": "Monat",
       "replaced": "Ersetzt",
       "week": "Woche",
@@ -1217,6 +1218,11 @@
         "help": "Geben Sie den (maximalen) Wasserdurchfluss beim Einschalten ein.",
         "invalid": "Bitte gebe einen Betrag von mindestens {value} ein.",
         "label": "Wasserfluss"
+      },
+      "gauge_values": {
+        "measurements": {
+          "label": ""
+        }
       },
       "hardware": {
         "help": "Wähle den Hardwaretyp für dieses Relais aus.",
@@ -1693,6 +1699,11 @@
       "auto_dark_mode": {
         "help": "",
         "label": "Wassertank-Modus"
+      },
+      "auto_discovery": {
+        "options": {
+          "no": "NEIN"
+        }
       },
       "currency": {
         "help": "Wählen Sie die Schnittstellenwährung.",

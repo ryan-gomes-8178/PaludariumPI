@@ -1177,6 +1177,14 @@
         "invalid": "Contiene el nombre de host o IP del servidor de correo.",
         "label": "Flujo de agua en L/m"
       },
+      "gauge_values": {
+        "limit": {
+          "help": ""
+        },
+        "measurements": {
+          "label": ""
+        }
+      },
       "hardware": {
         "help": "Contiene la tarjeta de sonido que se utiliza para reproducir audio.",
         "invalid": "Seleccione un tipo de hardware.",
@@ -1649,6 +1657,10 @@
         "help": "",
         "label": ""
       },
+      "auto_discovery": {
+        "help": "",
+        "invalid": ""
+      },
       "currency": {
         "help": "Seleccione la moneda de interfaz.",
         "invalid": "Por favor tome una decisión.",
@@ -1671,6 +1683,9 @@
       },
       "exclude-ids": {
         "help": "IDS que están excluidos.",
+        "label": ""
+      },
+      "graph_period": {
         "label": ""
       },
       "graph_smooth_value": {

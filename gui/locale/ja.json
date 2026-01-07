@@ -939,6 +939,7 @@
     "no-data": "データなし ...",
     "period": {
       "day": "日",
+      "hour": "時間",
       "month": "月",
       "replaced": "交換",
       "week": "週",
@@ -1290,6 +1291,20 @@
         "help": "オンになったときに（最大）水の流れを入力します.",
         "invalid": "％sの最小値を入力してください。.",
         "label": "水流量"
+      },
+      "gauge_values": {
+        "alarm": {
+          "help": "",
+          "label": ""
+        },
+        "limit": {
+          "help": "",
+          "label": ""
+        },
+        "measurements": {
+          "help": "",
+          "label": ""
+        }
       },
       "hardware": {
         "help": "このリレーの種類を選択してください。.",
@@ -1809,6 +1824,15 @@
           "on": ""
         }
       },
+      "auto_discovery": {
+        "help": "",
+        "invalid": "",
+        "label": "",
+        "options": {
+          "no": "いいえ",
+          "yes": ""
+        }
+      },
       "currency": {
         "help": "インターフェイス通貨を選択します。.",
         "invalid": "選択してください。.",
@@ -1835,6 +1859,11 @@
       },
       "graph_limit_min_max": {
         "help": "",
+        "label": ""
+      },
+      "graph_period": {
+        "help": "",
+        "invalid": "",
         "label": ""
       },
       "graph_smooth_value": {
@@ -2020,12 +2049,20 @@
         "error": "必要なすべてのフィールドが正しく入力されるわけではありません。"
       },
       "information": "天気システムを使用するには、％sで無料のアカウントを作成してください。",
+      "open_meteo": {
+        "information": ""
+      },
       "save": {
         "ok": {
           "message": ""
         }
       },
       "title": "天気設定",
+      "weather_provider": {
+        "help": "",
+        "label": "",
+        "placeholder": ""
+      },
       "weather_source": {
         "help": "OpenWeatherMapのAPI用のURLを次のようなフォーマットで入力してください：％s.",
         "invalid": "",
