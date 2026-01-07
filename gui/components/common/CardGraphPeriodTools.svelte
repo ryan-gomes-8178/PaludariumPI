@@ -113,7 +113,8 @@
       >{$_('graph.period.replaced', { default: 'Replaced' })}</button>
     {/if}
 
-    <!-- Keep Custom available and show inputs when opened -->
+    <!-- Custom period option: initialize and show date inputs.
+         Use stopPropagation on the click so Bootstrap does not auto-close the dropdown -->
     <button
       class="dropdown-item"
       class:active="{$graphs[id].period === 'custom'}"
