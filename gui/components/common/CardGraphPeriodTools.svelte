@@ -2,6 +2,7 @@
   import { _ } from 'svelte-i18n';
   import { graphs } from '../../stores/terrariumpi';
   import { toggleGraphPeriod } from '../../helpers/graph-helpers';
+  import { tick } from 'svelte';
 
   export let id;
   export let replaced = false;
@@ -30,6 +31,8 @@
     event.stopPropagation();
     populateFromStore();
     showCustom = true;
+    await tick();
+    if (customStartInput) customStartInput.focus();
   }
 
   // Toggle include time and convert current values sensibly
@@ -74,41 +77,47 @@
   <div class="dropdown-menu dropdown-menu-right" role="menu" style="min-width: auto !important;">
     <button
       class="dropdown-item"
+      class:active="{$graphs[id].period === 'hour'}"
+      on:click="{() => toggleGraphPeriod(id, 'hour')}">{$_('graph.period.hour', { default: 'Hour' })}</button
+    >
+    <button
+      class="dropdown-item"
       class:active="{$graphs[id].period === 'day'}"
-      on:click="{() => toggleGraphPeriod(id, 'day')}"
+      on:click={() => toggleGraphPeriod(id, 'day')}
     >{$_('graph.period.day', { default: 'Day' })}</button>
 
     <button
       class="dropdown-item"
       class:active="{$graphs[id].period === 'week'}"
-      on:click="{() => toggleGraphPeriod(id, 'week')}"
+      on:click={() => toggleGraphPeriod(id, 'week')}
     >{$_('graph.period.week', { default: 'Week' })}</button>
 
     <button
       class="dropdown-item"
       class:active="{$graphs[id].period === 'month'}"
-      on:click="{() => toggleGraphPeriod(id, 'month')}"
+      on:click={() => toggleGraphPeriod(id, 'month')}
     >{$_('graph.period.month', { default: 'Month' })}</button>
 
     <button
       class="dropdown-item"
       class:active="{$graphs[id].period === 'year'}"
-      on:click="{() => toggleGraphPeriod(id, 'year')}"
+      on:click={() => toggleGraphPeriod(id, 'year')}
     >{$_('graph.period.year', { default: 'Year' })}</button>
 
     {#if replaced}
       <button
         class="dropdown-item"
         class:active="{$graphs[id].period === 'replaced'}"
-        on:click="{() => toggleGraphPeriod(id, 'replaced')}"
+        on:click={() => toggleGraphPeriod(id, 'replaced')}
       >{$_('graph.period.replaced', { default: 'Replaced' })}</button>
     {/if}
 
-    <!-- Custom period option: initialize and show date inputs -->
+    <!-- Custom period option: initialize and show date inputs.
+         Use stopPropagation on the click so Bootstrap does not auto-close the dropdown -->
     <button
       class="dropdown-item"
       class:active="{$graphs[id].period === 'custom'}"
-      on:click="{onCustomClick}"
+      on:click|stopPropagation={onCustomClick}
     >Custom</button>
 
     {#if showCustom}
