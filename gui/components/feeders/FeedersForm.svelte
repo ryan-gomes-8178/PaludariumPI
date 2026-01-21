@@ -6,7 +6,7 @@
   export let feeder = null;
 
   const dispatch = createEventDispatcher();
-  let formData = feeder ? { ...feeder } : {
+  let formData = {
     name: '',
     enclosure: '',
     hardware: '',
@@ -29,29 +29,28 @@
   let error = '';
 
   function loadEnclosures() {
-    fetchEnclosures(null, (data) => {
-      if (data && data.data) {
-        enclosures = data.data;
-      }
-    });
+    try {
+      fetchEnclosures(null, (data) => {
+        console.log('Enclosures loaded:', data);
+        if (data && data.data) {
+          enclosures = data.data;
+        }
+      });
+    } catch (e) {
+      console.error('Error loading enclosures:', e);
+    }
   }
 
-  async function handleSubmit() {
+  function handleSubmit() {
     try {
       isSaving = true;
       error = '';
+      console.log('Submitting feeder:', formData);
 
-      if (feeder) {
-        // Update
-        updateFeeder(formData, (data) => {
-          dispatch('save');
-        });
-      } else {
-        // Create
-        addFeeder(formData, (data) => {
-          dispatch('save');
-        });
-      }
+      addFeeder(formData, (data) => {
+        console.log('Feeder saved:', data);
+        dispatch('save');
+      });
     } catch (e) {
       error = e.message;
       console.error('Form error:', e);
@@ -64,8 +63,168 @@
     dispatch('close');
   }
 
-  onMount(loadEnclosures);
+  onMount(() => {
+    console.log('FeedersForm mounted');
+    loadEnclosures();
+  });
 </script>
+
+<div class="modal-overlay" on:click={handleCancel}>
+  <div class="modal" on:click|stopPropagation>
+    <div class="modal-header">
+      <h2>Add Feeder</h2>
+      <button class="btn-close" on:click={handleCancel}>&times;</button>
+    </div>
+
+    <form on:submit|preventDefault={handleSubmit}>
+      {#if error}
+        <div class="alert alert-danger">{error}</div>
+      {/if}
+
+      <div class="form-group">
+        <label for="name">Name:</label>
+        <input
+          id="name"
+          type="text"
+          bind:value={formData.name}
+          required
+          placeholder="e.g., Main Tank Feeder"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="enclosure">Enclosure:</label>
+        <select id="enclosure" bind:value={formData.enclosure} required>
+          <option value="">Select an enclosure</option>
+          {#each enclosures as enc (enc.id)}
+            <option value={enc.id}>{enc.name}</option>
+          {/each}
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="hardware">GPIO Pin:</label>
+        <input
+          id="hardware"
+          type="text"
+          bind:value={formData.hardware}
+          required
+          placeholder="e.g., 17"
+        />
+      </div>
+
+      <div class="form-group">
+        <label>
+          <input type="checkbox" bind:checked={formData.enabled} />
+          Enabled
+        </label>
+      </div>
+
+      <div class="form-actions">
+        <button type="button" class="btn btn-secondary" on:click={handleCancel}>
+          Cancel
+        </button>
+        <button type="submit" class="btn btn-primary" disabled={isSaving}>
+          {isSaving ? 'Saving...' : 'Save'}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<style>
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+
+  .modal {
+    background: white;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  }
+
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid #eee;
+  }
+
+  .btn-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #666;
+  }
+
+  form {
+    padding: 20px;
+  }
+
+  .form-group {
+    margin-bottom: 15px;
+  }
+
+  .form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+  }
+
+  .form-group input[type='text'],
+  .form-group input[type='number'],
+  .form-group input[type='time'],
+  .form-group select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    box-sizing: border-box;
+  }
+
+  .form-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+  }
+
+  .form-actions button {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+
+  .btn-primary {
+    background-color: #007bff;
+    color: white;
+  }
+
+  .btn-secondary {
+    background-color: #6c757d;
+    color: white;
+  }
+</style>
 
 <div class="modal-overlay" on:click={handleCancel}>
   <div class="modal" on:click|stopPropagation>

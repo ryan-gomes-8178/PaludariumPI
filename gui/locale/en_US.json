@@ -2319,5 +2319,21 @@
       }
     },
     "title": "Webcams"
+  },
+  "feeders": {
+    "menu": {
+      "title": "Feeders"
+    },
+    "actions": {
+      "delete": "Delete feeder",
+      "edit": "Edit feeder",
+      "feed": "Feed now",
+      "test": "Test"
+    },
+    "delete": {
+      "confirm": {
+        "message": "Are you sure you want to delete the feeder ''{name}''?"
+      }
+    }
   }
 }

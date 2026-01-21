@@ -584,8 +584,8 @@ class terrariumEngine(object):
                     # Update existing sensor with new address
                     self.sensors[sensor.id].address = sensor.address
 
-                # Take a measurement from the sensor
-                value = self.sensors[sensor.id].update()
+                # Take a measurement from the sensor during startup (skip retries to fail fast)
+                value = self.sensors[sensor.id].update(startup_mode=True)
                 if value is None:
                     logger.warning(
                         f"{self.sensors[sensor.id]} had problems reading a new value during startup in {time.time()-start:.2f} seconds. Will be updated in the next round."

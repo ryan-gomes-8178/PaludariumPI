@@ -244,6 +244,7 @@ class Enclosure(db.Entity):
     areas = orm.Set(lambda: Area)
     doors = orm.Set(lambda: Button)
     webcams = orm.Set(lambda: Webcam)
+    feeders = orm.Set(lambda: Feeder)
 
     def __rename_image(self):
         regex = re.compile(f"{self.id}\.(jpg|jpeg|gif|png)$", re.IGNORECASE)
