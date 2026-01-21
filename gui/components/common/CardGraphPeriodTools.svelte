@@ -78,9 +78,8 @@
     <button
       class="dropdown-item"
       class:active="{$graphs[id].period === 'hour'}"
-      on:click={() => toggleGraphPeriod(id, 'hour')}
-    >{$_('graph.period.hour', { default: 'Hour' })}</button>
-
+      on:click="{() => toggleGraphPeriod(id, 'hour')}">{$_('graph.period.hour', { default: 'Hour' })}</button
+    >
     <button
       class="dropdown-item"
       class:active="{$graphs[id].period === 'day'}"
