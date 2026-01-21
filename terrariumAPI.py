@@ -23,6 +23,8 @@ from terrariumDatabase import (
     Audiofile,
     Button,
     Enclosure,
+    Feeder,
+    FeedingHistory,
     Playlist,
     NotificationMessage,
     NotificationService,
@@ -561,6 +563,71 @@ class terrariumAPI(object):
             "/api/sensors/", "GET", self.sensor_list, apply=self.authentication(False), name="api:sensor_list"
         )
         bottle_app.route("/api/sensors/", "POST", self.sensor_add, apply=self.authentication(), name="api:sensor_add")
+
+        # Feeder API
+        bottle_app.route(
+            "/api/feeders/<feeder:path>/history/<period:re:(hour|day|week|month|year|custom)>/",
+            "GET",
+            self.feeder_history,
+            apply=self.authentication(False),
+            name="api:feeder_history_period",
+        )
+        bottle_app.route(
+            "/api/feeders/<feeder:path>/history/",
+            "GET",
+            self.feeder_history,
+            apply=self.authentication(False),
+            name="api:feeder_history",
+        )
+        bottle_app.route(
+            "/api/feeders/<feeder:path>/feed/",
+            "POST",
+            self.feeder_manual_feed,
+            apply=self.authentication(),
+            name="api:feeder_manual_feed",
+        )
+        bottle_app.route(
+            "/api/feeders/<feeder:path>/test/",
+            "POST",
+            self.feeder_test,
+            apply=self.authentication(),
+            name="api:feeder_test",
+        )
+        bottle_app.route(
+            "/api/feeders/<feeder:path>/",
+            "GET",
+            self.feeder_detail,
+            apply=self.authentication(False),
+            name="api:feeder_detail",
+        )
+        bottle_app.route(
+            "/api/feeders/<feeder:path>/",
+            "PUT",
+            self.feeder_update,
+            apply=self.authentication(),
+            name="api:feeder_update",
+        )
+        bottle_app.route(
+            "/api/feeders/<feeder:path>/",
+            "DELETE",
+            self.feeder_delete,
+            apply=self.authentication(),
+            name="api:feeder_delete",
+        )
+        bottle_app.route(
+            "/api/feeders/",
+            "GET",
+            self.feeder_list,
+            apply=self.authentication(False),
+            name="api:feeder_list",
+        )
+        bottle_app.route(
+            "/api/feeders/",
+            "POST",
+            self.feeder_add,
+            apply=self.authentication(),
+            name="api:feeder_add",
+        )
 
         # Settings API
         bottle_app.route(
@@ -1935,6 +2002,178 @@ class terrariumAPI(object):
         except Exception as ex:
             raise HTTPError(status=500, body=f"Setting {setting} could not be removed. {ex}")
 
+     # Feeders
+    @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
+    def feeder_list(self):
+        from terrariumDatabase import Feeder
+        return {
+            "data": [
+                self.feeder_detail(feeder.id)
+                for feeder in Feeder.select(lambda f: not f.id in self.webserver.engine.settings["exclude_ids"])
+            ]
+        }
+    
+    @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
+    def feeder_detail(self, feeder):
+        from terrariumDatabase import Feeder
+        try:
+            feeder_obj = Feeder[feeder]
+            return feeder_obj.to_dict()
+        except orm.core.ObjectNotFound:
+            raise HTTPError(status=404, body=f"Feeder with id {feeder} does not exist.")
+        except Exception as ex:
+            raise HTTPError(status=500, body=f"Error getting feeder {feeder} detail. {ex}")
+    
+    @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
+    def feeder_add(self):
+        from terrariumDatabase import Feeder, Enclosure
+        try:
+            # Verify enclosure exists
+            _ = Enclosure[request.json["enclosure"]]
+            
+            feeder = Feeder(
+                enclosure=Enclosure[request.json["enclosure"]],
+                name=request.json["name"],
+                hardware=request.json["hardware"],
+                servo_config=request.json.get("servo_config", {
+                    "feed_angle": 90,
+                    "rest_angle": 0,
+                    "rotate_duration": 1000,
+                    "feed_hold_duration": 1500,
+                    "portion_size": 1.0
+                }),
+                schedule=request.json.get("schedule", {})
+            )
+            orm.commit()
+            
+            # Load feeder into engine
+            self.webserver.engine.load_feeders()
+            
+            return self.feeder_detail(feeder.id)
+        except orm.core.ObjectNotFound:
+            raise HTTPError(status=404, body=f'Enclosure with id {request.json.get("enclosure")} does not exist.')
+        except Exception as ex:
+            raise HTTPError(status=500, body=f"Feeder could not be added. {ex}")
+    
+    @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
+    def feeder_update(self, feeder):
+        from terrariumDatabase import Feeder
+        try:
+            feeder_obj = Feeder[feeder]
+            feeder_obj.name = request.json.get("name", feeder_obj.name)
+            feeder_obj.enabled = request.json.get("enabled", feeder_obj.enabled)
+            feeder_obj.servo_config = request.json.get("servo_config", feeder_obj.servo_config)
+            feeder_obj.schedule = request.json.get("schedule", feeder_obj.schedule)
+            feeder_obj.notification = request.json.get("notification", feeder_obj.notification)
+            orm.commit()
+            
+            # Reload feeder into engine
+            self.webserver.engine.load_feeders()
+            
+            return self.feeder_detail(feeder_obj.id)
+        except orm.core.ObjectNotFound:
+            raise HTTPError(status=404, body=f"Feeder with id {feeder} does not exist.")
+        except Exception as ex:
+            raise HTTPError(status=500, body=f"Error updating feeder {feeder}. {ex}")
+    
+    @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
+    def feeder_delete(self, feeder):
+        from terrariumDatabase import Feeder
+        try:
+            feeder_obj = Feeder[feeder]
+            message = f"Feeder {feeder_obj.name} is deleted."
+            
+            # Stop feeder hardware
+            if feeder in self.webserver.engine.feeders:
+                self.webserver.engine.feeders[feeder].stop()
+                del self.webserver.engine.feeders[feeder]
+            
+            feeder_obj.delete()
+            orm.commit()
+            
+            return {"message": message}
+        except orm.core.ObjectNotFound:
+            raise HTTPError(status=404, body=f"Feeder with id {feeder} does not exist.")
+        except Exception as ex:
+            raise HTTPError(status=500, body=f"Error deleting feeder {feeder}. {ex}")
+    
+    @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
+    def feeder_manual_feed(self, feeder):
+        try:
+            if feeder not in self.webserver.engine.feeders:
+                raise HTTPError(status=404, body=f"Feeder with id {feeder} is not loaded.")
+            
+            portion_size = request.json.get("portion_size") if request.json else None
+            result = self.webserver.engine.feeders[feeder].feed(portion_size)
+            
+            return result
+        except HTTPError:
+            raise
+        except Exception as ex:
+            raise HTTPError(status=500, body=f"Error triggering feed: {ex}")
+    
+    @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
+    def feeder_test(self, feeder):
+        try:
+            if feeder not in self.webserver.engine.feeders:
+                raise HTTPError(status=404, body=f"Feeder with id {feeder} is not loaded.")
+            
+            result = self.webserver.engine.feeders[feeder].test_movement()
+            
+            return result
+        except HTTPError:
+            raise
+        except Exception as ex:
+            raise HTTPError(status=500, body=f"Error testing feeder: {ex}")
+    
+    @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
+    def feeder_history(self, feeder, action="history", period="day"):
+        from terrariumDatabase import Feeder, FeedingHistory
+        
+        try:
+            feeder_obj = Feeder[feeder]
+            
+            if "hour" == period:
+                period_days = 1 / 24
+            elif "day" == period:
+                period_days = 1
+            elif "week" == period:
+                period_days = 7
+            elif "month" == period:
+                period_days = 31
+            elif "year" == period:
+                period_days = 365
+            else:
+                period_days = 1
+            
+            start_date = datetime.now() - timedelta(days=period_days)
+            
+            history = [
+                {
+                    "timestamp": item.timestamp.timestamp(),
+                    "status": item.status,
+                    "portion_size": item.portion_size
+                }
+                for item in feeder_obj.history.filter(lambda h: h.timestamp >= start_date)
+            ]
+            
+            if "export" == action:
+                csv_data = [";".join(["timestamp", "status", "portion_size"])]
+                for data_point in history:
+                    data_point["timestamp"] = datetime.fromtimestamp(data_point["timestamp"])
+                    csv_data.append(";".join([str(value) for value in data_point.values()]))
+                
+                response.headers["Content-Type"] = "application/csv"
+                response.headers["Content-Disposition"] = f"attachment; filename={feeder_obj.name}_{period}.csv"
+                return "\n".join(csv_data)
+            
+            return {"data": history}
+        
+        except orm.core.ObjectNotFound:
+            raise HTTPError(status=404, body=f"Feeder with id {feeder} does not exist.")
+        except Exception as ex:
+            raise HTTPError(status=500, body=f"Error getting feeder history: {ex}")
+    
     # System
     def system_status(self):
         data = self.webserver.engine.system_stats()

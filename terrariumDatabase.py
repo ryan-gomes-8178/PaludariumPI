@@ -680,3 +680,56 @@ class Webcam(db.Entity):
 
     def __repr__(self):
         return f"{self.hardware} webcam '{self.name}' at address '{self.address}'"
+
+class Feeder(db.Entity):
+    """Automatic aquarium feeder entity"""
+    
+    id = orm.PrimaryKey(str, default=terrariumUtils.generate_uuid)
+    enclosure = orm.Required(lambda: Enclosure)
+    name = orm.Required(str)
+    hardware = orm.Required(str)  # GPIO pin number or hardware address
+    
+    enabled = orm.Optional(bool, default=True)
+    notification = orm.Optional(bool, default=True)
+    
+    # Servo configuration as JSON
+    # {
+    #   "feed_angle": 90,
+    #   "rest_angle": 0,
+    #   "rotate_duration": 1000,  # milliseconds
+    #   "feed_hold_duration": 1500,  # milliseconds
+    #   "portion_size": 1.0
+    # }
+    servo_config = orm.Required(orm.Json)
+    
+    # Schedule as JSON
+    # {
+    #   "morning": {"time": "08:00", "enabled": true, "portion_size": 1.0},
+    #   "night": {"time": "20:00", "enabled": true, "portion_size": 1.0}
+    # }
+    schedule = orm.Required(orm.Json, default={})
+    
+    # Feeding history
+    history = orm.Set("FeedingHistory")
+    
+    def to_dict(self, only=None, exclude=None, with_collections=False, with_lazy=False, related_objects=False):
+        data = copy.deepcopy(super().to_dict(only, exclude, with_collections, with_lazy, related_objects))
+        # Add computed fields if needed
+        return data
+    
+    def __repr__(self):
+        return f"Feeder '{self.name}' for enclosure '{self.enclosure.name}'"
+
+
+class FeedingHistory(db.Entity):
+    """Record of each feeding event"""
+    
+    feeder = orm.Required("Feeder")
+    timestamp = orm.Required(datetime)
+    status = orm.Required(str)  # 'success', 'failed', 'partial'
+    portion_size = orm.Optional(float, default=0)  # in grams or portions
+    
+    orm.PrimaryKey(feeder, timestamp)
+    
+    def __repr__(self):
+        return f"Feeding {self.feeder.name} at {self.timestamp} - {self.status}"
