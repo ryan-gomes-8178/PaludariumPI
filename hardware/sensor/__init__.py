@@ -279,7 +279,28 @@ class terrariumSensor(object):
 
         return data
 
-    def update(self, force=False):
+    def get_data_no_retry(self):
+        """Get sensor data without retries. Used during startup to fail fast on disconnected sensors."""
+        error_message = f"Error getting new data from sensor {self}"
+        data = None
+
+        try:
+            self.__power_management(True)
+            data = func_timeout(self._UPDATE_TIME_OUT, self._get_data)
+
+        except FunctionTimedOut:
+            raise terrariumSensorUpdateException(f"{error_message}: Timed out after {self._UPDATE_TIME_OUT} seconds")
+        except Exception as ex:
+            raise terrariumSensorUpdateException(f"{error_message}: {ex}")
+        finally:
+            self.__power_management(False)
+
+        if data is None:
+            raise terrariumSensorUpdateException(f"{error_message}: no data")
+
+        return data
+
+    def update(self, force=False, startup_mode=False):
         if self._device["device"] is None:
             raise terrariumSensorLoadingException(f"Sensor {self} is not loaded! Can not update!")
 
@@ -289,7 +310,8 @@ class terrariumSensor(object):
         if (data is None or force) and self._sensor_cache.set_running(self._sensor_cache_key):
             logger.debug(f"Start getting new data from  sensor {self}")
             try:
-                data = self.get_data()
+                # During startup, skip retries to fail fast on disconnected sensors
+                data = self.get_data_no_retry() if startup_mode else self.get_data()
                 self._sensor_cache.set_data(self._sensor_cache_key, data, self._CACHE_TIMEOUT)
             except Exception as ex:
                 logger.error(f"Error updating sensor {self}. Check your hardware! {ex}")
