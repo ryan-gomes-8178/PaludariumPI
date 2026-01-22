@@ -64,8 +64,8 @@ def json_serial(obj):
         # Avoid direct imports to keep this utility light
         if hasattr(obj, "to_dict") and callable(obj.to_dict):
             return obj.to_dict()
-    except Exception:
-        pass
+    except Exception as exc:
+        logger.debug("json_serial: failed to serialize %r using to_dict(): %s", obj, exc)
 
     raise TypeError(f"Type {type(obj)} not serializable")
 
@@ -1145,7 +1145,6 @@ class terrariumAPI(object):
 
     # Enclosure
     @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
-    @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
     def enclosure_list(self):
         return {
             "data": [
@@ -2012,11 +2011,9 @@ class terrariumAPI(object):
         except Exception as ex:
             raise HTTPError(status=500, body=f"Setting {setting} could not be removed. {ex}")
 
-     # Feeders
-    @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
+    # Feeders
     @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
     def feeder_list(self):
-        from terrariumDatabase import Feeder
         return {
             "data": [
                 self.feeder_detail(feeder.id)
@@ -2026,7 +2023,6 @@ class terrariumAPI(object):
     
     @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
     def feeder_detail(self, feeder):
-        from terrariumDatabase import Feeder
         try:
             feeder_obj = Feeder[feeder]
             return feeder_obj.to_dict()
@@ -2037,7 +2033,6 @@ class terrariumAPI(object):
     
     @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
     def feeder_add(self):
-        from terrariumDatabase import Feeder, Enclosure
         try:
             # Verify enclosure exists
             _ = Enclosure[request.json["enclosure"]]
@@ -2068,14 +2063,20 @@ class terrariumAPI(object):
     
     @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
     def feeder_update(self, feeder):
-        from terrariumDatabase import Feeder
         try:
             feeder_obj = Feeder[feeder]
             feeder_obj.name = request.json.get("name", feeder_obj.name)
+            feeder_obj.hardware = request.json.get("hardware", feeder_obj.hardware)
             feeder_obj.enabled = request.json.get("enabled", feeder_obj.enabled)
             feeder_obj.servo_config = request.json.get("servo_config", feeder_obj.servo_config)
             feeder_obj.schedule = request.json.get("schedule", feeder_obj.schedule)
             feeder_obj.notification = request.json.get("notification", feeder_obj.notification)
+            
+            # Handle enclosure update - check both 'enclosure' and 'enclosure_id' fields
+            enclosure_id = request.json.get("enclosure_id") or request.json.get("enclosure")
+            if enclosure_id and enclosure_id != feeder_obj.enclosure.id:
+                feeder_obj.enclosure = Enclosure[enclosure_id]
+            
             orm.commit()
             
             # Reload feeder into engine
@@ -2089,7 +2090,6 @@ class terrariumAPI(object):
     
     @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
     def feeder_delete(self, feeder):
-        from terrariumDatabase import Feeder
         try:
             feeder_obj = Feeder[feeder]
             message = f"Feeder {feeder_obj.name} is deleted."
@@ -2139,7 +2139,6 @@ class terrariumAPI(object):
     
     @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
     def feeder_history(self, feeder, action="history", period="day"):
-        from terrariumDatabase import Feeder, FeedingHistory
         
         try:
             feeder_obj = Feeder[feeder]

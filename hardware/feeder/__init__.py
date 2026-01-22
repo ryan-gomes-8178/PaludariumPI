@@ -15,6 +15,21 @@ from datetime import datetime
 from gpiozero import PWMOutputDevice
 from terrariumUtils import terrariumUtils
 
+# Import gpiozero exceptions for specific error handling
+try:
+    from gpiozero.exc import (
+        GPIODeviceError,
+        GPIOPinInUse,
+        PinInvalidPin,
+        PinPWMUnsupported
+    )
+except ImportError:
+    # Fallback if gpiozero.exc is not available
+    GPIODeviceError = Exception
+    GPIOPinInUse = Exception
+    PinInvalidPin = Exception
+    PinPWMUnsupported = Exception
+
 
 class terrariumFeederException(Exception):
     """Base exception for feeder errors"""
@@ -81,9 +96,31 @@ class terrariumFeeder(object):
                 initial_value=0
             )
             logger.info(f"Loaded feeder {self.name} on GPIO {gpio_pin}")
+        except ValueError as e:
+            error_msg = f"Invalid GPIO pin number '{self.hardware}'. Please provide a valid GPIO pin number: {e}"
+            logger.error(error_msg)
+            raise terrariumFeederHardwareException(error_msg)
+        except GPIOPinInUse as e:
+            error_msg = f"GPIO pin {self.hardware} is already in use by another process or device. Please use a different pin or stop the conflicting process: {e}"
+            logger.error(error_msg)
+            raise terrariumFeederHardwareException(error_msg)
+        except PinInvalidPin as e:
+            error_msg = f"GPIO pin {self.hardware} is not a valid pin for this Raspberry Pi model: {e}"
+            logger.error(error_msg)
+            raise terrariumFeederHardwareException(error_msg)
+        except PinPWMUnsupported as e:
+            error_msg = f"PWM is not supported on GPIO pin {self.hardware}. Please use a PWM-capable pin: {e}"
+            logger.error(error_msg)
+            raise terrariumFeederHardwareException(error_msg)
+        except PermissionError as e:
+            error_msg = f"Permission denied accessing GPIO pin {self.hardware}. Please run with appropriate permissions or add user to gpio group: {e}"
+            logger.error(error_msg)
+            raise terrariumFeederHardwareException(error_msg)
         except Exception as e:
-            logger.error(f"Failed to load feeder hardware: {e}")
-            raise terrariumFeederHardwareException(f"Cannot load GPIO {self.hardware}: {e}")
+            # Generic fallback for any other unhandled exceptions
+            error_msg = f"Failed to initialize GPIO pin {self.hardware}. Check hardware connections and system configuration: {e}"
+            logger.error(error_msg)
+            raise terrariumFeederHardwareException(error_msg)
     
     def _angle_to_pwm(self, angle):
         """
