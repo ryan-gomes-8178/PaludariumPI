@@ -56,14 +56,17 @@
     console.log('Submitting feeder:', formData);
 
     const saveFunction = formData.id ? updateFeeder : addFeeder;
-    const actionText = formData.id ? 'updated' : 'saved';
+    const isUpdate = !!formData.id;
     
     saveFunction(formData, (data) => {
       console.log('Feeder save response:', data);
       isSaving = false;
       if (data && !data.error) {
+        const successMessage = isUpdate
+          ? $_('notification.feeder.updated', { default: 'Feeder updated successfully' })
+          : $_('notification.feeder.saved', { default: 'Feeder saved successfully' });
         successNotification(
-          $_('notification.feeder.saved', { default: `Feeder ${actionText} successfully` }),
+          successMessage,
           $_('feeders.menu.title', { default: 'Feeders' })
         );
         console.log('Dispatching save event to reload feeders list');
