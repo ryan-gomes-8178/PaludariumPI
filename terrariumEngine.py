@@ -47,8 +47,6 @@ from hardware.webcam import terrariumWebcam, terrariumWebcamLoadingException
 
 from terrariumNotification import terrariumNotification
 
-from hardware.feeder import terrariumFeeder, terrariumFeederException
-
 
 
 # https://docs.python.org/3/library/gettext.html#deferred-translations
