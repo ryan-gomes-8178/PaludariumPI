@@ -1,14 +1,13 @@
 <script>
   import { onMount } from 'svelte';
   import FeedersCard from '../components/feeders/FeedersCard.svelte';
-  import FeedersForm from '../components/feeders/FeedersForm.svelte';
+  import FeedersFormModal from '../components/feeders/FeedersFormModal.svelte';
   import { fetchFeeders, deleteFeeder } from '../providers/api';
 
   let feeders = [];
-  let showForm = false;
-  let selectedFeeder = null;
   let loading = true;
   let error = '';
+  let feedersModal;
 
   onMount(() => {
     loadFeeders();
@@ -26,23 +25,19 @@
   }
 
   function handleAddFeeder() {
-    selectedFeeder = null;
-    showForm = true;
+    if (feedersModal) {
+      feedersModal.show(null, () => {});
+    }
   }
 
   function handleEditFeeder(feeder) {
-    selectedFeeder = feeder;
-    showForm = true;
-  }
-
-  function handleFormClose() {
-    showForm = false;
-    selectedFeeder = null;
+    if (feedersModal) {
+      feedersModal.show(feeder, () => {});
+    }
   }
 
   function handleFormSave() {
     loadFeeders();
-    handleFormClose();
   }
 
   function handleDeleteFeeder(feeder) {
@@ -80,15 +75,9 @@
       {/each}
     </div>
   {/if}
-
-  {#if showForm}
-    <FeedersForm
-      feeder={selectedFeeder}
-      on:close={handleFormClose}
-      on:save={handleFormSave}
-    />
-  {/if}
 </div>
+
+<FeedersFormModal bind:this="{feedersModal}" on:save={handleFormSave} />
 
 <style>
   .feeders-page {
