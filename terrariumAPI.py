@@ -2092,7 +2092,7 @@ class terrariumAPI(object):
         # Validate feed_hold_duration (must be positive)
         if "feed_hold_duration" in servo_config:
             feed_hold_duration = servo_config["feed_hold_duration"]
-            if not isinstance(feed_hold_duration, (int, float)):
+            if not (isinstance(feed_hold_duration, (int, float)) and not isinstance(feed_hold_duration, bool)):
                 raise HTTPError(status=400, body="feed_hold_duration must be a number")
             if feed_hold_duration <= 0:
                 raise HTTPError(status=400, body="feed_hold_duration must be positive")
