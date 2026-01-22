@@ -2121,7 +2121,6 @@ class terrariumEngine(object):
 
     def callback_feeder(self, feeder_id, status, portion_size):
         """Callback when feeder operation completes"""
-        from terrariumDatabase import Feeder, FeedingHistory
 
         @orm.db_session
         def _update():
