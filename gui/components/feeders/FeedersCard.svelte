@@ -10,7 +10,7 @@
   async function triggerManualFeed() {
     try {
       isFeedingNow = true;
-      manualFeed(feeder.id, feeder.servo_config.portion_size, (data) => {
+      await manualFeed(feeder.id, feeder.servo_config.portion_size, (data) => {
         dispatch('reload');
         isFeedingNow = false;
       });
@@ -22,7 +22,7 @@
 
   async function testServo() {
     try {
-      testFeederServo(feeder.id, (data) => {
+      await testFeederServo(feeder.id, (data) => {
         console.log('Servo test result:', data);
       });
     } catch (e) {
