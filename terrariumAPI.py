@@ -64,8 +64,8 @@ def json_serial(obj):
         # Avoid direct imports to keep this utility light
         if hasattr(obj, "to_dict") and callable(obj.to_dict):
             return obj.to_dict()
-    except Exception:
-        pass
+    except Exception as exc:
+        logger.debug("json_serial: failed to serialize %r using to_dict(): %s", obj, exc)
 
     raise TypeError(f"Type {type(obj)} not serializable")
 
@@ -1145,7 +1145,6 @@ class terrariumAPI(object):
 
     # Enclosure
     @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
-    @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
     def enclosure_list(self):
         return {
             "data": [
@@ -2012,11 +2011,9 @@ class terrariumAPI(object):
         except Exception as ex:
             raise HTTPError(status=500, body=f"Setting {setting} could not be removed. {ex}")
 
-     # Feeders
-    @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
+    # Feeders
     @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
     def feeder_list(self):
-        from terrariumDatabase import Feeder
         return {
             "data": [
                 self.feeder_detail(feeder.id)
@@ -2026,7 +2023,6 @@ class terrariumAPI(object):
     
     @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
     def feeder_detail(self, feeder):
-        from terrariumDatabase import Feeder
         try:
             feeder_obj = Feeder[feeder]
             return feeder_obj.to_dict()
@@ -2037,7 +2033,6 @@ class terrariumAPI(object):
     
     @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
     def feeder_add(self):
-        from terrariumDatabase import Feeder, Enclosure
         try:
             # Verify enclosure exists
             _ = Enclosure[request.json["enclosure"]]
@@ -2068,7 +2063,6 @@ class terrariumAPI(object):
     
     @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
     def feeder_update(self, feeder):
-        from terrariumDatabase import Feeder
         try:
             feeder_obj = Feeder[feeder]
             feeder_obj.name = request.json.get("name", feeder_obj.name)
@@ -2089,7 +2083,6 @@ class terrariumAPI(object):
     
     @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
     def feeder_delete(self, feeder):
-        from terrariumDatabase import Feeder
         try:
             feeder_obj = Feeder[feeder]
             message = f"Feeder {feeder_obj.name} is deleted."
@@ -2139,7 +2132,6 @@ class terrariumAPI(object):
     
     @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
     def feeder_history(self, feeder, action="history", period="day"):
-        from terrariumDatabase import Feeder, FeedingHistory
         
         try:
             feeder_obj = Feeder[feeder]

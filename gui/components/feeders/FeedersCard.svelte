@@ -46,7 +46,7 @@
   <div class="card-body">
     <div class="info-row">
       <label>Enclosure:</label>
-      <span>{feeder.enclosure}</span>
+      <span>{feeder.enclosure?.name ?? ''}</span>
     </div>
     <div class="info-row">
       <label>GPIO:</label>
