@@ -574,6 +574,18 @@ class terrariumAPI(object):
 
         # Feeder API
         bottle_app.route(
+            "/api/feeders/hardware/",
+            "GET",
+            self.feeder_hardware,
+            apply=self.authentication(),
+            name="api:feeder_hardware",
+        )
+
+        bottle_app.route(
+            "/api/feeders/scan/", "POST", self.feeder_scan, apply=self.authentication(), name="api:feeder_scan"
+        )
+
+        bottle_app.route(
             "/api/feeders/<feeder:path>/history/<period:re:(hour|day|week|month|year|custom)>/",
             "GET",
             self.feeder_history,
@@ -1527,8 +1539,8 @@ class terrariumAPI(object):
                 period = 365
                 use_custom = False
             elif "custom" == period:
-                start_date_str = request.query.get('start_date')
-                end_date_str = request.query.get('end_date')
+                start_date_str = request.query.get("start_date")
+                end_date_str = request.query.get("end_date")
                 if not start_date_str or not end_date_str:
                     return {"error": "start_date and end_date are required for custom period"}, 400
 
@@ -1543,7 +1555,9 @@ class terrariumAPI(object):
                         end_date = datetime.fromisoformat(end_date_str)
                     else:
                         # Include the entire end date when a date-only is supplied
-                        end_date = datetime.strptime(end_date_str, "%Y-%m-%d") + timedelta(days=1) - timedelta(seconds=1)
+                        end_date = (
+                            datetime.strptime(end_date_str, "%Y-%m-%d") + timedelta(days=1) - timedelta(seconds=1)
+                        )
                 except Exception:
                     return {"error": "Invalid date format. Use YYYY-MM-DD or YYYY-MM-DDTHH:MM"}, 400
 
@@ -1685,8 +1699,8 @@ class terrariumAPI(object):
             period = 365
             use_custom = False
         elif "custom" == period:
-            start_date_str = request.query.get('start_date')
-            end_date_str = request.query.get('end_date')
+            start_date_str = request.query.get("start_date")
+            end_date_str = request.query.get("end_date")
             if not start_date_str or not end_date_str:
                 return {"error": "start_date and end_date are required for custom period"}, 400
             try:
@@ -1743,18 +1757,14 @@ class terrariumAPI(object):
                     orm.avg(sh.limit_max),
                 )
                 for sh in SensorHistory
-                if sh.sensor.type == filter
-                and sh.timestamp >= start_date
-                and sh.timestamp <= end_date
+                if sh.sensor.type == filter and sh.timestamp >= start_date and sh.timestamp <= end_date
             )
 
         else:
             query = orm.select(
                 (sh.timestamp, sh.value, sh.alarm_min, sh.alarm_max, sh.limit_min, sh.limit_max)
                 for sh in SensorHistory
-                if sh.sensor.id == filter
-                and sh.timestamp >= start_date
-                and sh.timestamp <= end_date
+                if sh.sensor.id == filter and sh.timestamp >= start_date and sh.timestamp <= end_date
             )
 
         data = []
@@ -2012,21 +2022,32 @@ class terrariumAPI(object):
         except Exception as ex:
             raise HTTPError(status=500, body=f"Setting {setting} could not be removed. {ex}")
 
-     # Feeders
+    # Feeders
+    def feeder_hardware(self):
+        return {"data": [{"hardware": "servo", "name": "Servo Feeder"}]}
+
     @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
+    def feeder_scan(self):
+        current_amount = len(self.webserver.engine.feeders)
+        self.webserver.engine.scan_new_feeders()
+        new = len(self.webserver.engine.feeders) - current_amount
+        return {"message": f"Found {new} new feeders"}
+
     @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
     def feeder_list(self):
         from terrariumDatabase import Feeder
+
         return {
             "data": [
                 self.feeder_detail(feeder.id)
                 for feeder in Feeder.select(lambda f: not f.id in self.webserver.engine.settings["exclude_ids"])
             ]
         }
-    
+
     @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
     def feeder_detail(self, feeder):
         from terrariumDatabase import Feeder
+
         try:
             feeder_obj = Feeder[feeder]
             return feeder_obj.to_dict()
@@ -2034,41 +2055,46 @@ class terrariumAPI(object):
             raise HTTPError(status=404, body=f"Feeder with id {feeder} does not exist.")
         except Exception as ex:
             raise HTTPError(status=500, body=f"Error getting feeder {feeder} detail. {ex}")
-    
+
     @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
     def feeder_add(self):
         from terrariumDatabase import Feeder, Enclosure
+
         try:
             # Verify enclosure exists
             _ = Enclosure[request.json["enclosure"]]
-            
+
             feeder = Feeder(
                 enclosure=Enclosure[request.json["enclosure"]],
                 name=request.json["name"],
                 hardware=request.json["hardware"],
-                servo_config=request.json.get("servo_config", {
-                    "feed_angle": 90,
-                    "rest_angle": 0,
-                    "rotate_duration": 1000,
-                    "feed_hold_duration": 1500,
-                    "portion_size": 1.0
-                }),
-                schedule=request.json.get("schedule", {})
+                servo_config=request.json.get(
+                    "servo_config",
+                    {
+                        "feed_angle": 90,
+                        "rest_angle": 0,
+                        "rotate_duration": 1000,
+                        "feed_hold_duration": 1500,
+                        "portion_size": 1.0,
+                    },
+                ),
+                schedule=request.json.get("schedule", {}),
             )
             orm.commit()
-            
+
             # Load feeder into engine
             self.webserver.engine.load_feeders()
-            
+
             return self.feeder_detail(feeder.id)
         except orm.core.ObjectNotFound:
             raise HTTPError(status=404, body=f'Enclosure with id {request.json.get("enclosure")} does not exist.')
         except Exception as ex:
             raise HTTPError(status=500, body=f"Feeder could not be added. {ex}")
-    
+
     @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
     def feeder_update(self, feeder):
         from terrariumDatabase import Feeder
+
         try:
             feeder_obj = Feeder[feeder]
             feeder_obj.name = request.json.get("name", feeder_obj.name)
@@ -2077,73 +2103,74 @@ class terrariumAPI(object):
             feeder_obj.schedule = request.json.get("schedule", feeder_obj.schedule)
             feeder_obj.notification = request.json.get("notification", feeder_obj.notification)
             orm.commit()
-            
+
             # Reload feeder into engine
             self.webserver.engine.load_feeders()
-            
+
             return self.feeder_detail(feeder_obj.id)
         except orm.core.ObjectNotFound:
             raise HTTPError(status=404, body=f"Feeder with id {feeder} does not exist.")
         except Exception as ex:
             raise HTTPError(status=500, body=f"Error updating feeder {feeder}. {ex}")
-    
+
     @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
     def feeder_delete(self, feeder):
         from terrariumDatabase import Feeder
+
         try:
             feeder_obj = Feeder[feeder]
             message = f"Feeder {feeder_obj.name} is deleted."
-            
+
             # Stop feeder hardware
             if feeder in self.webserver.engine.feeders:
                 self.webserver.engine.feeders[feeder].stop()
                 del self.webserver.engine.feeders[feeder]
-            
+
             feeder_obj.delete()
             orm.commit()
-            
+
             return {"message": message}
         except orm.core.ObjectNotFound:
             raise HTTPError(status=404, body=f"Feeder with id {feeder} does not exist.")
         except Exception as ex:
             raise HTTPError(status=500, body=f"Error deleting feeder {feeder}. {ex}")
-    
+
     @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
     def feeder_manual_feed(self, feeder):
         try:
             if feeder not in self.webserver.engine.feeders:
                 raise HTTPError(status=404, body=f"Feeder with id {feeder} is not loaded.")
-            
+
             portion_size = request.json.get("portion_size") if request.json else None
             result = self.webserver.engine.feeders[feeder].feed(portion_size)
-            
+
             return result
         except HTTPError:
             raise
         except Exception as ex:
             raise HTTPError(status=500, body=f"Error triggering feed: {ex}")
-    
+
     @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
     def feeder_test(self, feeder):
         try:
             if feeder not in self.webserver.engine.feeders:
                 raise HTTPError(status=404, body=f"Feeder with id {feeder} is not loaded.")
-            
+
             result = self.webserver.engine.feeders[feeder].test_movement()
-            
+
             return result
         except HTTPError:
             raise
         except Exception as ex:
             raise HTTPError(status=500, body=f"Error testing feeder: {ex}")
-    
+
     @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
     def feeder_history(self, feeder, action="history", period="day"):
         from terrariumDatabase import Feeder, FeedingHistory
-        
+
         try:
             feeder_obj = Feeder[feeder]
-            
+
             if "hour" == period:
                 period_days = 1 / 24
             elif "day" == period:
@@ -2156,35 +2183,31 @@ class terrariumAPI(object):
                 period_days = 365
             else:
                 period_days = 1
-            
+
             start_date = datetime.now() - timedelta(days=period_days)
-            
+
             history = [
-                {
-                    "timestamp": item.timestamp.timestamp(),
-                    "status": item.status,
-                    "portion_size": item.portion_size
-                }
+                {"timestamp": item.timestamp.timestamp(), "status": item.status, "portion_size": item.portion_size}
                 for item in feeder_obj.history.filter(lambda h: h.timestamp >= start_date)
             ]
-            
+
             if "export" == action:
                 csv_data = [";".join(["timestamp", "status", "portion_size"])]
                 for data_point in history:
                     data_point["timestamp"] = datetime.fromtimestamp(data_point["timestamp"])
                     csv_data.append(";".join([str(value) for value in data_point.values()]))
-                
+
                 response.headers["Content-Type"] = "application/csv"
                 response.headers["Content-Disposition"] = f"attachment; filename={feeder_obj.name}_{period}.csv"
                 return "\n".join(csv_data)
-            
+
             return {"data": history}
-        
+
         except orm.core.ObjectNotFound:
             raise HTTPError(status=404, body=f"Feeder with id {feeder} does not exist.")
         except Exception as ex:
             raise HTTPError(status=500, body=f"Error getting feeder history: {ex}")
-    
+
     # System
     def system_status(self):
         data = self.webserver.engine.system_stats()
