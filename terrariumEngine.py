@@ -67,6 +67,8 @@ def N_(message):
 class terrariumEngine(object):
     __ENGINE_LOOP_TIMEOUT = 30.0  # in seconds
     __VERSION_UPDATE_CHECK_TIMEOUT = 1  # in days
+    __SCHEDULE_TOLERANCE_SECONDS = 90  # Extra time window for schedule checking
+    __DUPLICATE_FEEDING_WINDOW_MINUTES = 1  # Time window to prevent duplicate feedings
 
     def __init__(self, version):
         self.starttime = time.time()
@@ -2154,10 +2156,12 @@ class terrariumEngine(object):
                     now = datetime.datetime.now()
                     
                     # Create a time window to account for missed checks
-                    # Check from (now - loop_timeout - 90 seconds) to now
+                    # Check from (now - loop_timeout - tolerance) to now
                     # This ensures we don't miss feedings even if the engine is under heavy load
                     # and skips a check cycle or two
-                    window_start = now - datetime.timedelta(seconds=terrariumEngine.__ENGINE_LOOP_TIMEOUT + 90)
+                    window_start = now - datetime.timedelta(
+                        seconds=terrariumEngine.__ENGINE_LOOP_TIMEOUT + terrariumEngine.__SCHEDULE_TOLERANCE_SECONDS
+                    )
 
                     for feed_name, feed_config in schedule.items():
                         if not feed_config.get("enabled", True):
@@ -2171,6 +2175,12 @@ class terrariumEngine(object):
                         try:
                             hour, minute = map(int, scheduled_time_str.split(":"))
                             scheduled_time = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
+                            
+                            # If the scheduled time is in the future (later today), skip it
+                            # This handles the case where current time is 23:30 and schedule is 08:00
+                            if scheduled_time > now:
+                                continue
+                                
                         except (ValueError, AttributeError):
                             logger.error(f"Invalid time format for feeder {feeder_id} schedule {feed_name}: {scheduled_time_str}")
                             continue
@@ -2178,9 +2188,13 @@ class terrariumEngine(object):
                         # Check if the scheduled time falls within our window
                         if window_start <= scheduled_time <= now:
                             # Check if we already fed for this schedule recently
-                            # Look for any feeding in the last 2 minutes to avoid duplicates
+                            # Look for any feeding within the duplicate window to avoid duplicates
                             last_history = (
-                                feeder_db.history.filter(lambda h: h.timestamp >= scheduled_time - datetime.timedelta(minutes=1))
+                                feeder_db.history.filter(
+                                    lambda h: h.timestamp >= scheduled_time - datetime.timedelta(
+                                        minutes=terrariumEngine.__DUPLICATE_FEEDING_WINDOW_MINUTES
+                                    )
+                                )
                                 .order_by(orm.desc(FeedingHistory.timestamp))
                                 .first()
                             )
