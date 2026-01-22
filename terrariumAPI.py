@@ -2028,9 +2028,7 @@ class terrariumAPI(object):
 
     @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
     def feeder_scan(self):
-        current_amount = len(self.webserver.engine.feeders)
-        self.webserver.engine.scan_new_feeders()
-        new = len(self.webserver.engine.feeders) - current_amount
+        new = self.webserver.engine.scan_new_feeders()
         return {"message": f"Found {new} new feeders"}
 
     @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)

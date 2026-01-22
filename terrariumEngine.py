@@ -2088,8 +2088,39 @@ class terrariumEngine(object):
 
         Unlike relays, feeders don't have auto-discovery hardware scanning.
         This method reloads feeders from the database to pick up any manually added feeders.
+
+        Returns:
+            int: Number of new feeders found
         """
-        self.load_feeders()
+        from terrariumDatabase import Feeder as FeedersDB
+        from hardware.feeder import terrariumFeeder
+
+        existing_ids = set(self.feeders.keys())
+        new_count = 0
+
+        @orm.db_session
+        def _scan():
+            nonlocal new_count
+            for feeder_data in orm.select(f for f in FeedersDB):
+                if feeder_data.id not in existing_ids:
+                    try:
+                        feeder = terrariumFeeder(
+                            feeder_data.id,
+                            feeder_data.enclosure.id,
+                            feeder_data.hardware,
+                            feeder_data.name,
+                            feeder_data.servo_config,
+                            feeder_data.schedule,
+                            callback=self.callback_feeder,
+                        )
+                        self.feeders[feeder_data.id] = feeder
+                        new_count += 1
+                        logger.info(f"Scanned and loaded new feeder: {feeder_data.name}")
+                    except Exception as e:
+                        logger.error(f"Failed to load feeder {feeder_data.name}: {e}")
+
+        _scan()
+        return new_count
 
     def callback_feeder(self, feeder_id, status, portion_size):
         """Callback when feeder operation completes"""
