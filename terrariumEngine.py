@@ -31,7 +31,18 @@ from pyfancy.pyfancy import pyfancy
 from func_timeout import func_timeout, FunctionTimedOut
 
 from pony import orm
-from terrariumDatabase import init as init_db, db, Setting, Sensor, Relay, Button, Webcam, Enclosure, Feeder, FeedingHistory
+from terrariumDatabase import (
+    init as init_db,
+    db,
+    Setting,
+    Sensor,
+    Relay,
+    Button,
+    Webcam,
+    Enclosure,
+    Feeder,
+    FeedingHistory,
+)
 from terrariumWebserver import terrariumWebserver
 from terrariumCalendar import terrariumCalendar
 from terrariumUtils import terrariumUtils, terrariumAsync, terrariumCache
@@ -46,9 +57,6 @@ from hardware.button import terrariumButton, terrariumButtonLoadingException
 from hardware.webcam import terrariumWebcam, terrariumWebcamLoadingException
 
 from terrariumNotification import terrariumNotification
-
-from hardware.feeder import terrariumFeeder, terrariumFeederException
-
 
 
 # https://docs.python.org/3/library/gettext.html#deferred-translations
@@ -151,7 +159,7 @@ class terrariumEngine(object):
 
         # Feeder initialization
         self.feeders = {}
-        
+
         # Loading the sensors
         start = time.time()
         logger.info("Loading existing sensors from database.")
@@ -2020,8 +2028,7 @@ class terrariumEngine(object):
         else:
             # We are using total() vs sum() as total() will always return a number. https://sqlite.org/lang_aggfunc.html#sumunc
             with orm.db_session():
-                data = db.select(
-                    """SELECT
+                data = db.select("""SELECT
                         TOTAL(total_wattage) AS wattage,
                         TOTAL(total_flow)    AS flow,
                         IFNULL((JulianDay(MAX(off)) - JulianDay(MIN(`on`))) * 24 * 60 * 60,0) AS duration
@@ -2038,8 +2045,7 @@ class terrariumEngine(object):
                                 ON RH2.relay = RH1.relay
                                 AND RH2.timestamp = (SELECT MIN(timestamp) FROM RelayHistory WHERE timestamp > RH1.timestamp AND relay = RH1.relay)
                             WHERE RH1.value > 0
-                        )"""
-                )
+                        )""")
 
                 totals = {"total_watt": data[0][0], "total_flow": data[0][1], "duration": data[0][2]}
                 thread_return[0] = totals
@@ -2052,9 +2058,9 @@ class terrariumEngine(object):
         """Load all feeders from database"""
         from terrariumDatabase import Feeder as FeedersDB
         from hardware.feeder import terrariumFeeder
-        
+
         self.feeders = {}
-        
+
         @orm.db_session
         def _load():
             for feeder_data in orm.select(f for f in FeedersDB):
@@ -2066,19 +2072,58 @@ class terrariumEngine(object):
                         feeder_data.name,
                         feeder_data.servo_config,
                         feeder_data.schedule,
-                        callback=self.callback_feeder
+                        callback=self.callback_feeder,
                     )
                     self.feeders[feeder_data.id] = feeder
                     logger.info(f"Loaded feeder: {feeder_data.name}")
                 except Exception as e:
                     logger.error(f"Failed to load feeder {feeder_data.name}: {e}")
-        
+
         _load()
-    
+
+    def scan_new_feeders(self):
+        """Scan for new feeders in the database
+
+        Unlike relays, feeders don't have auto-discovery hardware scanning.
+        This method reloads feeders from the database to pick up any manually added feeders.
+
+        Returns:
+            int: Number of new feeders found
+        """
+        from terrariumDatabase import Feeder as FeedersDB
+        from hardware.feeder import terrariumFeeder
+
+        existing_ids = set(self.feeders.keys())
+        new_count = 0
+
+        @orm.db_session
+        def _scan():
+            nonlocal new_count
+            for feeder_data in orm.select(f for f in FeedersDB):
+                if feeder_data.id not in existing_ids:
+                    try:
+                        feeder = terrariumFeeder(
+                            feeder_data.id,
+                            feeder_data.enclosure.id,
+                            feeder_data.hardware,
+                            feeder_data.name,
+                            feeder_data.servo_config,
+                            feeder_data.schedule,
+                            callback=self.callback_feeder,
+                        )
+                        self.feeders[feeder_data.id] = feeder
+                        new_count += 1
+                        logger.info(f"Scanned and loaded new feeder: {feeder_data.name}")
+                    except Exception as e:
+                        logger.error(f"Failed to load feeder {feeder_data.name}: {e}")
+
+        _scan()
+        return new_count
+
     def callback_feeder(self, feeder_id, status, portion_size):
         """Callback when feeder operation completes"""
         from terrariumDatabase import Feeder, FeedingHistory
-        
+
         @orm.db_session
         def _update():
             try:
@@ -2087,18 +2132,18 @@ class terrariumEngine(object):
                     feeder=feeder,
                     timestamp=datetime.datetime.now(),
                     status=status,
-                    portion_size=portion_size if status == 'success' else 0
+                    portion_size=portion_size if status == "success" else 0,
                 )
                 orm.commit()
             except Exception as e:
                 logger.error(f"Failed to record feeding history: {e}")
-        
+
         _update()
-    
+
     def check_feeder_schedules(self):
         """Check if any feeders should be fed based on schedule"""
         from terrariumDatabase import Feeder
-        
+
         @orm.db_session
         def _check():
             for feeder_id, feeder in self.feeders.items():
@@ -2106,30 +2151,30 @@ class terrariumEngine(object):
                     feeder_db = Feeder[feeder_id]
                     if not feeder_db.enabled:
                         continue
-                    
+
                     schedule = feeder_db.schedule
                     now = datetime.datetime.now()
                     current_time = now.strftime("%H:%M")
-                    
+
                     for feed_name, feed_config in schedule.items():
-                        if not feed_config.get('enabled', True):
+                        if not feed_config.get("enabled", True):
                             continue
-                        
-                        if feed_config.get('time') == current_time:
+
+                        if feed_config.get("time") == current_time:
                             # Check if we already fed in this minute
-                            last_history = feeder_db.history.filter(
-                                lambda h: h.timestamp >= now - datetime.timedelta(minutes=1)
-                            ).order_by(orm.desc(FeedingHistory.timestamp)).first()
-                            
+                            last_history = (
+                                feeder_db.history.filter(lambda h: h.timestamp >= now - timedelta(minutes=1))
+                                .order_by(orm.desc(FeedingHistory.timestamp))
+                                .first()
+                            )
+
                             if not last_history:
-                                portion = feed_config.get('portion_size', feeder_db.servo_config.get('portion_size', 1.0))
+                                portion = feed_config.get(
+                                    "portion_size", feeder_db.servo_config.get("portion_size", 1.0)
+                                )
                                 # Run in thread to avoid blocking
-                                threading.Thread(
-                                    target=feeder.feed,
-                                    args=(portion,),
-                                    daemon=True
-                                ).start()
+                                threading.Thread(target=feeder.feed, args=(portion,), daemon=True).start()
                 except Exception as e:
                     logger.error(f"Error checking feeder schedule: {e}")
-        
+
         _check()
