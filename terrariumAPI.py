@@ -2161,7 +2161,25 @@ class terrariumAPI(object):
         try:
             feeder_obj = Feeder[feeder]
             feeder_obj.name = request.json.get("name", feeder_obj.name)
-            feeder_obj.hardware = request.json.get("hardware", feeder_obj.hardware)
+            
+            # Validate and update GPIO hardware pin if provided
+            if "hardware" in request.json:
+                hardware = request.json["hardware"]
+                try:
+                    gpio_pin = int(hardware)
+                    # Valid BCM GPIO pins on Raspberry Pi range from 0 to 27
+                    if gpio_pin < 0 or gpio_pin > 27:
+                        raise HTTPError(
+                            status=400,
+                            body=f"Invalid GPIO pin number: {gpio_pin}. Must be between 0 and 27.",
+                        )
+                except ValueError:
+                    raise HTTPError(
+                        status=400,
+                        body=f"Invalid GPIO pin number: {hardware}. Must be a numeric value.",
+                    )
+                feeder_obj.hardware = hardware
+            
             feeder_obj.enabled = request.json.get("enabled", feeder_obj.enabled)
             
             # Validate servo_config if provided
