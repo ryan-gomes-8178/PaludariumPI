@@ -2035,6 +2035,59 @@ class terrariumAPI(object):
         except Exception as ex:
             raise HTTPError(status=500, body=f"Error getting feeder {feeder} detail. {ex}")
     
+    def _validate_servo_config(self, servo_config):
+        """
+        Validate servo configuration parameters
+        
+        Args:
+            servo_config (dict): Configuration to validate
+            
+        Raises:
+            HTTPError: If validation fails
+        """
+        if not isinstance(servo_config, dict):
+            raise HTTPError(status=400, body="servo_config must be a dictionary")
+        
+        # Validate feed_angle (0-180 degrees)
+        if "feed_angle" in servo_config:
+            feed_angle = servo_config["feed_angle"]
+            if not isinstance(feed_angle, (int, float)):
+                raise HTTPError(status=400, body="feed_angle must be a number")
+            if feed_angle < 0 or feed_angle > 180:
+                raise HTTPError(status=400, body="feed_angle must be between 0 and 180 degrees")
+        
+        # Validate rest_angle (0-180 degrees)
+        if "rest_angle" in servo_config:
+            rest_angle = servo_config["rest_angle"]
+            if not isinstance(rest_angle, (int, float)):
+                raise HTTPError(status=400, body="rest_angle must be a number")
+            if rest_angle < 0 or rest_angle > 180:
+                raise HTTPError(status=400, body="rest_angle must be between 0 and 180 degrees")
+        
+        # Validate rotate_duration (must be positive)
+        if "rotate_duration" in servo_config:
+            rotate_duration = servo_config["rotate_duration"]
+            if not isinstance(rotate_duration, (int, float)):
+                raise HTTPError(status=400, body="rotate_duration must be a number")
+            if rotate_duration <= 0:
+                raise HTTPError(status=400, body="rotate_duration must be positive")
+        
+        # Validate feed_hold_duration (must be positive)
+        if "feed_hold_duration" in servo_config:
+            feed_hold_duration = servo_config["feed_hold_duration"]
+            if not isinstance(feed_hold_duration, (int, float)):
+                raise HTTPError(status=400, body="feed_hold_duration must be a number")
+            if feed_hold_duration <= 0:
+                raise HTTPError(status=400, body="feed_hold_duration must be positive")
+        
+        # Validate portion_size (must be positive)
+        if "portion_size" in servo_config:
+            portion_size = servo_config["portion_size"]
+            if not isinstance(portion_size, (int, float)):
+                raise HTTPError(status=400, body="portion_size must be a number")
+            if portion_size <= 0:
+                raise HTTPError(status=400, body="portion_size must be positive")
+    
     @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
     def feeder_add(self):
         from terrariumDatabase import Feeder, Enclosure
@@ -2042,17 +2095,21 @@ class terrariumAPI(object):
             # Verify enclosure exists
             _ = Enclosure[request.json["enclosure"]]
             
+            # Get and validate servo_config
+            servo_config = request.json.get("servo_config", {
+                "feed_angle": 90,
+                "rest_angle": 0,
+                "rotate_duration": 1000,
+                "feed_hold_duration": 1500,
+                "portion_size": 1.0
+            })
+            self._validate_servo_config(servo_config)
+            
             feeder = Feeder(
                 enclosure=Enclosure[request.json["enclosure"]],
                 name=request.json["name"],
                 hardware=request.json["hardware"],
-                servo_config=request.json.get("servo_config", {
-                    "feed_angle": 90,
-                    "rest_angle": 0,
-                    "rotate_duration": 1000,
-                    "feed_hold_duration": 1500,
-                    "portion_size": 1.0
-                }),
+                servo_config=servo_config,
                 schedule=request.json.get("schedule", {})
             )
             orm.commit()
@@ -2073,7 +2130,13 @@ class terrariumAPI(object):
             feeder_obj = Feeder[feeder]
             feeder_obj.name = request.json.get("name", feeder_obj.name)
             feeder_obj.enabled = request.json.get("enabled", feeder_obj.enabled)
-            feeder_obj.servo_config = request.json.get("servo_config", feeder_obj.servo_config)
+            
+            # Validate servo_config if provided
+            if "servo_config" in request.json:
+                servo_config = request.json.get("servo_config", feeder_obj.servo_config)
+                self._validate_servo_config(servo_config)
+                feeder_obj.servo_config = servo_config
+            
             feeder_obj.schedule = request.json.get("schedule", feeder_obj.schedule)
             feeder_obj.notification = request.json.get("notification", feeder_obj.notification)
             orm.commit()
