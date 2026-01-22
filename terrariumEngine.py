@@ -2143,6 +2143,21 @@ class terrariumEngine(object):
 
         _update()
 
+    def _feed_with_tracking(self, feeder_id, feeder, portion):
+        """
+        Wrapper to feed a feeder and track completion
+        
+        Args:
+            feeder_id: ID of the feeder
+            feeder: Feeder instance
+            portion: Portion size to feed
+        """
+        try:
+            feeder.feed(portion)
+        finally:
+            with self._feeding_lock:
+                self._feeding_in_progress.discard(feeder_id)
+
     def check_feeder_schedules(self):
         """Check if any feeders should be fed based on schedule"""
 
@@ -2183,16 +2198,12 @@ class terrariumEngine(object):
                                     "portion_size", feeder_db.servo_config.get("portion_size", 1.0)
                                 )
                                 
-                                # Wrapper function to track feeding completion
-                                def feed_wrapper():
-                                    try:
-                                        feeder.feed(portion)
-                                    finally:
-                                        with self._feeding_lock:
-                                            self._feeding_in_progress.discard(feeder_id)
-                                
                                 # Run in thread to avoid blocking
-                                threading.Thread(target=feed_wrapper, daemon=True).start()
+                                threading.Thread(
+                                    target=self._feed_with_tracking,
+                                    args=(feeder_id, feeder, portion),
+                                    daemon=True
+                                ).start()
                 except Exception as e:
                     logger.error(f"Error checking feeder schedule: {e}")
 
