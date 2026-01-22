@@ -2084,7 +2084,7 @@ class terrariumAPI(object):
         # Validate rotate_duration (must be positive)
         if "rotate_duration" in servo_config:
             rotate_duration = servo_config["rotate_duration"]
-            if not isinstance(rotate_duration, (int, float)):
+            if isinstance(rotate_duration, bool) or not isinstance(rotate_duration, (int, float)):
                 raise HTTPError(status=400, body="rotate_duration must be a number")
             if rotate_duration <= 0:
                 raise HTTPError(status=400, body="rotate_duration must be positive")
