@@ -689,13 +689,11 @@ export const fetchFeeders = async (feeder_id, cb) => {
   if (feeder_id) {
     url += `${feeder_id}/`;
   }
-  console.log('Fetching feeders from:', url);
   await _getData(url, cb);
 };
 
 export const addFeeder = async (data, cb) => {
   delete data.id;
-  console.log('Adding feeder:', data);
   await _postData(`${apiHost}/feeders/`, data, cb);
 };
 
