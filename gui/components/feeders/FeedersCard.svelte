@@ -7,7 +7,7 @@
   const dispatch = createEventDispatcher();
   let isFeedingNow = false;
 
-  async function triggerManualFeed() {
+  function triggerManualFeed() {
     try {
       isFeedingNow = true;
       manualFeed(feeder.id, feeder.servo_config.portion_size, (data) => {
@@ -20,7 +20,7 @@
     }
   }
 
-  async function testServo() {
+  function testServo() {
     try {
       testFeederServo(feeder.id, (data) => {
         console.log('Servo test result:', data);
@@ -46,7 +46,7 @@
   <div class="card-body">
     <div class="info-row">
       <label>Enclosure:</label>
-      <span>{feeder.enclosure}</span>
+      <span>{feeder.enclosure?.name ?? ''}</span>
     </div>
     <div class="info-row">
       <label>GPIO:</label>
