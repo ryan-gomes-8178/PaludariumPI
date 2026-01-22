@@ -2032,8 +2032,6 @@ class terrariumAPI(object):
 
     @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
     def feeder_list(self):
-        from terrariumDatabase import Feeder
-
         return {
             "data": [
                 self.feeder_detail(feeder.id)
@@ -2050,7 +2048,60 @@ class terrariumAPI(object):
             raise HTTPError(status=404, body=f"Feeder with id {feeder} does not exist.")
         except Exception as ex:
             raise HTTPError(status=500, body=f"Error getting feeder {feeder} detail. {ex}")
-
+    
+    def _validate_servo_config(self, servo_config):
+        """
+        Validate servo configuration parameters
+        
+        Args:
+            servo_config (dict): Configuration to validate
+            
+        Raises:
+            HTTPError: If validation fails
+        """
+        if not isinstance(servo_config, dict):
+            raise HTTPError(status=400, body="servo_config must be a dictionary")
+        
+        # Validate feed_angle (0-180 degrees)
+        if "feed_angle" in servo_config:
+            feed_angle = servo_config["feed_angle"]
+            if isinstance(feed_angle, bool) or not isinstance(feed_angle, (int, float)):
+                raise HTTPError(status=400, body="feed_angle must be a number")
+            if feed_angle < 0 or feed_angle > 180:
+                raise HTTPError(status=400, body="feed_angle must be between 0 and 180 degrees")
+        
+        # Validate rest_angle (0-180 degrees)
+        if "rest_angle" in servo_config:
+            rest_angle = servo_config["rest_angle"]
+            if isinstance(rest_angle, bool) or not isinstance(rest_angle, (int, float)):
+                raise HTTPError(status=400, body="rest_angle must be a number")
+            if rest_angle < 0 or rest_angle > 180:
+                raise HTTPError(status=400, body="rest_angle must be between 0 and 180 degrees")
+        
+        # Validate rotate_duration (must be positive)
+        if "rotate_duration" in servo_config:
+            rotate_duration = servo_config["rotate_duration"]
+            if isinstance(rotate_duration, bool) or not isinstance(rotate_duration, (int, float)):
+                raise HTTPError(status=400, body="rotate_duration must be a number")
+            if rotate_duration <= 0:
+                raise HTTPError(status=400, body="rotate_duration must be positive")
+        
+        # Validate feed_hold_duration (must be positive)
+        if "feed_hold_duration" in servo_config:
+            feed_hold_duration = servo_config["feed_hold_duration"]
+            if not (isinstance(feed_hold_duration, (int, float)) and not isinstance(feed_hold_duration, bool)):
+                raise HTTPError(status=400, body="feed_hold_duration must be a number")
+            if feed_hold_duration <= 0:
+                raise HTTPError(status=400, body="feed_hold_duration must be positive")
+        
+        # Validate portion_size (must be positive)
+        if "portion_size" in servo_config:
+            portion_size = servo_config["portion_size"]
+            if not isinstance(portion_size, (int, float)) or isinstance(portion_size, bool):
+                raise HTTPError(status=400, body="portion_size must be a number")
+            if portion_size <= 0:
+                raise HTTPError(status=400, body="portion_size must be positive")
+    
     @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
     def feeder_add(self):
         try:
@@ -2067,21 +2118,25 @@ class terrariumAPI(object):
             except ValueError:
                 raise HTTPError(status=400, body=f'Invalid GPIO pin number: {hardware}. Must be a numeric value.')
             
+            # Get and validate servo_config
+            servo_config = request.json.get("servo_config", {
+                "feed_angle": 90,
+                "rest_angle": 0,
+                "rotate_duration": 1000,
+                "feed_hold_duration": 1500,
+                "portion_size": 1.0
+            })
+            try:
+                self._validate_servo_config(servo_config)
+            except HTTPError:
+                raise
+            
             feeder = Feeder(
                 enclosure=Enclosure[request.json["enclosure"]],
                 name=request.json["name"],
                 hardware=request.json["hardware"],
-                servo_config=request.json.get(
-                    "servo_config",
-                    {
-                        "feed_angle": 90,
-                        "rest_angle": 0,
-                        "rotate_duration": 1000,
-                        "feed_hold_duration": 1500,
-                        "portion_size": 1.0,
-                    },
-                ),
-                schedule=request.json.get("schedule", {}),
+                servo_config=servo_config,
+                schedule=request.json.get("schedule", {})
             )
             orm.commit()
 
@@ -2089,6 +2144,8 @@ class terrariumAPI(object):
             self.webserver.engine.load_feeders()
 
             return self.feeder_detail(feeder.id)
+        except HTTPError:
+            raise
         except orm.core.ObjectNotFound:
             raise HTTPError(status=404, body=f'Enclosure with id {request.json.get("enclosure")} does not exist.')
         except Exception as ex:
@@ -2099,9 +2156,36 @@ class terrariumAPI(object):
         try:
             feeder_obj = Feeder[feeder]
             feeder_obj.name = request.json.get("name", feeder_obj.name)
-            feeder_obj.hardware = request.json.get("hardware", feeder_obj.hardware)
+            
+            # Validate and update GPIO hardware pin if provided
+            if "hardware" in request.json:
+                hardware = request.json["hardware"]
+                try:
+                    gpio_pin = int(hardware)
+                    # Valid BCM GPIO pins on Raspberry Pi range from 0 to 27
+                    if gpio_pin < 0 or gpio_pin > 27:
+                        raise HTTPError(
+                            status=400,
+                            body=f"Invalid GPIO pin number: {gpio_pin}. Must be between 0 and 27.",
+                        )
+                except ValueError:
+                    raise HTTPError(
+                        status=400,
+                        body=f"Invalid GPIO pin number: {hardware}. Must be a numeric value.",
+                    )
+                feeder_obj.hardware = hardware
+            
             feeder_obj.enabled = request.json.get("enabled", feeder_obj.enabled)
-            feeder_obj.servo_config = request.json.get("servo_config", feeder_obj.servo_config)
+            
+            # Validate servo_config if provided
+            if "servo_config" in request.json:
+                servo_config = request.json["servo_config"]
+                try:
+                    self._validate_servo_config(servo_config)
+                except HTTPError:
+                    raise
+                feeder_obj.servo_config = servo_config
+            
             feeder_obj.schedule = request.json.get("schedule", feeder_obj.schedule)
             feeder_obj.notification = request.json.get("notification", feeder_obj.notification)
             
@@ -2116,6 +2200,8 @@ class terrariumAPI(object):
             self.webserver.engine.load_feeders()
 
             return self.feeder_detail(feeder_obj.id)
+        except HTTPError:
+            raise
         except orm.core.ObjectNotFound:
             raise HTTPError(status=404, body=f"Feeder with id {feeder} does not exist.")
         except Exception as ex:
@@ -2172,7 +2258,6 @@ class terrariumAPI(object):
 
     @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
     def feeder_history(self, feeder, action="history", period="day"):
-        
         try:
             feeder_obj = Feeder[feeder]
 
