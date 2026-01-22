@@ -2140,7 +2140,6 @@ class terrariumEngine(object):
 
     def check_feeder_schedules(self):
         """Check if any feeders should be fed based on schedule"""
-        from terrariumDatabase import Feeder
 
         @orm.db_session
         def _check():
