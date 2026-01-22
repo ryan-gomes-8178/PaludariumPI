@@ -46,7 +46,7 @@
   <div class="card-body">
     <div class="info-row">
       <label>Enclosure:</label>
-      <span>{feeder.enclosure?.name ?? ''}</span>
+      <span>{feeder.enclosure}</span>
     </div>
     <div class="info-row">
       <label>GPIO:</label>
@@ -85,6 +85,10 @@
     overflow: hidden;
   }
 
+  :global(.dark-mode) .feeder-card {
+    border-color: #4b5563;
+  }
+
   .card-header {
     background-color: #f5f5f5;
     padding: 15px;
@@ -93,13 +97,27 @@
     align-items: center;
   }
 
+  :global(.dark-mode) .card-header {
+    background-color: #343a40;
+  }
+
   .card-header h3 {
     margin: 0;
     font-size: 18px;
+    color: #333;
+  }
+
+  :global(.dark-mode) .card-header h3 {
+    color: #fff;
   }
 
   .card-body {
     padding: 15px;
+    background-color: #fff;
+  }
+
+  :global(.dark-mode) .card-body {
+    background-color: #454d55;
   }
 
   .info-row {
@@ -114,12 +132,28 @@
     color: #666;
   }
 
+  :global(.dark-mode) .info-row label {
+    color: #adb5bd;
+  }
+
+  .info-row span {
+    color: #333;
+  }
+
+  :global(.dark-mode) .info-row span {
+    color: #e9ecef;
+  }
+
   .card-actions {
     padding: 15px;
     background-color: #f9f9f9;
     display: flex;
     gap: 5px;
     flex-wrap: wrap;
+  }
+
+  :global(.dark-mode) .card-actions {
+    background-color: #2d3238;
   }
 
   .btn {
