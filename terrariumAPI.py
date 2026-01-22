@@ -2043,6 +2043,7 @@ class terrariumAPI(object):
 
     @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
     def feeder_detail(self, feeder):
+        from terrariumDatabase import Feeder
         try:
             feeder_obj = Feeder[feeder]
             return feeder_obj.to_dict()
@@ -2106,9 +2107,20 @@ class terrariumAPI(object):
     
     @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
     def feeder_add(self):
+        from terrariumDatabase import Feeder, Enclosure
         try:
             # Verify enclosure exists
             _ = Enclosure[request.json["enclosure"]]
+            
+            # Validate GPIO pin number
+            hardware = request.json["hardware"]
+            try:
+                gpio_pin = int(hardware)
+                # Valid BCM GPIO pins on Raspberry Pi range from 0 to 27
+                if gpio_pin < 0 or gpio_pin > 27:
+                    raise HTTPError(status=400, body=f'Invalid GPIO pin number: {gpio_pin}. Must be between 0 and 27.')
+            except ValueError:
+                raise HTTPError(status=400, body=f'Invalid GPIO pin number: {hardware}. Must be a numeric value.')
             
             # Get and validate servo_config
             servo_config = request.json.get("servo_config", {
@@ -2140,6 +2152,7 @@ class terrariumAPI(object):
 
     @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
     def feeder_update(self, feeder):
+        from terrariumDatabase import Feeder, Enclosure
         try:
             feeder_obj = Feeder[feeder]
             feeder_obj.name = request.json.get("name", feeder_obj.name)
@@ -2173,6 +2186,7 @@ class terrariumAPI(object):
 
     @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
     def feeder_delete(self, feeder):
+        from terrariumDatabase import Feeder
         try:
             feeder_obj = Feeder[feeder]
             message = f"Feeder {feeder_obj.name} is deleted."
@@ -2222,6 +2236,7 @@ class terrariumAPI(object):
 
     @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
     def feeder_history(self, feeder, action="history", period="day"):
+        from terrariumDatabase import Feeder, FeedingHistory
         
         try:
             feeder_obj = Feeder[feeder]
