@@ -2032,8 +2032,6 @@ class terrariumAPI(object):
 
     @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
     def feeder_list(self):
-        from terrariumDatabase import Feeder
-
         return {
             "data": [
                 self.feeder_detail(feeder.id)
@@ -2043,7 +2041,6 @@ class terrariumAPI(object):
 
     @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
     def feeder_detail(self, feeder):
-        from terrariumDatabase import Feeder
         try:
             feeder_obj = Feeder[feeder]
             return feeder_obj.to_dict()
@@ -2068,7 +2065,7 @@ class terrariumAPI(object):
         # Validate feed_angle (0-180 degrees)
         if "feed_angle" in servo_config:
             feed_angle = servo_config["feed_angle"]
-            if not isinstance(feed_angle, (int, float)):
+            if isinstance(feed_angle, bool) or not isinstance(feed_angle, (int, float)):
                 raise HTTPError(status=400, body="feed_angle must be a number")
             if feed_angle < 0 or feed_angle > 180:
                 raise HTTPError(status=400, body="feed_angle must be between 0 and 180 degrees")
@@ -2076,7 +2073,7 @@ class terrariumAPI(object):
         # Validate rest_angle (0-180 degrees)
         if "rest_angle" in servo_config:
             rest_angle = servo_config["rest_angle"]
-            if not isinstance(rest_angle, (int, float)):
+            if isinstance(rest_angle, bool) or not isinstance(rest_angle, (int, float)):
                 raise HTTPError(status=400, body="rest_angle must be a number")
             if rest_angle < 0 or rest_angle > 180:
                 raise HTTPError(status=400, body="rest_angle must be between 0 and 180 degrees")
@@ -2107,7 +2104,6 @@ class terrariumAPI(object):
     
     @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
     def feeder_add(self):
-        from terrariumDatabase import Feeder, Enclosure
         try:
             # Verify enclosure exists
             _ = Enclosure[request.json["enclosure"]]
@@ -2132,10 +2128,8 @@ class terrariumAPI(object):
             })
             try:
                 self._validate_servo_config(servo_config)
-            except HTTPError as e:
-                # Return HTTPError directly so it is not wrapped by a generic
-                # except Exception handler higher up in this try block.
-                return e
+            except HTTPError:
+                raise
             
             feeder = Feeder(
                 enclosure=Enclosure[request.json["enclosure"]],
@@ -2150,6 +2144,8 @@ class terrariumAPI(object):
             self.webserver.engine.load_feeders()
 
             return self.feeder_detail(feeder.id)
+        except HTTPError:
+            raise
         except orm.core.ObjectNotFound:
             raise HTTPError(status=404, body=f'Enclosure with id {request.json.get("enclosure")} does not exist.')
         except Exception as ex:
@@ -2157,7 +2153,6 @@ class terrariumAPI(object):
 
     @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
     def feeder_update(self, feeder):
-        from terrariumDatabase import Feeder, Enclosure
         try:
             feeder_obj = Feeder[feeder]
             feeder_obj.name = request.json.get("name", feeder_obj.name)
@@ -2185,7 +2180,10 @@ class terrariumAPI(object):
             # Validate servo_config if provided
             if "servo_config" in request.json:
                 servo_config = request.json["servo_config"]
-                self._validate_servo_config(servo_config)
+                try:
+                    self._validate_servo_config(servo_config)
+                except HTTPError:
+                    raise
                 feeder_obj.servo_config = servo_config
             
             feeder_obj.schedule = request.json.get("schedule", feeder_obj.schedule)
@@ -2202,6 +2200,8 @@ class terrariumAPI(object):
             self.webserver.engine.load_feeders()
 
             return self.feeder_detail(feeder_obj.id)
+        except HTTPError:
+            raise
         except orm.core.ObjectNotFound:
             raise HTTPError(status=404, body=f"Feeder with id {feeder} does not exist.")
         except Exception as ex:
@@ -2209,7 +2209,6 @@ class terrariumAPI(object):
 
     @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
     def feeder_delete(self, feeder):
-        from terrariumDatabase import Feeder
         try:
             feeder_obj = Feeder[feeder]
             message = f"Feeder {feeder_obj.name} is deleted."
@@ -2259,8 +2258,6 @@ class terrariumAPI(object):
 
     @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
     def feeder_history(self, feeder, action="history", period="day"):
-        from terrariumDatabase import Feeder, FeedingHistory
-        
         try:
             feeder_obj = Feeder[feeder]
 
