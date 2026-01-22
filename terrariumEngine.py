@@ -2130,7 +2130,7 @@ class terrariumEngine(object):
                 feeder = Feeder[feeder_id]
                 FeedingHistory(
                     feeder=feeder,
-                    timestamp=datetime.now(),
+                    timestamp=datetime.datetime.now(),
                     status=status,
                     portion_size=portion_size if status == "success" else 0,
                 )
@@ -2153,7 +2153,7 @@ class terrariumEngine(object):
                         continue
 
                     schedule = feeder_db.schedule
-                    now = datetime.now()
+                    now = datetime.datetime.now()
                     current_time = now.strftime("%H:%M")
 
                     for feed_name, feed_config in schedule.items():
