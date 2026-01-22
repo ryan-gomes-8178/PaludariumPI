@@ -2068,14 +2068,21 @@ class terrariumAPI(object):
     
     @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
     def feeder_update(self, feeder):
-        from terrariumDatabase import Feeder
+        from terrariumDatabase import Feeder, Enclosure
         try:
             feeder_obj = Feeder[feeder]
             feeder_obj.name = request.json.get("name", feeder_obj.name)
+            feeder_obj.hardware = request.json.get("hardware", feeder_obj.hardware)
             feeder_obj.enabled = request.json.get("enabled", feeder_obj.enabled)
             feeder_obj.servo_config = request.json.get("servo_config", feeder_obj.servo_config)
             feeder_obj.schedule = request.json.get("schedule", feeder_obj.schedule)
             feeder_obj.notification = request.json.get("notification", feeder_obj.notification)
+            
+            # Handle enclosure update - check both 'enclosure' and 'enclosure_id' fields
+            enclosure_id = request.json.get("enclosure_id") or request.json.get("enclosure")
+            if enclosure_id and enclosure_id != feeder_obj.enclosure.id:
+                feeder_obj.enclosure = Enclosure[enclosure_id]
+            
             orm.commit()
             
             # Reload feeder into engine

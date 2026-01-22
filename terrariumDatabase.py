@@ -715,7 +715,10 @@ class Feeder(db.Entity):
     
     def to_dict(self, only=None, exclude=None, with_collections=False, with_lazy=False, related_objects=False):
         data = copy.deepcopy(super().to_dict(only, exclude, with_collections, with_lazy, related_objects))
-        # Add computed fields if needed
+        # Replace enclosure ID with enclosure name for display
+        if 'enclosure' in data and self.enclosure:
+            data['enclosure_id'] = data['enclosure']
+            data['enclosure'] = self.enclosure.name
         return data
     
     def __repr__(self):

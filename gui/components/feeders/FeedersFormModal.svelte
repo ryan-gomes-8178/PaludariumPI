@@ -55,12 +55,15 @@
     error = '';
     console.log('Submitting feeder:', formData);
 
-    addFeeder(formData, (data) => {
+    const saveFunction = formData.id ? updateFeeder : addFeeder;
+    const action = formData.id ? 'updated' : 'saved';
+    
+    saveFunction(formData, (data) => {
       console.log('Feeder save response:', data);
       isSaving = false;
       if (data && !data.error) {
         successNotification(
-          $_('notification.feeder.saved', { default: 'Feeder saved successfully' }),
+          $_(`notification.feeder.${action}`, { default: `Feeder ${action} successfully` }),
           $_('feeders.menu.title', { default: 'Feeders' })
         );
         console.log('Dispatching save event to reload feeders list');
@@ -95,6 +98,10 @@
     if (item) {
       feeder = item;
       formData = { ...item };
+      // Restore enclosure_id if it exists (backend sends both enclosure name and enclosure_id)
+      if (item.enclosure_id && !item.enclosure.match(/^[0-9a-f-]{36}$/)) {
+        formData.enclosure = item.enclosure_id;
+      }
     } else {
       feeder = null;
       formData = {
