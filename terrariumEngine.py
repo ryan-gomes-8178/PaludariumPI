@@ -2163,7 +2163,7 @@ class terrariumEngine(object):
                         if feed_config.get("time") == current_time:
                             # Check if we already fed in this minute
                             last_history = (
-                                feeder_db.history.filter(lambda h: h.timestamp >= now - timedelta(minutes=1))
+                                feeder_db.history.filter(lambda h: h.timestamp >= now - datetime.timedelta(minutes=1))
                                 .order_by(orm.desc(FeedingHistory.timestamp))
                                 .first()
                             )
