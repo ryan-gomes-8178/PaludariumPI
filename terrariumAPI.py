@@ -2100,7 +2100,7 @@ class terrariumAPI(object):
         # Validate portion_size (must be positive)
         if "portion_size" in servo_config:
             portion_size = servo_config["portion_size"]
-            if not isinstance(portion_size, (int, float)):
+            if not isinstance(portion_size, (int, float)) or isinstance(portion_size, bool):
                 raise HTTPError(status=400, body="portion_size must be a number")
             if portion_size <= 0:
                 raise HTTPError(status=400, body="portion_size must be positive")
