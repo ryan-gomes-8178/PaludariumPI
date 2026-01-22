@@ -160,6 +160,8 @@ class terrariumEngine(object):
         # Feeder initialization
         self.feeders = {}
         self.load_feeders()
+        self._feeding_in_progress = set()  # Track feeders currently being fed
+        self._feeding_lock = threading.Lock()  # Lock for thread-safe access to _feeding_in_progress
 
         # Loading the sensors
         start = time.time()
@@ -2061,6 +2063,9 @@ class terrariumEngine(object):
         from hardware.feeder import terrariumFeeder
 
         self.feeders = {}
+        # Clear feeding tracking when reloading feeders
+        with self._feeding_lock:
+            self._feeding_in_progress.clear()
 
         @orm.db_session
         def _load():
@@ -2140,6 +2145,21 @@ class terrariumEngine(object):
 
         _update()
 
+    def _feed_with_tracking(self, feeder_id, feeder, portion):
+        """
+        Wrapper to feed a feeder and track completion
+        
+        Args:
+            feeder_id: ID of the feeder
+            feeder: Feeder instance
+            portion: Portion size to feed
+        """
+        try:
+            feeder.feed(portion)
+        finally:
+            with self._feeding_lock:
+                self._feeding_in_progress.discard(feeder_id)
+
     def check_feeder_schedules(self):
         """Check if any feeders should be fed based on schedule"""
 
@@ -2168,11 +2188,24 @@ class terrariumEngine(object):
                             )
 
                             if not last_history:
+                                # Check if this feeder is already being fed
+                                with self._feeding_lock:
+                                    if feeder_id in self._feeding_in_progress:
+                                        logger.debug(f"Feeder {feeder_id} is already being fed, skipping")
+                                        continue
+                                    # Mark this feeder as being fed
+                                    self._feeding_in_progress.add(feeder_id)
+                                
                                 portion = feed_config.get(
                                     "portion_size", feeder_db.servo_config.get("portion_size", 1.0)
                                 )
+                                
                                 # Run in thread to avoid blocking
-                                threading.Thread(target=feeder.feed, args=(portion,), daemon=True).start()
+                                threading.Thread(
+                                    target=self._feed_with_tracking,
+                                    args=(feeder_id, feeder, portion),
+                                    daemon=True
+                                ).start()
                 except Exception as e:
                     logger.error(f"Error checking feeder schedule: {e}")
 
