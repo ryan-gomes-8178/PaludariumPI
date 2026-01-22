@@ -59,6 +59,14 @@ def json_serial(obj):
     if isinstance(obj, (datetime,)):
         return obj.timestamp()
 
+    # Make ORM entities (e.g. Feeder, Enclosure, Relay, etc.) serializable
+    try:
+        # Avoid direct imports to keep this utility light
+        if hasattr(obj, "to_dict") and callable(obj.to_dict):
+            return obj.to_dict()
+    except Exception:
+        pass
+
     raise TypeError(f"Type {type(obj)} not serializable")
 
 
@@ -1137,6 +1145,7 @@ class terrariumAPI(object):
 
     # Enclosure
     @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
+    @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
     def enclosure_list(self):
         return {
             "data": [
@@ -1580,6 +1589,7 @@ class terrariumAPI(object):
     def relay_hardware(self):
         return {"data": terrariumRelay.available_relays}
 
+    @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
     def relay_scan(self):
         current_amount = len(self.webserver.engine.relays)
         self.webserver.engine.scan_new_relays()
@@ -2003,6 +2013,7 @@ class terrariumAPI(object):
             raise HTTPError(status=500, body=f"Setting {setting} could not be removed. {ex}")
 
      # Feeders
+    @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
     @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
     def feeder_list(self):
         from terrariumDatabase import Feeder

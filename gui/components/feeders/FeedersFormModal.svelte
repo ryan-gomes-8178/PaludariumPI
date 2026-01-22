@@ -51,30 +51,38 @@
   }
 
   function handleSubmit() {
-    try {
-      isSaving = true;
-      error = '';
-      console.log('Submitting feeder:', formData);
+    isSaving = true;
+    error = '';
+    console.log('Submitting feeder:', formData);
 
-      addFeeder(formData, (data) => {
-        console.log('Feeder saved:', data);
+    addFeeder(formData, (data) => {
+      console.log('Feeder save response:', data);
+      isSaving = false;
+      if (data && !data.error) {
         successNotification(
           $_('notification.feeder.saved', { default: 'Feeder saved successfully' }),
           $_('feeders.menu.title', { default: 'Feeders' })
         );
+        console.log('Dispatching save event to reload feeders list');
         dispatch('save');
         hide();
-      });
-    } catch (e) {
-      error = e.message;
+      } else {
+        error = data?.error || 'Failed to save feeder';
+        console.error('Save error:', error);
+        errorNotification(
+          error,
+          $_('feeders.menu.title', { default: 'Feeders' })
+        );
+      }
+    }).catch(e => {
+      isSaving = false;
+      error = e.message || 'Failed to save feeder';
+      console.error('Form error:', e);
       errorNotification(
         error,
         $_('feeders.menu.title', { default: 'Feeders' })
       );
-      console.error('Form error:', e);
-    } finally {
-      isSaving = false;
-    }
+    });
   }
 
   function hide() {

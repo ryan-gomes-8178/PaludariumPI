@@ -1,5 +1,6 @@
 <script>
   import { onMount } from 'svelte';
+  import { _ } from 'svelte-i18n';
   import FeedersCard from '../components/feeders/FeedersCard.svelte';
   import FeedersFormModal from '../components/feeders/FeedersFormModal.svelte';
   import { fetchFeeders, deleteFeeder } from '../providers/api';
@@ -10,15 +11,24 @@
   let feedersModal;
 
   onMount(() => {
+    document.title = $_('feeders.menu.title', { default: 'Feeders' }) + ' - TerrariumPI';
     loadFeeders();
   });
 
   function loadFeeders() {
     loading = true;
     error = '';
+    console.log('Loading feeders...');
     fetchFeeders(null, (data) => {
+      console.log('Feeders response:', data);
       if (data && data.data) {
         feeders = data.data;
+        console.log('Feeders loaded:', feeders.length, 'feeders (via data.data)');
+      } else if (Array.isArray(data)) {
+        feeders = data;
+        console.log('Feeders loaded:', feeders.length, 'feeders (array payload)');
+      } else {
+        console.warn('No feeders data returned:', data);
       }
       loading = false;
     });
