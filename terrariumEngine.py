@@ -159,6 +159,7 @@ class terrariumEngine(object):
 
         # Feeder initialization
         self.feeders = {}
+        self.load_feeders()
 
         # Loading the sensors
         start = time.time()
