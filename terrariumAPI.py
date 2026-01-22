@@ -2056,7 +2056,17 @@ class terrariumAPI(object):
         try:
             # Verify enclosure exists
             _ = Enclosure[request.json["enclosure"]]
-
+            
+            # Validate GPIO pin number
+            hardware = request.json["hardware"]
+            try:
+                gpio_pin = int(hardware)
+                # Valid BCM GPIO pins on Raspberry Pi range from 0 to 27
+                if gpio_pin < 0 or gpio_pin > 27:
+                    raise HTTPError(status=400, body=f'Invalid GPIO pin number: {gpio_pin}. Must be between 0 and 27.')
+            except ValueError:
+                raise HTTPError(status=400, body=f'Invalid GPIO pin number: {hardware}. Must be a numeric value.')
+            
             feeder = Feeder(
                 enclosure=Enclosure[request.json["enclosure"]],
                 name=request.json["name"],
