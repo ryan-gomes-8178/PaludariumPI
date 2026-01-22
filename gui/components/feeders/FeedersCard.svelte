@@ -23,7 +23,7 @@
   function testServo() {
     try {
       testFeederServo(feeder.id, (data) => {
-        console.log('Servo test result:', data);
+        // Handle servo test result if needed
       });
     } catch (e) {
       console.error('Test error:', e);
