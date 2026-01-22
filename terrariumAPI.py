@@ -2196,6 +2196,10 @@ class terrariumAPI(object):
             
             orm.commit()
 
+            # Stop existing feeder hardware before reloading to avoid GPIO/resource leaks
+            if feeder in self.webserver.engine.feeders:
+                self.webserver.engine.feeders[feeder].stop()
+                del self.webserver.engine.feeders[feeder]
             # Reload feeder into engine
             self.webserver.engine.load_feeders()
 
