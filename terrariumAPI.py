@@ -2196,6 +2196,10 @@ class terrariumAPI(object):
             
             orm.commit()
 
+            # Stop existing feeder hardware before reloading to avoid GPIO/resource leaks
+            if feeder in self.webserver.engine.feeders:
+                self.webserver.engine.feeders[feeder].stop()
+                del self.webserver.engine.feeders[feeder]
             # Reload feeder into engine
             self.webserver.engine.load_feeders()
 
@@ -2261,20 +2265,44 @@ class terrariumAPI(object):
         try:
             feeder_obj = Feeder[feeder]
 
-            if "hour" == period:
-                period_days = 1 / 24
-            elif "day" == period:
-                period_days = 1
-            elif "week" == period:
-                period_days = 7
-            elif "month" == period:
-                period_days = 31
-            elif "year" == period:
-                period_days = 365
-            else:
-                period_days = 1
+            # Handle custom period explicitly so it does not fall back to the 1-day default
+            if "custom" == period:
+                # Try to obtain a custom start timestamp from the query parameters.
+                # This mirrors the behavior of other *_history endpoints that support custom ranges.
+                start_param = request.query.get("start") or request.query.get("from")
 
-            start_date = datetime.now() - timedelta(days=period_days)
+                if start_param:
+                    try:
+                        # First, try interpreting the value as a Unix timestamp (seconds).
+                        start_ts = float(start_param)
+                        start_date = datetime.fromtimestamp(start_ts)
+                    except ValueError:
+                        # If that fails, fall back to ISO 8601 datetime parsing.
+                        try:
+                            start_date = datetime.fromisoformat(start_param)
+                        except ValueError:
+                            raise HTTPError(
+                                status=400,
+                                body=f"Invalid custom start date format: {start_param}",
+                            )
+                else:
+                    # No custom start provided; fall back to the default 1-day window.
+                    start_date = datetime.now() - timedelta(days=1)
+            else:
+                if "hour" == period:
+                    period_days = 1 / 24
+                elif "day" == period:
+                    period_days = 1
+                elif "week" == period:
+                    period_days = 7
+                elif "month" == period:
+                    period_days = 31
+                elif "year" == period:
+                    period_days = 365
+                else:
+                    period_days = 1
+
+                start_date = datetime.now() - timedelta(days=period_days)
 
             history = [
                 {"timestamp": item.timestamp.timestamp(), "status": item.status, "portion_size": item.portion_size}

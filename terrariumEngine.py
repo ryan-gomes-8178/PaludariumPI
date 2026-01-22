@@ -159,6 +159,7 @@ class terrariumEngine(object):
 
         # Feeder initialization
         self.feeders = {}
+        self.load_feeders()
         self._feeding_in_progress = set()  # Track feeders currently being fed
         self._feeding_lock = threading.Lock()  # Lock for thread-safe access to _feeding_in_progress
 
@@ -2059,6 +2060,7 @@ class terrariumEngine(object):
     def load_feeders(self):
         """Load all feeders from database"""
         from terrariumDatabase import Feeder as FeedersDB
+        from hardware.feeder import terrariumFeeder
 
         self.feeders = {}
         # Clear feeding tracking when reloading feeders

@@ -91,7 +91,7 @@
       feeder = item;
       formData = { ...item };
       // Restore enclosure_id if it exists (backend sends both enclosure name and enclosure_id)
-      if (item.enclosure_id && !item.enclosure.match(/^[0-9a-f-]{36}$/)) {
+      if (item.enclosure_id && !item.enclosure.match(/^[0-9a-f-]{36}$/i)) {
         formData.enclosure = item.enclosure_id;
       }
     } else {
@@ -125,7 +125,6 @@
   }
 
   onMount(() => {
-    console.log('FeedersFormModal mounted');
   });
 </script>
 
