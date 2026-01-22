@@ -2166,7 +2166,7 @@ class terrariumAPI(object):
             
             # Validate servo_config if provided
             if "servo_config" in request.json:
-                servo_config = request.json.get("servo_config", feeder_obj.servo_config)
+                servo_config = request.json["servo_config"]
                 self._validate_servo_config(servo_config)
                 feeder_obj.servo_config = servo_config
             
