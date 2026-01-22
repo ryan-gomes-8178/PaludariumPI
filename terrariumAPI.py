@@ -2130,7 +2130,12 @@ class terrariumAPI(object):
                 "feed_hold_duration": 1500,
                 "portion_size": 1.0
             })
-            self._validate_servo_config(servo_config)
+            try:
+                self._validate_servo_config(servo_config)
+            except HTTPError as e:
+                # Return HTTPError directly so it is not wrapped by a generic
+                # except Exception handler higher up in this try block.
+                return e
             
             feeder = Feeder(
                 enclosure=Enclosure[request.json["enclosure"]],
