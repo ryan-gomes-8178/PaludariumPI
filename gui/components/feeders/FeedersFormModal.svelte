@@ -125,7 +125,6 @@
   }
 
   onMount(() => {
-    console.log('FeedersFormModal mounted');
   });
 </script>
 

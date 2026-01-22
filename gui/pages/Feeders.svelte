@@ -18,15 +18,11 @@
   function loadFeeders() {
     loading = true;
     error = '';
-    console.log('Loading feeders...');
     fetchFeeders(null, (data) => {
-      console.log('Feeders response:', data);
       if (data && data.data) {
         feeders = data.data;
-        console.log('Feeders loaded:', feeders.length, 'feeders (via data.data)');
       } else if (Array.isArray(data)) {
         feeders = data;
-        console.log('Feeders loaded:', feeders.length, 'feeders (array payload)');
       } else {
         console.warn('No feeders data returned:', data);
       }

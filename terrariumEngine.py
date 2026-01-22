@@ -159,6 +159,7 @@ class terrariumEngine(object):
 
         # Feeder initialization
         self.feeders = {}
+        self.load_feeders()
 
         # Loading the sensors
         start = time.time()
@@ -2057,6 +2058,7 @@ class terrariumEngine(object):
     def load_feeders(self):
         """Load all feeders from database"""
         from terrariumDatabase import Feeder as FeedersDB
+        from hardware.feeder import terrariumFeeder
 
         self.feeders = {}
 
