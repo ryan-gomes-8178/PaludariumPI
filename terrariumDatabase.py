@@ -711,7 +711,7 @@ class Feeder(db.Entity):
     schedule = orm.Required(orm.Json, default={})
     
     # Feeding history
-    history = orm.Set("FeedingHistory")
+    history = orm.Set("FeedingHistory", cascade_delete=True)
     
     def to_dict(self, only=None, exclude=None, with_collections=False, with_lazy=False, related_objects=False):
         data = copy.deepcopy(super().to_dict(only, exclude, with_collections, with_lazy, related_objects))
