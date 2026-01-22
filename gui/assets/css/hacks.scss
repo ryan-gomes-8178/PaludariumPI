@@ -39,6 +39,10 @@
   max-width: 100%;
 }
 
+.dark-mode .card-header .card-title {
+  color: #c2c7d0;
+}
+
 .leaflet-control-fullscreen-button:after {
   font-family: 'Font Awesome 5 Free';
   content: '\f065';
