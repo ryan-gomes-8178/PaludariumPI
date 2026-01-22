@@ -216,8 +216,10 @@ class terrariumFeeder(object):
                 logger.error(error_msg)
                 try:
                     self._device.value = 0
-                except:
-                    pass
+                except Exception as stop_error:
+                    logger.warning(
+                        f"Feeder '{self.name}' failed to stop device after test movement error: {stop_error}"
+                    )
                 return {
                     'status': 'failed',
                     'message': error_msg
