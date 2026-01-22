@@ -74,14 +74,6 @@
           $_('feeders.menu.title', { default: 'Feeders' })
         );
       }
-    }).catch(e => {
-      isSaving = false;
-      error = e.message || 'Failed to save feeder';
-      console.error('Form error:', e);
-      errorNotification(
-        error,
-        $_('feeders.menu.title', { default: 'Feeders' })
-      );
     });
   }
 
