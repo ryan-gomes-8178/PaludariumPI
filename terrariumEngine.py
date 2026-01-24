@@ -161,9 +161,9 @@ class terrariumEngine(object):
 
         # Feeder initialization
         self.feeders = {}
-        self.load_feeders()
         self._feeding_in_progress = set()  # Track feeders currently being fed
         self._feeding_lock = threading.Lock()  # Lock for thread-safe access to _feeding_in_progress
+        self.load_feeders()
 
         # Loading the sensors
         start = time.time()
