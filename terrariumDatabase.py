@@ -515,7 +515,17 @@ class Sensor(db.Entity):
 
     @property
     def error(self):
-        return True if self.value is None else False
+        # Check if there's no value or if the latest measurement is out of range
+        if self.value is None:
+            return True
+        
+        latest_measurement = (
+            self.history.filter(lambda h: h.timestamp >= datetime.now() - timedelta(seconds=Sensor.__MAX_VALUE_AGE))
+            .order_by(orm.desc(SensorHistory.timestamp))
+            .first()
+        )
+        
+        return latest_measurement.out_of_range if latest_measurement else True
 
     @property
     def areas(self):
@@ -531,7 +541,7 @@ class Sensor(db.Entity):
 
         return data
 
-    def update(self, value):
+    def update(self, value, out_of_range=False):
         if value is None:
             return
 
@@ -562,6 +572,7 @@ class Sensor(db.Entity):
             )
 
             sensor_data.exclude_avg = self.exclude_avg
+            sensor_data.out_of_range = out_of_range
         else:
             # New data
             sensor_data = SensorHistory(
@@ -573,6 +584,7 @@ class Sensor(db.Entity):
                 alarm_min=self.alarm_min,
                 alarm_max=self.alarm_max,
                 exclude_avg=self.exclude_avg,
+                out_of_range=out_of_range,
             )
 
         return sensor_data
@@ -592,6 +604,7 @@ class SensorHistory(db.Entity):
     alarm_max = orm.Required(float)
 
     exclude_avg = orm.Required(bool, default=False)
+    out_of_range = orm.Required(bool, default=False)
 
     orm.PrimaryKey(sensor, timestamp)
 
