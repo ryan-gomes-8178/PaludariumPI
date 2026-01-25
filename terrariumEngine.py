@@ -584,8 +584,23 @@ class terrariumEngine(object):
                     logger.warning(
                         f"{self.sensors[sensor.id]} had problems reading a new value during startup in {time.time()-start:.2f} seconds. Will be updated in the next round."
                     )
+                    continue
 
-                elif not sensor.limit_min <= value <= sensor.limit_max:
+                # Convert some values like temperature and distance ...
+                if "temperature" == sensor.type.lower():
+                    if "fahrenheit" == self.settings["temperature_indicator"]:
+                        value = terrariumUtils.to_fahrenheit(value)
+                    elif "kelvin" == self.settings["temperature_indicator"]:
+                        value = terrariumUtils.to_kelvin(value)
+
+                elif "distance" == sensor.type.lower():
+                    if "inch" == self.settings["distance_indicator"]:
+                        value = terrariumUtils.to_inches(value)
+
+                # We have a valid reading from the hardware sensor. Now increase/decrease with the offset
+                value += sensor.offset
+
+                if not sensor.limit_min <= value <= sensor.limit_max:
                     sensorLogger.warning(
                         f"Measurement for sensor {self.sensors[sensor.id]} of {value:.2f}{self.units[sensor.type]} is outside valid range {sensor.limit_min:.2f}{self.units[sensor.type]} to {sensor.limit_max:.2f}{self.units[sensor.type]} during startup in {time.time()-start:.2f} seconds. Recording as out-of-range measurement."
                     )
@@ -2043,8 +2058,7 @@ class terrariumEngine(object):
         else:
             # We are using total() vs sum() as total() will always return a number. https://sqlite.org/lang_aggfunc.html#sumunc
             with orm.db_session():
-                data = db.select(
-                    """SELECT
+                data = db.select("""SELECT
                         TOTAL(total_wattage) AS wattage,
                         TOTAL(total_flow)    AS flow,
                         IFNULL((JulianDay(MAX(off)) - JulianDay(MIN(`on`))) * 24 * 60 * 60,0) AS duration
@@ -2061,8 +2075,7 @@ class terrariumEngine(object):
                                 ON RH2.relay = RH1.relay
                                 AND RH2.timestamp = (SELECT MIN(timestamp) FROM RelayHistory WHERE timestamp > RH1.timestamp AND relay = RH1.relay)
                             WHERE RH1.value > 0
-                        )"""
-                )
+                        )""")
 
                 totals = {"total_watt": data[0][0], "total_flow": data[0][1], "duration": data[0][2]}
                 thread_return[0] = totals
