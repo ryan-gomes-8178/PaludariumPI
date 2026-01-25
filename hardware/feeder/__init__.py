@@ -51,8 +51,8 @@ class terrariumFeeder(object):
     """
     
     # Default servo parameters (SG90 standard)
-    DEFAULT_MIN_PULSE = 0.5 / 1000  # 0.5ms in seconds
-    DEFAULT_MAX_PULSE = 2.5 / 1000  # 2.5ms in seconds
+    DEFAULT_MIN_PULSE = 1.0  # 1ms in milliseconds (0°)
+    DEFAULT_MAX_PULSE = 2.0  # 2ms in milliseconds (180°)
     DEFAULT_FREQUENCY = 50  # Hz
     
     def __init__(self, feeder_id, enclosure_id, hardware, name, servo_config, schedule, callback=None):
@@ -87,11 +87,9 @@ class terrariumFeeder(object):
         """Initialize PWM device for servo control"""
         try:
             gpio_pin = int(self.hardware)
-            # Convert to BCM pin number if needed
-            bcm_pin = terrariumUtils.to_BCM_port_number(str(gpio_pin))
             
             self._device = PWMOutputDevice(
-                bcm_pin,
+                gpio_pin,
                 frequency=self.DEFAULT_FREQUENCY,
                 initial_value=0
             )
@@ -124,17 +122,21 @@ class terrariumFeeder(object):
     
     def _angle_to_pwm(self, angle):
         """
-        Convert servo angle (0-180) to PWM pulse value (0-1)
+        Convert servo angle (0-180) to PWM duty cycle (0-1)
         
         SG90 servo ranges:
-        - 0° = 0.5ms pulse (0.025 on 0-1 scale at 50Hz)
-        - 90° = 1.5ms pulse (0.075 on 0-1 scale at 50Hz)
-        - 180° = 2.5ms pulse (0.125 on 0-1 scale at 50Hz)
+        - 0° = 1.0ms pulse (0.05 duty cycle at 50Hz)
+        - 90° = 1.5ms pulse (0.075 duty cycle at 50Hz)
+        - 180° = 2.0ms pulse (0.10 duty cycle at 50Hz)
+        
+        At 50Hz frequency, period = 20ms
+        Duty cycle = (pulse_width_ms / 20ms) * 100 / 100
         """
+        # Calculate pulse width in milliseconds (1.0-2.0ms range)
         pulse_ms = self.DEFAULT_MIN_PULSE + (angle / 180.0) * (self.DEFAULT_MAX_PULSE - self.DEFAULT_MIN_PULSE)
-        # Convert to 0-1 scale for gpiozero (period = 1/frequency)
-        period = 1.0 / self.DEFAULT_FREQUENCY
-        pwm_value = pulse_ms / period
+        # Convert to duty cycle (0-1 scale) at 50Hz
+        # Period at 50Hz = 20ms, so duty cycle = pulse_ms / 20
+        pwm_value = pulse_ms / 20.0
         return max(0.0, min(1.0, pwm_value))
     
     def feed(self, portion_size=None):

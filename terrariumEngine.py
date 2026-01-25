@@ -2072,6 +2072,11 @@ class terrariumEngine(object):
         @orm.db_session
         def _load():
             for feeder_data in orm.select(f for f in FeedersDB):
+                # Only load hardware for enabled feeders; keep disabled feeders idle
+                if not feeder_data.enabled:
+                    logger.info(f"Skipping hardware load for disabled feeder: {feeder_data.name}")
+                    continue
+
                 try:
                     feeder = terrariumFeeder(
                         feeder_data.id,
@@ -2083,7 +2088,7 @@ class terrariumEngine(object):
                         callback=self.callback_feeder,
                     )
                     self.feeders[feeder_data.id] = feeder
-                    logger.info(f"Loaded feeder: {feeder_data.name}")
+                    logger.info(f"Loaded feeder: {feeder_data.name} (enabled)")
                 except Exception as e:
                     logger.error(f"Failed to load feeder {feeder_data.name}: {e}")
 
@@ -2108,6 +2113,8 @@ class terrariumEngine(object):
         def _scan():
             nonlocal new_count
             for feeder_data in orm.select(f for f in FeedersDB):
+                if not feeder_data.enabled:
+                    continue
                 if feeder_data.id not in existing_ids:
                     try:
                         feeder = terrariumFeeder(
@@ -2121,7 +2128,7 @@ class terrariumEngine(object):
                         )
                         self.feeders[feeder_data.id] = feeder
                         new_count += 1
-                        logger.info(f"Scanned and loaded new feeder: {feeder_data.name}")
+                        logger.info(f"Scanned and loaded new feeder: {feeder_data.name} (enabled)")
                     except Exception as e:
                         logger.error(f"Failed to load feeder {feeder_data.name}: {e}")
 

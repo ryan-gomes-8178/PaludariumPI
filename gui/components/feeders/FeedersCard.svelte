@@ -62,11 +62,17 @@
     <button
       class="btn btn-sm btn-success"
       on:click={triggerManualFeed}
-      disabled={isFeedingNow}
+      disabled={isFeedingNow || !feeder.enabled}
+      title={feeder.enabled ? 'Feed Now' : 'Feeder is disabled'}
     >
       {isFeedingNow ? 'Feeding...' : 'Feed Now'}
     </button>
-    <button class="btn btn-sm btn-info" on:click={testServo}>
+    <button
+      class="btn btn-sm btn-info"
+      on:click={testServo}
+      disabled={!feeder.enabled}
+      title={feeder.enabled ? 'Test Servo' : 'Feeder is disabled'}
+    >
       Test
     </button>
     <button class="btn btn-sm btn-warning" on:click={() => dispatch('edit')}>

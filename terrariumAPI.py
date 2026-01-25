@@ -2117,6 +2117,17 @@ class terrariumAPI(object):
                     raise HTTPError(status=400, body=f'Invalid GPIO pin number: {gpio_pin}. Must be between 0 and 27.')
             except ValueError:
                 raise HTTPError(status=400, body=f'Invalid GPIO pin number: {hardware}. Must be a numeric value.')
+
+            enabled = request.json.get("enabled", True)
+
+            # Conflict: if enabling, GPIO must not be used by another enabled feeder
+            if enabled:
+                existing = orm.select(f for f in Feeder if f.hardware == hardware and f.enabled)
+                if existing.exists():
+                    raise HTTPError(
+                        status=409,
+                        body=f"GPIO {hardware} is already in use by enabled feeder '{existing[0].name}'. Disable that feeder first or use a different GPIO."
+                    )
             
             # Get and validate servo_config
             servo_config = request.json.get("servo_config", {
@@ -2135,6 +2146,7 @@ class terrariumAPI(object):
                 enclosure=Enclosure[request.json["enclosure"]],
                 name=request.json["name"],
                 hardware=request.json["hardware"],
+                enabled=enabled,
                 servo_config=servo_config,
                 schedule=request.json.get("schedule", {})
             )
@@ -2157,6 +2169,8 @@ class terrariumAPI(object):
             feeder_obj = Feeder[feeder]
             feeder_obj.name = request.json.get("name", feeder_obj.name)
             
+            enabled = request.json.get("enabled", feeder_obj.enabled)
+
             # Validate and update GPIO hardware pin if provided
             if "hardware" in request.json:
                 hardware = request.json["hardware"]
@@ -2173,9 +2187,22 @@ class terrariumAPI(object):
                         status=400,
                         body=f"Invalid GPIO pin number: {hardware}. Must be a numeric value.",
                     )
-                feeder_obj.hardware = hardware
-            
-            feeder_obj.enabled = request.json.get("enabled", feeder_obj.enabled)
+            else:
+                hardware = feeder_obj.hardware
+
+            # GPIO conflict checks
+            if enabled:
+                # If changing GPIO or enabling from disabled, ensure no other enabled feeder on that GPIO
+                if hardware != feeder_obj.hardware or feeder_obj.enabled is False:
+                    existing = orm.select(f for f in Feeder if f.hardware == hardware and f.enabled and f.id != feeder)
+                    if existing.exists():
+                        raise HTTPError(
+                            status=409,
+                            body=f"GPIO {hardware} is already in use by enabled feeder '{existing[0].name}'. Disable that feeder first or use a different GPIO."
+                        )
+
+            feeder_obj.hardware = hardware
+            feeder_obj.enabled = enabled
             
             # Validate servo_config if provided
             if "servo_config" in request.json:
