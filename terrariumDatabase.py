@@ -572,7 +572,13 @@ class Sensor(db.Entity):
             )
 
             sensor_data.exclude_avg = self.exclude_avg
-            sensor_data.out_of_range = out_of_range
+            if self.__VALUE_MODE == 2:
+                sensor_data.out_of_range = (
+                    sensor_data.value < sensor_data.limit_min
+                    or sensor_data.value > sensor_data.limit_max
+                )
+            else:
+                sensor_data.out_of_range = out_of_range
         else:
             # New data
             sensor_data = SensorHistory(
