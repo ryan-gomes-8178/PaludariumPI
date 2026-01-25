@@ -502,7 +502,7 @@ class Sensor(db.Entity):
         return not self.alarm_min <= self.value <= self.alarm_max
 
     def _get_latest_measurement(self):
-        """Get the latest measurement from history. Cached within a single DB session."""
+        """Get the latest measurement from history within the max age threshold."""
         return (
             self.history.filter(lambda h: h.timestamp >= datetime.now() - timedelta(seconds=Sensor.__MAX_VALUE_AGE))
             .order_by(orm.desc(SensorHistory.timestamp))
@@ -540,7 +540,11 @@ class Sensor(db.Entity):
         data["value"] = measurement.value if measurement else None
         data["offset"] = self.offset
         data["error"] = measurement.out_of_range if measurement else True
-        data["alarm"] = False if data["error"] else not (self.alarm_min <= data["value"] <= self.alarm_max)
+        data["alarm"] = (
+            False
+            if data["error"] or data["value"] is None
+            else not (self.alarm_min <= data["value"] <= self.alarm_max)
+        )
 
         return data
 
