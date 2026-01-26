@@ -36,9 +36,9 @@ class terrariumRPIWebcam(terrariumWebcam):
             self.awb = "daylight"
         self.awb = "auto" if self.awb not in valid_awb else self.awb
 
-        # libcamera-still requires --immediate/--nopreview to avoid hanging
+        # libcamera-still and rpicam-still require --immediate/--nopreview to avoid hanging
         extra = []
-        if "libcamera-still" in str(raspistill):
+        if "libcamera-still" in str(raspistill) or "rpicam-still" in str(raspistill):
             extra = ["--immediate", "--nopreview"]
 
         return [str(raspistill), "--quality", "95", "--timeout", str(self._WARM_UP * 1000), "--encoding", "jpg", *extra]
