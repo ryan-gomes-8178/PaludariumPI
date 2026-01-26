@@ -5,6 +5,7 @@ logger = terrariumLogging.logging.getLogger(__name__)
 
 import json
 import types
+import ipaddress
 from functools import partial
 from datetime import datetime, timezone, timedelta
 from pony import orm
@@ -2114,7 +2115,6 @@ class terrariumAPI(object):
             # Validate hardware based on type
             if hardware_type == "esp32_wifi":
                 # Validate IP address format
-                import ipaddress
                 try:
                     ipaddress.IPv4Address(hardware)
                 except ValueError:
@@ -2190,7 +2190,6 @@ class terrariumAPI(object):
                 
                 if hardware_type == "esp32_wifi":
                     # Validate IP address format
-                    import ipaddress
                     try:
                         ipaddress.IPv4Address(hardware)
                     except ValueError:
