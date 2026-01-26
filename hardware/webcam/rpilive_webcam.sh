@@ -9,10 +9,13 @@ ROTATION=$5
 AWB=$6
 DIR=$7
 
-# Find the needed programs
-RASPIVID=$(type -p raspivid)
+# Find the needed programs (prefer modern libcamera stack)
+RASPIVID=$(type -p libcamera-vid)
 if [ $? -ne 0 ]; then
-    RASPIVID=$(type -p rpicam-vid)
+  RASPIVID=$(type -p rpicam-vid)
+  if [ $? -ne 0 ]; then
+    RASPIVID=$(type -p raspivid)
+  fi
 fi
 FFMPEG=$(type -p ffmpeg)
 
@@ -57,19 +60,33 @@ else
 fi
 
 function streamNew() {
- "${RASPIVID}" -v 0 --output - --codec h264 --bitrate 2000000 --timeout 0 --width "${WIDTH}" --height "${HEIGHT}" "${ROTATION_ACTION}" "${ROTATION}" --awb "${AWB}" --framerate 30 --intra 30 --profile high --level 4.2 | \
-   "${FFMPEG}" -hide_banner -nostdin -re -i - -c:v copy -f hls -hls_time 2 -hls_list_size 3 -hls_flags delete_segments+split_by_time -hls_segment_filename "${DIR}/chunk_%03d.ts" "${DIR}/stream.m3u8"
+ "${RASPIVID}" -v 0 --output - --codec h264 --bitrate 2000000 --timeout 0 --width "${WIDTH}" --height "${HEIGHT}" "${ROTATION_ACTION}" "${ROTATION}" --awb "${AWB}" --framerate 30 --inline | \
+ "${FFMPEG}" -hide_banner -nostdin -re -i - -c:v copy -f hls -hls_time 2 -hls_list_size 3 -hls_flags delete_segments+split_by_time -hls_segment_filename "${DIR}/chunk_%03d.ts" "${DIR}/stream.m3u8"
 }
 
 function streamOld() {
  "${RASPIVID}" --output - --bitrate 2000000 --timeout 0 --width "${WIDTH}" --height "${HEIGHT}" "${ROTATION_ACTION}" "${ROTATION}" --awb "${AWB}" --framerate 30 --intra 30 --profile high --level 4.2 -ae 46,0xff,0x808000 -a 8 -a " ${NAME} @ %d/%m/%Y %X " -a 1024 | \
-   "${FFMPEG}" -hide_banner -nostdin -re -i - -c:v copy -f hls -hls_time 2 -hls_list_size 3 -hls_flags delete_segments+split_by_time -hls_segment_filename "${DIR}/chunk_%03d.ts" "${DIR}/stream.m3u8"
+ "${FFMPEG}" -hide_banner -nostdin -re -i - -c:v copy -f hls -hls_time 2 -hls_list_size 3 -hls_flags delete_segments+split_by_time -hls_segment_filename "${DIR}/chunk_%03d.ts" "${DIR}/stream.m3u8"
 }
 
 # Start streaming
-if [[ "${RASPIVID}" == *"rpicam-vid" ]]
+if [[ "${RASPIVID}" == *"rpicam-vid"* ]] || [[ "${RASPIVID}" == *"libcamera-vid"* ]]
 then
+  # New libcamera-based stack
   streamNew
 else
-  streamOld
+  # Legacy raspivid path only if legacy camera stack is enabled
+  if vcgencmd get_camera 2>/dev/null | grep -q 'supported=1'; then
+    streamOld
+  else
+    echo "ERROR: Legacy camera stack not enabled. Falling back to libcamera-vid if available." >&2
+    ALT=$(type -p libcamera-vid || true)
+    if [[ "${ALT}" != "" ]]; then
+      RASPIVID="${ALT}"
+      streamNew
+    else
+      echo "ERROR: libcamera-vid not found; live streaming is not possible on this system." >&2
+      exit 1
+    fi
+  fi
 fi

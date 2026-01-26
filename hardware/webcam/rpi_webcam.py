@@ -17,23 +17,31 @@ class terrariumRPIWebcam(terrariumWebcam):
     INFO_SOURCE = "rpicam"
 
     def _load_hardware(self):
-        # Old RPI Camera app (works better...)
-        raspistill = Path("/usr/bin/raspistill")
-        if not raspistill.exists():
-            # New RPI Camera app
-            raspistill = Path("/usr/bin/rpicam-still")
-            if not raspistill.exists():
-                return None
+        # Prefer legacy raspistill, fallback to rpicam-still or libcamera-still
+        candidates = [
+            Path("/usr/bin/raspistill"),
+            Path("/usr/bin/rpicam-still"),
+            Path("/usr/bin/libcamera-still"),
+        ]
+        for path in candidates:
+            if path.exists():
+                raspistill = path
+                break
+        else:
+            return None
 
-            # Fix changed AWB values
-            valid_awb = ["auto", "incandescent", "tungsten", "fluorescent", "indoor", "daylight", "cloudy"]
+        # Fix changed AWB values
+        valid_awb = ["auto", "incandescent", "tungsten", "fluorescent", "indoor", "daylight", "cloudy"]
+        if self.awb == "sunlight":
+            self.awb = "daylight"
+        self.awb = "auto" if self.awb not in valid_awb else self.awb
 
-            if self.awb == "sunlight":
-                self.awb = "daylight"
+        # libcamera-still requires --immediate/--nopreview to avoid hanging
+        extra = []
+        if "libcamera-still" in str(raspistill):
+            extra = ["--immediate", "--nopreview"]
 
-            self.awb = "auto" if self.awb not in valid_awb else self.awb
-
-        return [str(raspistill), "--quality", "95", "--timeout", str(self._WARM_UP * 1000), "--encoding", "jpg"]
+        return [str(raspistill), "--quality", "95", "--timeout", str(self._WARM_UP * 1000), "--encoding", "jpg", *extra]
 
     def _get_raw_data(self):
         if self._device["device"] is None:

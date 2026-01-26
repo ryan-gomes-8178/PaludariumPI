@@ -100,7 +100,8 @@
     {#if webcams.length > 0}
       <!-- Sort based on translated names -->
       {#each webcams.sort((a, b) => a.name.localeCompare(b.name)) as webcam}
-        <div class="col-12 col-md-12 col-lg-6 col-xl-4">
+        <!-- Make each webcam card span the full width so the video can fill the page -->
+        <div class="col-12">
           <WebcamCard {webcam} />
         </div>
       {/each}
