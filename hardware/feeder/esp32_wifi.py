@@ -9,7 +9,6 @@ that communicate over WiFi using a simple REST API.
 import terrariumLogging
 logger = terrariumLogging.logging.getLogger(__name__)
 
-import time
 import threading
 import requests
 from datetime import datetime
