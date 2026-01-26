@@ -87,6 +87,21 @@
 /* Make webcam map background black to remove gray side gaps around the video */
 .leaflet-container {
   background: #000;
+  height: 100% !important;
+  min-height: calc(100vh - 250px);
+}
+
+/* Maximize webcam display in fullscreen mode */
+.leaflet-container.leaflet-fullscreen-on {
+  height: 100vh !important;
+  width: 100vw !important;
+}
+
+/* Ensure webcam images/video scale to fill available space */
+.leaflet-image-layer {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain;
 }
 
 .nav-item.disabled {
