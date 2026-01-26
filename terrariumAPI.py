@@ -2103,6 +2103,10 @@ class terrariumAPI(object):
             if portion_size <= 0:
                 raise HTTPError(status=400, body="portion_size must be positive")
     
+    def _get_hardware_description(self, hardware_type):
+        """Get human-readable hardware description based on hardware type."""
+        return "IP address" if hardware_type == "esp32_wifi" else "GPIO pin"
+    
     @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
     def feeder_add(self):
         try:
@@ -2137,7 +2141,7 @@ class terrariumAPI(object):
                 if existing.exists():
                     raise HTTPError(
                         status=409,
-                        body=f"{hardware_type.upper()} {hardware} is already in use by enabled feeder '{existing[0].name}'. Disable that feeder first or use different hardware."
+                        body=f"{hardware_type.upper()} {hardware} is already in use by enabled feeder '{existing[0].name}'. Disable that feeder first or use a different {self._get_hardware_description(hardware_type)}."
                     )
             
             # Get and validate servo_config
@@ -2219,7 +2223,7 @@ class terrariumAPI(object):
                     if existing.exists():
                         raise HTTPError(
                             status=409,
-                            body=f"{hardware_type.upper()} {hardware} is already in use by enabled feeder '{existing[0].name}'. Disable that feeder first or use different hardware."
+                            body=f"{hardware_type.upper()} {hardware} is already in use by enabled feeder '{existing[0].name}'. Disable that feeder first or use a different {self._get_hardware_description(hardware_type)}."
                         )
 
             feeder_obj.hardware = hardware
