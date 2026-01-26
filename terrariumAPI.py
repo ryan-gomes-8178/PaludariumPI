@@ -5,6 +5,7 @@ logger = terrariumLogging.logging.getLogger(__name__)
 
 import json
 import types
+import ipaddress
 from functools import partial
 from datetime import datetime, timezone, timedelta
 from pony import orm
@@ -2102,6 +2103,10 @@ class terrariumAPI(object):
             if portion_size <= 0:
                 raise HTTPError(status=400, body="portion_size must be positive")
     
+    def _get_hardware_description(self, hardware_type):
+        """Get human-readable hardware description based on hardware type."""
+        return "IP address" if hardware_type == "esp32_wifi" else "GPIO pin"
+    
     @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
     def feeder_add(self):
         try:
@@ -2113,10 +2118,10 @@ class terrariumAPI(object):
             
             # Validate hardware based on type
             if hardware_type == "esp32_wifi":
-                # Validate IP address format (basic check)
-                import re
-                ip_pattern = r'^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$'
-                if not re.match(ip_pattern, hardware):
+                # Validate IP address format
+                try:
+                    ipaddress.IPv4Address(hardware)
+                except ValueError:
                     raise HTTPError(status=400, body=f'Invalid IP address: {hardware}. Expected format: 192.168.1.100')
             else:
                 # Validate GPIO pin number for local feeders
@@ -2136,7 +2141,7 @@ class terrariumAPI(object):
                 if existing.exists():
                     raise HTTPError(
                         status=409,
-                        body=f"{hardware_type.upper()} {hardware} is already in use by enabled feeder '{existing[0].name}'. Disable that feeder first or use different hardware."
+                        body=f"{hardware_type.upper()} {hardware} is already in use by enabled feeder '{existing[0].name}'. Disable that feeder first or use a different {self._get_hardware_description(hardware_type)}."
                     )
             
             # Get and validate servo_config
@@ -2189,9 +2194,9 @@ class terrariumAPI(object):
                 
                 if hardware_type == "esp32_wifi":
                     # Validate IP address format
-                    import re
-                    ip_pattern = r'^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$'
-                    if not re.match(ip_pattern, hardware):
+                    try:
+                        ipaddress.IPv4Address(hardware)
+                    except ValueError:
                         raise HTTPError(status=400, body=f'Invalid IP address: {hardware}. Expected format: 192.168.1.100')
                 else:
                     # Validate GPIO pin number
@@ -2218,7 +2223,7 @@ class terrariumAPI(object):
                     if existing.exists():
                         raise HTTPError(
                             status=409,
-                            body=f"{hardware_type.upper()} {hardware} is already in use by enabled feeder '{existing[0].name}'. Disable that feeder first or use different hardware."
+                            body=f"{hardware_type.upper()} {hardware} is already in use by enabled feeder '{existing[0].name}'. Disable that feeder first or use a different {self._get_hardware_description(hardware_type)}."
                         )
 
             feeder_obj.hardware = hardware
