@@ -17,11 +17,11 @@ class terrariumRPIWebcam(terrariumWebcam):
     INFO_SOURCE = "rpicam"
 
     def _load_hardware(self):
-        # Prefer legacy raspistill, fallback to rpicam-still or libcamera-still
+        # Prefer modern libcamera-still, fallback to rpicam-still or legacy raspistill
         candidates = [
-            Path("/usr/bin/raspistill"),
-            Path("/usr/bin/rpicam-still"),
             Path("/usr/bin/libcamera-still"),
+            Path("/usr/bin/rpicam-still"),
+            Path("/usr/bin/raspistill"),
         ]
         for path in candidates:
             if path.exists():
