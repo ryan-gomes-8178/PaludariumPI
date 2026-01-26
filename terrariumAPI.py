@@ -23,6 +23,8 @@ from terrariumDatabase import (
     Audiofile,
     Button,
     Enclosure,
+    Feeder,
+    FeedingHistory,
     Playlist,
     NotificationMessage,
     NotificationService,
@@ -56,6 +58,14 @@ def json_serial(obj):
 
     if isinstance(obj, (datetime,)):
         return obj.timestamp()
+
+    # Make ORM entities (e.g. Feeder, Enclosure, Relay, etc.) serializable
+    try:
+        # Avoid direct imports to keep this utility light
+        if hasattr(obj, "to_dict") and callable(obj.to_dict):
+            return obj.to_dict()
+    except Exception as exc:
+        logger.debug("json_serial: failed to serialize %r using to_dict(): %s", obj, exc)
 
     raise TypeError(f"Type {type(obj)} not serializable")
 
@@ -561,6 +571,83 @@ class terrariumAPI(object):
             "/api/sensors/", "GET", self.sensor_list, apply=self.authentication(False), name="api:sensor_list"
         )
         bottle_app.route("/api/sensors/", "POST", self.sensor_add, apply=self.authentication(), name="api:sensor_add")
+
+        # Feeder API
+        bottle_app.route(
+            "/api/feeders/hardware/",
+            "GET",
+            self.feeder_hardware,
+            apply=self.authentication(),
+            name="api:feeder_hardware",
+        )
+
+        bottle_app.route(
+            "/api/feeders/scan/", "POST", self.feeder_scan, apply=self.authentication(), name="api:feeder_scan"
+        )
+
+        bottle_app.route(
+            "/api/feeders/<feeder:path>/history/<period:re:(hour|day|week|month|year|custom)>/",
+            "GET",
+            self.feeder_history,
+            apply=self.authentication(False),
+            name="api:feeder_history_period",
+        )
+        bottle_app.route(
+            "/api/feeders/<feeder:path>/history/",
+            "GET",
+            self.feeder_history,
+            apply=self.authentication(False),
+            name="api:feeder_history",
+        )
+        bottle_app.route(
+            "/api/feeders/<feeder:path>/feed/",
+            "POST",
+            self.feeder_manual_feed,
+            apply=self.authentication(),
+            name="api:feeder_manual_feed",
+        )
+        bottle_app.route(
+            "/api/feeders/<feeder:path>/test/",
+            "POST",
+            self.feeder_test,
+            apply=self.authentication(),
+            name="api:feeder_test",
+        )
+        bottle_app.route(
+            "/api/feeders/<feeder:path>/",
+            "GET",
+            self.feeder_detail,
+            apply=self.authentication(False),
+            name="api:feeder_detail",
+        )
+        bottle_app.route(
+            "/api/feeders/<feeder:path>/",
+            "PUT",
+            self.feeder_update,
+            apply=self.authentication(),
+            name="api:feeder_update",
+        )
+        bottle_app.route(
+            "/api/feeders/<feeder:path>/",
+            "DELETE",
+            self.feeder_delete,
+            apply=self.authentication(),
+            name="api:feeder_delete",
+        )
+        bottle_app.route(
+            "/api/feeders/",
+            "GET",
+            self.feeder_list,
+            apply=self.authentication(False),
+            name="api:feeder_list",
+        )
+        bottle_app.route(
+            "/api/feeders/",
+            "POST",
+            self.feeder_add,
+            apply=self.authentication(),
+            name="api:feeder_add",
+        )
 
         # Settings API
         bottle_app.route(
@@ -1451,8 +1538,8 @@ class terrariumAPI(object):
                 period = 365
                 use_custom = False
             elif "custom" == period:
-                start_date_str = request.query.get('start_date')
-                end_date_str = request.query.get('end_date')
+                start_date_str = request.query.get("start_date")
+                end_date_str = request.query.get("end_date")
                 if not start_date_str or not end_date_str:
                     return {"error": "start_date and end_date are required for custom period"}, 400
 
@@ -1467,7 +1554,9 @@ class terrariumAPI(object):
                         end_date = datetime.fromisoformat(end_date_str)
                     else:
                         # Include the entire end date when a date-only is supplied
-                        end_date = datetime.strptime(end_date_str, "%Y-%m-%d") + timedelta(days=1) - timedelta(seconds=1)
+                        end_date = (
+                            datetime.strptime(end_date_str, "%Y-%m-%d") + timedelta(days=1) - timedelta(seconds=1)
+                        )
                 except Exception:
                     return {"error": "Invalid date format. Use YYYY-MM-DD or YYYY-MM-DDTHH:MM"}, 400
 
@@ -1513,6 +1602,7 @@ class terrariumAPI(object):
     def relay_hardware(self):
         return {"data": terrariumRelay.available_relays}
 
+    @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
     def relay_scan(self):
         current_amount = len(self.webserver.engine.relays)
         self.webserver.engine.scan_new_relays()
@@ -1608,8 +1698,8 @@ class terrariumAPI(object):
             period = 365
             use_custom = False
         elif "custom" == period:
-            start_date_str = request.query.get('start_date')
-            end_date_str = request.query.get('end_date')
+            start_date_str = request.query.get("start_date")
+            end_date_str = request.query.get("end_date")
             if not start_date_str or not end_date_str:
                 return {"error": "start_date and end_date are required for custom period"}, 400
             try:
@@ -1666,18 +1756,14 @@ class terrariumAPI(object):
                     orm.avg(sh.limit_max),
                 )
                 for sh in SensorHistory
-                if sh.sensor.type == filter
-                and sh.timestamp >= start_date
-                and sh.timestamp <= end_date
+                if sh.sensor.type == filter and sh.timestamp >= start_date and sh.timestamp <= end_date
             )
 
         else:
             query = orm.select(
                 (sh.timestamp, sh.value, sh.alarm_min, sh.alarm_max, sh.limit_min, sh.limit_max)
                 for sh in SensorHistory
-                if sh.sensor.id == filter
-                and sh.timestamp >= start_date
-                and sh.timestamp <= end_date
+                if sh.sensor.id == filter and sh.timestamp >= start_date and sh.timestamp <= end_date
             )
 
         data = []
@@ -1934,6 +2020,338 @@ class terrariumAPI(object):
             raise HTTPError(status=404, body=f"Setting with id {setting} does not exists.")
         except Exception as ex:
             raise HTTPError(status=500, body=f"Setting {setting} could not be removed. {ex}")
+
+    # Feeders
+    def feeder_hardware(self):
+        return {"data": [{"hardware": "servo", "name": "Servo Feeder"}]}
+
+    @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
+    def feeder_scan(self):
+        new = self.webserver.engine.scan_new_feeders()
+        return {"message": f"Found {new} new feeders"}
+
+    @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
+    def feeder_list(self):
+        return {
+            "data": [
+                self.feeder_detail(feeder.id)
+                for feeder in Feeder.select(lambda f: not f.id in self.webserver.engine.settings["exclude_ids"])
+            ]
+        }
+
+    @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
+    def feeder_detail(self, feeder):
+        try:
+            feeder_obj = Feeder[feeder]
+            return feeder_obj.to_dict()
+        except orm.core.ObjectNotFound:
+            raise HTTPError(status=404, body=f"Feeder with id {feeder} does not exist.")
+        except Exception as ex:
+            raise HTTPError(status=500, body=f"Error getting feeder {feeder} detail. {ex}")
+    
+    def _validate_servo_config(self, servo_config):
+        """
+        Validate servo configuration parameters
+        
+        Args:
+            servo_config (dict): Configuration to validate
+            
+        Raises:
+            HTTPError: If validation fails
+        """
+        if not isinstance(servo_config, dict):
+            raise HTTPError(status=400, body="servo_config must be a dictionary")
+        
+        # Validate feed_angle (0-180 degrees)
+        if "feed_angle" in servo_config:
+            feed_angle = servo_config["feed_angle"]
+            if isinstance(feed_angle, bool) or not isinstance(feed_angle, (int, float)):
+                raise HTTPError(status=400, body="feed_angle must be a number")
+            if feed_angle < 0 or feed_angle > 180:
+                raise HTTPError(status=400, body="feed_angle must be between 0 and 180 degrees")
+        
+        # Validate rest_angle (0-180 degrees)
+        if "rest_angle" in servo_config:
+            rest_angle = servo_config["rest_angle"]
+            if isinstance(rest_angle, bool) or not isinstance(rest_angle, (int, float)):
+                raise HTTPError(status=400, body="rest_angle must be a number")
+            if rest_angle < 0 or rest_angle > 180:
+                raise HTTPError(status=400, body="rest_angle must be between 0 and 180 degrees")
+        
+        # Validate rotate_duration (must be positive)
+        if "rotate_duration" in servo_config:
+            rotate_duration = servo_config["rotate_duration"]
+            if isinstance(rotate_duration, bool) or not isinstance(rotate_duration, (int, float)):
+                raise HTTPError(status=400, body="rotate_duration must be a number")
+            if rotate_duration <= 0:
+                raise HTTPError(status=400, body="rotate_duration must be positive")
+        
+        # Validate feed_hold_duration (must be positive)
+        if "feed_hold_duration" in servo_config:
+            feed_hold_duration = servo_config["feed_hold_duration"]
+            if not (isinstance(feed_hold_duration, (int, float)) and not isinstance(feed_hold_duration, bool)):
+                raise HTTPError(status=400, body="feed_hold_duration must be a number")
+            if feed_hold_duration <= 0:
+                raise HTTPError(status=400, body="feed_hold_duration must be positive")
+        
+        # Validate portion_size (must be positive)
+        if "portion_size" in servo_config:
+            portion_size = servo_config["portion_size"]
+            if not isinstance(portion_size, (int, float)) or isinstance(portion_size, bool):
+                raise HTTPError(status=400, body="portion_size must be a number")
+            if portion_size <= 0:
+                raise HTTPError(status=400, body="portion_size must be positive")
+    
+    @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
+    def feeder_add(self):
+        try:
+            # Verify enclosure exists
+            _ = Enclosure[request.json["enclosure"]]
+            
+            # Validate GPIO pin number
+            hardware = request.json["hardware"]
+            try:
+                gpio_pin = int(hardware)
+                # Valid BCM GPIO pins on Raspberry Pi range from 0 to 27
+                if gpio_pin < 0 or gpio_pin > 27:
+                    raise HTTPError(status=400, body=f'Invalid GPIO pin number: {gpio_pin}. Must be between 0 and 27.')
+            except ValueError:
+                raise HTTPError(status=400, body=f'Invalid GPIO pin number: {hardware}. Must be a numeric value.')
+
+            enabled = request.json.get("enabled", True)
+
+            # Conflict: if enabling, GPIO must not be used by another enabled feeder
+            if enabled:
+                existing = orm.select(f for f in Feeder if f.hardware == hardware and f.enabled)
+                if existing.exists():
+                    raise HTTPError(
+                        status=409,
+                        body=f"GPIO {hardware} is already in use by enabled feeder '{existing[0].name}'. Disable that feeder first or use a different GPIO."
+                    )
+            
+            # Get and validate servo_config
+            servo_config = request.json.get("servo_config", {
+                "feed_angle": 90,
+                "rest_angle": 0,
+                "rotate_duration": 1000,
+                "feed_hold_duration": 1500,
+                "portion_size": 1.0
+            })
+            try:
+                self._validate_servo_config(servo_config)
+            except HTTPError:
+                raise
+            
+            feeder = Feeder(
+                enclosure=Enclosure[request.json["enclosure"]],
+                name=request.json["name"],
+                hardware=request.json["hardware"],
+                enabled=enabled,
+                servo_config=servo_config,
+                schedule=request.json.get("schedule", {})
+            )
+            orm.commit()
+
+            # Load feeder into engine
+            self.webserver.engine.load_feeders()
+
+            return self.feeder_detail(feeder.id)
+        except HTTPError:
+            raise
+        except orm.core.ObjectNotFound:
+            raise HTTPError(status=404, body=f'Enclosure with id {request.json.get("enclosure")} does not exist.')
+        except Exception as ex:
+            raise HTTPError(status=500, body=f"Feeder could not be added. {ex}")
+
+    @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
+    def feeder_update(self, feeder):
+        try:
+            feeder_obj = Feeder[feeder]
+            feeder_obj.name = request.json.get("name", feeder_obj.name)
+            
+            enabled = request.json.get("enabled", feeder_obj.enabled)
+
+            # Validate and update GPIO hardware pin if provided
+            if "hardware" in request.json:
+                hardware = request.json["hardware"]
+                try:
+                    gpio_pin = int(hardware)
+                    # Valid BCM GPIO pins on Raspberry Pi range from 0 to 27
+                    if gpio_pin < 0 or gpio_pin > 27:
+                        raise HTTPError(
+                            status=400,
+                            body=f"Invalid GPIO pin number: {gpio_pin}. Must be between 0 and 27.",
+                        )
+                except ValueError:
+                    raise HTTPError(
+                        status=400,
+                        body=f"Invalid GPIO pin number: {hardware}. Must be a numeric value.",
+                    )
+            else:
+                hardware = feeder_obj.hardware
+
+            # GPIO conflict checks
+            if enabled:
+                # If changing GPIO or enabling from disabled, ensure no other enabled feeder on that GPIO
+                if hardware != feeder_obj.hardware or feeder_obj.enabled is False:
+                    existing = orm.select(f for f in Feeder if f.hardware == hardware and f.enabled and f.id != feeder)
+                    if existing.exists():
+                        raise HTTPError(
+                            status=409,
+                            body=f"GPIO {hardware} is already in use by enabled feeder '{existing[0].name}'. Disable that feeder first or use a different GPIO."
+                        )
+
+            feeder_obj.hardware = hardware
+            feeder_obj.enabled = enabled
+            
+            # Validate servo_config if provided
+            if "servo_config" in request.json:
+                servo_config = request.json["servo_config"]
+                try:
+                    self._validate_servo_config(servo_config)
+                except HTTPError:
+                    raise
+                feeder_obj.servo_config = servo_config
+            
+            feeder_obj.schedule = request.json.get("schedule", feeder_obj.schedule)
+            feeder_obj.notification = request.json.get("notification", feeder_obj.notification)
+            
+            # Handle enclosure update - check both 'enclosure' and 'enclosure_id' fields
+            enclosure_id = request.json.get("enclosure_id") or request.json.get("enclosure")
+            if enclosure_id and enclosure_id != feeder_obj.enclosure.id:
+                feeder_obj.enclosure = Enclosure[enclosure_id]
+            
+            orm.commit()
+
+            # Stop existing feeder hardware before reloading to avoid GPIO/resource leaks
+            if feeder in self.webserver.engine.feeders:
+                self.webserver.engine.feeders[feeder].stop()
+                del self.webserver.engine.feeders[feeder]
+            # Reload feeder into engine
+            self.webserver.engine.load_feeders()
+
+            return self.feeder_detail(feeder_obj.id)
+        except HTTPError:
+            raise
+        except orm.core.ObjectNotFound:
+            raise HTTPError(status=404, body=f"Feeder with id {feeder} does not exist.")
+        except Exception as ex:
+            raise HTTPError(status=500, body=f"Error updating feeder {feeder}. {ex}")
+
+    @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
+    def feeder_delete(self, feeder):
+        try:
+            feeder_obj = Feeder[feeder]
+            message = f"Feeder {feeder_obj.name} is deleted."
+
+            # Stop feeder hardware
+            if feeder in self.webserver.engine.feeders:
+                self.webserver.engine.feeders[feeder].stop()
+                del self.webserver.engine.feeders[feeder]
+
+            feeder_obj.delete()
+            orm.commit()
+
+            return {"message": message}
+        except orm.core.ObjectNotFound:
+            raise HTTPError(status=404, body=f"Feeder with id {feeder} does not exist.")
+        except Exception as ex:
+            raise HTTPError(status=500, body=f"Error deleting feeder {feeder}. {ex}")
+
+    @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
+    def feeder_manual_feed(self, feeder):
+        try:
+            if feeder not in self.webserver.engine.feeders:
+                raise HTTPError(status=404, body=f"Feeder with id {feeder} is not loaded.")
+
+            portion_size = request.json.get("portion_size") if request.json else None
+            result = self.webserver.engine.feeders[feeder].feed(portion_size)
+
+            return result
+        except HTTPError:
+            raise
+        except Exception as ex:
+            raise HTTPError(status=500, body=f"Error triggering feed: {ex}")
+
+    @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
+    def feeder_test(self, feeder):
+        try:
+            if feeder not in self.webserver.engine.feeders:
+                raise HTTPError(status=404, body=f"Feeder with id {feeder} is not loaded.")
+
+            result = self.webserver.engine.feeders[feeder].test_movement()
+
+            return result
+        except HTTPError:
+            raise
+        except Exception as ex:
+            raise HTTPError(status=500, body=f"Error testing feeder: {ex}")
+
+    @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
+    def feeder_history(self, feeder, action="history", period="day"):
+        try:
+            feeder_obj = Feeder[feeder]
+
+            # Handle custom period explicitly so it does not fall back to the 1-day default
+            if "custom" == period:
+                # Try to obtain a custom start timestamp from the query parameters.
+                # This mirrors the behavior of other *_history endpoints that support custom ranges.
+                start_param = request.query.get("start") or request.query.get("from")
+
+                if start_param:
+                    try:
+                        # First, try interpreting the value as a Unix timestamp (seconds).
+                        start_ts = float(start_param)
+                        start_date = datetime.fromtimestamp(start_ts)
+                    except ValueError:
+                        # If that fails, fall back to ISO 8601 datetime parsing.
+                        try:
+                            start_date = datetime.fromisoformat(start_param)
+                        except ValueError:
+                            raise HTTPError(
+                                status=400,
+                                body=f"Invalid custom start date format: {start_param}",
+                            )
+                else:
+                    # No custom start provided; fall back to the default 1-day window.
+                    start_date = datetime.now() - timedelta(days=1)
+            else:
+                if "hour" == period:
+                    period_days = 1 / 24
+                elif "day" == period:
+                    period_days = 1
+                elif "week" == period:
+                    period_days = 7
+                elif "month" == period:
+                    period_days = 31
+                elif "year" == period:
+                    period_days = 365
+                else:
+                    period_days = 1
+
+                start_date = datetime.now() - timedelta(days=period_days)
+
+            history = [
+                {"timestamp": item.timestamp.timestamp(), "status": item.status, "portion_size": item.portion_size}
+                for item in feeder_obj.history.filter(lambda h: h.timestamp >= start_date)
+            ]
+
+            if "export" == action:
+                csv_data = [";".join(["timestamp", "status", "portion_size"])]
+                for data_point in history:
+                    data_point["timestamp"] = datetime.fromtimestamp(data_point["timestamp"])
+                    csv_data.append(";".join([str(value) for value in data_point.values()]))
+
+                response.headers["Content-Type"] = "application/csv"
+                response.headers["Content-Disposition"] = f"attachment; filename={feeder_obj.name}_{period}.csv"
+                return "\n".join(csv_data)
+
+            return {"data": history}
+
+        except orm.core.ObjectNotFound:
+            raise HTTPError(status=404, body=f"Feeder with id {feeder} does not exist.")
+        except Exception as ex:
+            raise HTTPError(status=500, body=f"Error getting feeder history: {ex}")
 
     # System
     def system_status(self):

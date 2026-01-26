@@ -11,6 +11,7 @@ import Calendar from './Calendar.svelte';
 import Sensors from './Sensors.svelte';
 import Relays from './Relays.svelte';
 import Buttons from './Buttons.svelte';
+import Feeders from './Feeders.svelte';
 import Webcams from './Webcams.svelte';
 import AudioFiles from './Audiofiles.svelte';
 import Playlists from './Playlists.svelte';
@@ -177,6 +178,15 @@ export const Pages = [
         hide: false,
       },
     ],
+  },
+  {
+    name: 'Feeders',
+    title: 'feeders.menu.title',
+    url: '/feeders/',
+    breadcrumb: [],
+    icon: 'fas fa-fish',
+    hide: false,
+    nesting: false,
   },
   {
     name: 'Webcams',
@@ -374,6 +384,7 @@ export default {
   ['/sensors/:type/']: Sensors,
   [PageUrls.Relays]: Relays,
   [PageUrls.Buttons]: Buttons,
+  [PageUrls.Feeders]: Feeders,
   [PageUrls.Webcams]: Webcams,
   [PageUrls.audio_files]: AudioFiles,
   [PageUrls.playlists]: Playlists,
