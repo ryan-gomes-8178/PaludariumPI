@@ -17,6 +17,13 @@ if [ $? -ne 0 ]; then
     RASPIVID=$(type -p raspivid)
   fi
 fi
+
+# Verify a camera command was found
+if [ -z "${RASPIVID}" ]; then
+  echo "Error: No camera command found (libcamera-vid, rpicam-vid, or raspivid). Please install the appropriate camera software." >&2
+  exit 1
+fi
+
 FFMPEG=$(type -p ffmpeg)
 if [ -z "${FFMPEG}" ]; then
   echo "Error: ffmpeg not found. Please install ffmpeg to use this script." >&2
