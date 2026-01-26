@@ -101,6 +101,7 @@
         name: '',
         enclosure: '',
         hardware: '',
+        hardware_type: 'gpio',
         enabled: true,
         servo_config: {
           feed_angle: 90,
