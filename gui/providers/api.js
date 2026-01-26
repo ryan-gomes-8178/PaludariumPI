@@ -682,3 +682,42 @@ export const deleteNotificationMessage = async (message_id, cb) => {
   await _deleteData(`${apiHost}/notification/messages/${message_id}/`, cb);
 };
 // End notification messages API
+
+// Feeders API
+export const fetchFeeders = async (feeder_id, cb) => {
+  let url = `${apiHost}/feeders/`;
+  if (feeder_id) {
+    url += `${feeder_id}/`;
+  }
+  await _getData(url, cb);
+};
+
+export const addFeeder = async (data, cb) => {
+  delete data.id;
+  await _postData(`${apiHost}/feeders/`, data, cb);
+};
+
+export const updateFeeder = async (data, cb) => {
+  if (data.id) {
+    await _updateData(`${apiHost}/feeders/${data.id}/`, data, cb);
+  } else {
+    await addFeeder(data, cb);
+  }
+};
+
+export const deleteFeeder = async (feeder_id, cb) => {
+  await _deleteData(`${apiHost}/feeders/${feeder_id}/`, cb);
+};
+
+export const manualFeed = async (feeder_id, portion_size, cb) => {
+  await _postData(`${apiHost}/feeders/${feeder_id}/feed/`, { portion_size }, cb);
+};
+
+export const testFeederServo = async (feeder_id, cb) => {
+  await _postData(`${apiHost}/feeders/${feeder_id}/test/`, {}, cb);
+};
+
+export const fetchFeederHistory = async (feeder_id, period = 'day', cb) => {
+  await _getData(`${apiHost}/feeders/${feeder_id}/history/${period}/`, cb);
+};
+// End feeders API
