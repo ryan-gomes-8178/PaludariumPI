@@ -2113,10 +2113,11 @@ class terrariumAPI(object):
             
             # Validate hardware based on type
             if hardware_type == "esp32_wifi":
-                # Validate IP address format (basic check)
-                import re
-                ip_pattern = r'^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$'
-                if not re.match(ip_pattern, hardware):
+                # Validate IP address format
+                import ipaddress
+                try:
+                    ipaddress.IPv4Address(hardware)
+                except ValueError:
                     raise HTTPError(status=400, body=f'Invalid IP address: {hardware}. Expected format: 192.168.1.100')
             else:
                 # Validate GPIO pin number for local feeders
@@ -2189,9 +2190,10 @@ class terrariumAPI(object):
                 
                 if hardware_type == "esp32_wifi":
                     # Validate IP address format
-                    import re
-                    ip_pattern = r'^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$'
-                    if not re.match(ip_pattern, hardware):
+                    import ipaddress
+                    try:
+                        ipaddress.IPv4Address(hardware)
+                    except ValueError:
                         raise HTTPError(status=400, body=f'Invalid IP address: {hardware}. Expected format: 192.168.1.100')
                 else:
                     # Validate GPIO pin number
