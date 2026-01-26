@@ -688,7 +688,8 @@ class Feeder(db.Entity):
     id = orm.PrimaryKey(str, default=terrariumUtils.generate_uuid)
     enclosure = orm.Required(lambda: Enclosure)
     name = orm.Required(str)
-    hardware = orm.Required(str)  # GPIO pin number or hardware address
+    hardware = orm.Required(str)  # GPIO pin number or IP address (for ESP32)
+    hardware_type = orm.Optional(str, default='gpio')  # 'gpio' or 'esp32_wifi'
     
     enabled = orm.Optional(bool, default=True)
     notification = orm.Optional(bool, default=True)

@@ -2108,25 +2108,35 @@ class terrariumAPI(object):
             # Verify enclosure exists
             _ = Enclosure[request.json["enclosure"]]
             
-            # Validate GPIO pin number
             hardware = request.json["hardware"]
-            try:
-                gpio_pin = int(hardware)
-                # Valid BCM GPIO pins on Raspberry Pi range from 0 to 27
-                if gpio_pin < 0 or gpio_pin > 27:
-                    raise HTTPError(status=400, body=f'Invalid GPIO pin number: {gpio_pin}. Must be between 0 and 27.')
-            except ValueError:
-                raise HTTPError(status=400, body=f'Invalid GPIO pin number: {hardware}. Must be a numeric value.')
+            hardware_type = request.json.get("hardware_type", "gpio")
+            
+            # Validate hardware based on type
+            if hardware_type == "esp32_wifi":
+                # Validate IP address format (basic check)
+                import re
+                ip_pattern = r'^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$'
+                if not re.match(ip_pattern, hardware):
+                    raise HTTPError(status=400, body=f'Invalid IP address: {hardware}. Expected format: 192.168.1.100')
+            else:
+                # Validate GPIO pin number for local feeders
+                try:
+                    gpio_pin = int(hardware)
+                    # Valid BCM GPIO pins on Raspberry Pi range from 0 to 27
+                    if gpio_pin < 0 or gpio_pin > 27:
+                        raise HTTPError(status=400, body=f'Invalid GPIO pin number: {gpio_pin}. Must be between 0 and 27.')
+                except ValueError:
+                    raise HTTPError(status=400, body=f'Invalid GPIO pin number: {hardware}. Must be a numeric value.')
 
             enabled = request.json.get("enabled", True)
 
-            # Conflict: if enabling, GPIO must not be used by another enabled feeder
+            # Conflict check: if enabling, hardware must not be used by another enabled feeder
             if enabled:
-                existing = orm.select(f for f in Feeder if f.hardware == hardware and f.enabled)
+                existing = orm.select(f for f in Feeder if f.hardware == hardware and f.enabled and f.hardware_type == hardware_type)
                 if existing.exists():
                     raise HTTPError(
                         status=409,
-                        body=f"GPIO {hardware} is already in use by enabled feeder '{existing[0].name}'. Disable that feeder first or use a different GPIO."
+                        body=f"{hardware_type.upper()} {hardware} is already in use by enabled feeder '{existing[0].name}'. Disable that feeder first or use different hardware."
                     )
             
             # Get and validate servo_config
@@ -2145,7 +2155,8 @@ class terrariumAPI(object):
             feeder = Feeder(
                 enclosure=Enclosure[request.json["enclosure"]],
                 name=request.json["name"],
-                hardware=request.json["hardware"],
+                hardware=hardware,
+                hardware_type=hardware_type,
                 enabled=enabled,
                 servo_config=servo_config,
                 schedule=request.json.get("schedule", {})

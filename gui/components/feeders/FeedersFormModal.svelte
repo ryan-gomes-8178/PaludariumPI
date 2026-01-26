@@ -16,6 +16,7 @@
     name: '',
     enclosure: '',
     hardware: '',
+    hardware_type: 'gpio',
     enabled: true,
     servo_config: {
       feed_angle: 90,
@@ -159,13 +160,27 @@
     </div>
 
     <div class="form-group">
-      <label for="hardware">GPIO Pin:</label>
+      <label for="hardware_type">Hardware Type:</label>
+      <select id="hardware_type" bind:value={formData.hardware_type} class="form-control">
+        <option value="gpio">Local GPIO (Raspberry Pi)</option>
+        <option value="esp32_wifi">ESP32 WiFi (Wireless)</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="hardware">
+        {#if formData.hardware_type === 'esp32_wifi'}
+          ESP32 IP Address:
+        {:else}
+          GPIO Pin:
+        {/if}
+      </label>
       <input
         id="hardware"
         type="text"
         bind:value={formData.hardware}
         required
-        placeholder="e.g., 17"
+        placeholder={formData.hardware_type === 'esp32_wifi' ? 'e.g., 192.168.1.100' : 'e.g., 17'}
         class="form-control"
       />
     </div>
