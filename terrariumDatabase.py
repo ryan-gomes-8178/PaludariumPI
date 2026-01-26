@@ -501,31 +501,30 @@ class Sensor(db.Entity):
 
         return not self.alarm_min <= self.value <= self.alarm_max
 
-    @property
-    def value(self):
-        value = (
+    def _get_latest_measurement(self):
+        """Get the latest measurement from history within the max age threshold."""
+        return (
             self.history.filter(lambda h: h.timestamp >= datetime.now() - timedelta(seconds=Sensor.__MAX_VALUE_AGE))
             .order_by(orm.desc(SensorHistory.timestamp))
             .first()
         )
-        if value:
-            return value.value
+
+    @property
+    def value(self):
+        measurement = self._get_latest_measurement()
+        if measurement:
+            return measurement.value
 
         return None
 
     @property
     def error(self):
         # Check if there's no value or if the latest measurement is out of range
-        if self.value is None:
+        measurement = self._get_latest_measurement()
+        if measurement is None:
             return True
         
-        latest_measurement = (
-            self.history.filter(lambda h: h.timestamp >= datetime.now() - timedelta(seconds=Sensor.__MAX_VALUE_AGE))
-            .order_by(orm.desc(SensorHistory.timestamp))
-            .first()
-        )
-        
-        return latest_measurement.out_of_range if latest_measurement else True
+        return measurement.out_of_range
 
     @property
     def areas(self):
@@ -533,11 +532,19 @@ class Sensor(db.Entity):
 
     def to_dict(self, only=None, exclude=None, with_collections=False, with_lazy=False, related_objects=False):
         data = copy.deepcopy(super().to_dict(only, exclude, with_collections, with_lazy, related_objects))
+        
+        # Fetch measurement once to avoid duplicate queries
+        measurement = self._get_latest_measurement()
+        
         # Add extra fields
-        data["value"] = self.value
+        data["value"] = measurement.value if measurement else None
         data["offset"] = self.offset
-        data["alarm"] = self.alarm
-        data["error"] = self.error
+        data["error"] = measurement.out_of_range if measurement else True
+        data["alarm"] = (
+            False
+            if data["error"] or data["value"] is None
+            else not (self.alarm_min <= data["value"] <= self.alarm_max)
+        )
 
         return data
 
