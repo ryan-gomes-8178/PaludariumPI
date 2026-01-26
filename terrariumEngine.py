@@ -2062,7 +2062,7 @@ class terrariumEngine(object):
     def load_feeders(self):
         """Load all feeders from database"""
         from terrariumDatabase import Feeder as FeedersDB
-        from hardware.feeder import terrariumFeeder
+        from hardware.feeder import create_feeder
 
         self.feeders = {}
         # Clear feeding tracking when reloading feeders
@@ -2078,17 +2078,18 @@ class terrariumEngine(object):
                     continue
 
                 try:
-                    feeder = terrariumFeeder(
+                    feeder = create_feeder(
                         feeder_data.id,
                         feeder_data.enclosure.id,
                         feeder_data.hardware,
                         feeder_data.name,
                         feeder_data.servo_config,
                         feeder_data.schedule,
+                        hardware_type=feeder_data.hardware_type,
                         callback=self.callback_feeder,
                     )
                     self.feeders[feeder_data.id] = feeder
-                    logger.info(f"Loaded feeder: {feeder_data.name} (enabled)")
+                    logger.info(f"Loaded feeder: {feeder_data.name} (enabled, type: {feeder_data.hardware_type})")
                 except Exception as e:
                     logger.error(f"Failed to load feeder {feeder_data.name}: {e}")
 
@@ -2104,7 +2105,7 @@ class terrariumEngine(object):
             int: Number of new feeders found
         """
         from terrariumDatabase import Feeder as FeedersDB
-        from hardware.feeder import terrariumFeeder
+        from hardware.feeder import create_feeder
 
         existing_ids = set(self.feeders.keys())
         new_count = 0
@@ -2117,18 +2118,19 @@ class terrariumEngine(object):
                     continue
                 if feeder_data.id not in existing_ids:
                     try:
-                        feeder = terrariumFeeder(
+                        feeder = create_feeder(
                             feeder_data.id,
                             feeder_data.enclosure.id,
                             feeder_data.hardware,
                             feeder_data.name,
                             feeder_data.servo_config,
                             feeder_data.schedule,
+                            hardware_type=feeder_data.hardware_type,
                             callback=self.callback_feeder,
                         )
                         self.feeders[feeder_data.id] = feeder
                         new_count += 1
-                        logger.info(f"Scanned and loaded new feeder: {feeder_data.name} (enabled)")
+                        logger.info(f"Scanned and loaded new feeder: {feeder_data.name} (enabled, type: {feeder_data.hardware_type})")
                     except Exception as e:
                         logger.error(f"Failed to load feeder {feeder_data.name}: {e}")
 

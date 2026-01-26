@@ -5,6 +5,7 @@ logger = terrariumLogging.logging.getLogger(__name__)
 
 import json
 import types
+import ipaddress
 from functools import partial
 from datetime import datetime, timezone, timedelta
 from pony import orm
@@ -2102,31 +2103,45 @@ class terrariumAPI(object):
             if portion_size <= 0:
                 raise HTTPError(status=400, body="portion_size must be positive")
     
+    def _get_hardware_description(self, hardware_type):
+        """Get human-readable hardware description based on hardware type."""
+        return "IP address" if hardware_type == "esp32_wifi" else "GPIO pin"
+    
     @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
     def feeder_add(self):
         try:
             # Verify enclosure exists
             _ = Enclosure[request.json["enclosure"]]
             
-            # Validate GPIO pin number
             hardware = request.json["hardware"]
-            try:
-                gpio_pin = int(hardware)
-                # Valid BCM GPIO pins on Raspberry Pi range from 0 to 27
-                if gpio_pin < 0 or gpio_pin > 27:
-                    raise HTTPError(status=400, body=f'Invalid GPIO pin number: {gpio_pin}. Must be between 0 and 27.')
-            except ValueError:
-                raise HTTPError(status=400, body=f'Invalid GPIO pin number: {hardware}. Must be a numeric value.')
+            hardware_type = request.json.get("hardware_type", "gpio")
+            
+            # Validate hardware based on type
+            if hardware_type == "esp32_wifi":
+                # Validate IP address format
+                try:
+                    ipaddress.IPv4Address(hardware)
+                except ValueError:
+                    raise HTTPError(status=400, body=f'Invalid IP address: {hardware}. Expected format: 192.168.1.100')
+            else:
+                # Validate GPIO pin number for local feeders
+                try:
+                    gpio_pin = int(hardware)
+                    # Valid BCM GPIO pins on Raspberry Pi range from 0 to 27
+                    if gpio_pin < 0 or gpio_pin > 27:
+                        raise HTTPError(status=400, body=f'Invalid GPIO pin number: {gpio_pin}. Must be between 0 and 27.')
+                except ValueError:
+                    raise HTTPError(status=400, body=f'Invalid GPIO pin number: {hardware}. Must be a numeric value.')
 
             enabled = request.json.get("enabled", True)
 
-            # Conflict: if enabling, GPIO must not be used by another enabled feeder
+            # Conflict check: if enabling, hardware must not be used by another enabled feeder
             if enabled:
-                existing = orm.select(f for f in Feeder if f.hardware == hardware and f.enabled)
+                existing = orm.select(f for f in Feeder if f.hardware == hardware and f.enabled and f.hardware_type == hardware_type)
                 if existing.exists():
                     raise HTTPError(
                         status=409,
-                        body=f"GPIO {hardware} is already in use by enabled feeder '{existing[0].name}'. Disable that feeder first or use a different GPIO."
+                        body=f"{hardware_type.upper()} {hardware} is already in use by enabled feeder '{existing[0].name}'. Disable that feeder first or use a different {self._get_hardware_description(hardware_type)}."
                     )
             
             # Get and validate servo_config
@@ -2145,7 +2160,8 @@ class terrariumAPI(object):
             feeder = Feeder(
                 enclosure=Enclosure[request.json["enclosure"]],
                 name=request.json["name"],
-                hardware=request.json["hardware"],
+                hardware=hardware,
+                hardware_type=hardware_type,
                 enabled=enabled,
                 servo_config=servo_config,
                 schedule=request.json.get("schedule", {})
@@ -2170,38 +2186,48 @@ class terrariumAPI(object):
             feeder_obj.name = request.json.get("name", feeder_obj.name)
             
             enabled = request.json.get("enabled", feeder_obj.enabled)
+            hardware_type = request.json.get("hardware_type", feeder_obj.hardware_type)
 
-            # Validate and update GPIO hardware pin if provided
+            # Validate and update hardware based on type
             if "hardware" in request.json:
                 hardware = request.json["hardware"]
-                try:
-                    gpio_pin = int(hardware)
-                    # Valid BCM GPIO pins on Raspberry Pi range from 0 to 27
-                    if gpio_pin < 0 or gpio_pin > 27:
+                
+                if hardware_type == "esp32_wifi":
+                    # Validate IP address format
+                    try:
+                        ipaddress.IPv4Address(hardware)
+                    except ValueError:
+                        raise HTTPError(status=400, body=f'Invalid IP address: {hardware}. Expected format: 192.168.1.100')
+                else:
+                    # Validate GPIO pin number
+                    try:
+                        gpio_pin = int(hardware)
+                        if gpio_pin < 0 or gpio_pin > 27:
+                            raise HTTPError(
+                                status=400,
+                                body=f"Invalid GPIO pin number: {gpio_pin}. Must be between 0 and 27.",
+                            )
+                    except ValueError:
                         raise HTTPError(
                             status=400,
-                            body=f"Invalid GPIO pin number: {gpio_pin}. Must be between 0 and 27.",
+                            body=f"Invalid GPIO pin number: {hardware}. Must be a numeric value.",
                         )
-                except ValueError:
-                    raise HTTPError(
-                        status=400,
-                        body=f"Invalid GPIO pin number: {hardware}. Must be a numeric value.",
-                    )
             else:
                 hardware = feeder_obj.hardware
 
-            # GPIO conflict checks
+            # Hardware conflict checks
             if enabled:
-                # If changing GPIO or enabling from disabled, ensure no other enabled feeder on that GPIO
+                # If changing hardware or enabling from disabled, ensure no conflicts
                 if hardware != feeder_obj.hardware or feeder_obj.enabled is False:
-                    existing = orm.select(f for f in Feeder if f.hardware == hardware and f.enabled and f.id != feeder)
+                    existing = orm.select(f for f in Feeder if f.hardware == hardware and f.hardware_type == hardware_type and f.enabled and f.id != feeder)
                     if existing.exists():
                         raise HTTPError(
                             status=409,
-                            body=f"GPIO {hardware} is already in use by enabled feeder '{existing[0].name}'. Disable that feeder first or use a different GPIO."
+                            body=f"{hardware_type.upper()} {hardware} is already in use by enabled feeder '{existing[0].name}'. Disable that feeder first or use a different {self._get_hardware_description(hardware_type)}."
                         )
 
             feeder_obj.hardware = hardware
+            feeder_obj.hardware_type = hardware_type
             feeder_obj.enabled = enabled
             
             # Validate servo_config if provided

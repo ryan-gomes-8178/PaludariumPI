@@ -3,7 +3,7 @@
 Aquarium feeder hardware driver for servo-based feeding mechanism
 
 This module provides control for automatic aquarium feeders using a servo motor
-that rotates to dispense food.
+that rotates to dispense food. Supports both local GPIO and remote ESP32 WiFi feeders.
 """
 
 import terrariumLogging
@@ -14,6 +14,7 @@ import threading
 from datetime import datetime
 from gpiozero import PWMOutputDevice
 from terrariumUtils import terrariumUtils
+from hardware.feeder.esp32_wifi import terrariumESP32WiFiFeeder, terrariumESP32WiFiFeederException
 
 # Import gpiozero exceptions for specific error handling
 try:
@@ -274,3 +275,34 @@ class terrariumFeeder(object):
     
     def __repr__(self):
         return f"Feeder '{self.name}' on GPIO {self.hardware}"
+
+
+def create_feeder(feeder_id, enclosure_id, hardware, name, servo_config, schedule, hardware_type="gpio", callback=None):
+    """
+    Factory function to create the appropriate feeder type
+    
+    Args:
+        feeder_id (str): Unique identifier
+        enclosure_id (str): Parent enclosure ID
+        hardware (str): GPIO pin or IP address
+        name (str): Human-readable name
+        servo_config (dict): Servo configuration
+        schedule (dict): Feeding schedule
+        hardware_type (str): "gpio" or "esp32_wifi"
+        callback (callable): Status callback
+        
+    Returns:
+        terrariumFeeder or terrariumESP32WiFiFeeder instance
+    """
+    if hardware_type == "esp32_wifi":
+        logger.info(f"Creating ESP32 WiFi feeder {name} at {hardware}")
+        return terrariumESP32WiFiFeeder(
+            feeder_id, enclosure_id, hardware, name, 
+            servo_config, schedule, callback
+        )
+    else:
+        logger.info(f"Creating GPIO feeder {name} on pin {hardware}")
+        return terrariumFeeder(
+            feeder_id, enclosure_id, hardware, name, 
+            servo_config, schedule, callback
+        )
