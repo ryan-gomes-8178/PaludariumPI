@@ -2102,6 +2102,10 @@ class terrariumAPI(object):
             if portion_size <= 0:
                 raise HTTPError(status=400, body="portion_size must be positive")
     
+    def _get_hardware_description(self, hardware_type):
+        """Get human-readable hardware description based on hardware type."""
+        return "IP address" if hardware_type == "esp32_wifi" else "GPIO pin"
+    
     @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
     def feeder_add(self):
         try:
@@ -2134,11 +2138,9 @@ class terrariumAPI(object):
             if enabled:
                 existing = orm.select(f for f in Feeder if f.hardware == hardware and f.enabled and f.hardware_type == hardware_type)
                 if existing.exists():
-                    # Create dynamic error message based on hardware type
-                    hardware_description = "IP address" if hardware_type == "esp32_wifi" else "GPIO pin"
                     raise HTTPError(
                         status=409,
-                        body=f"{hardware_type.upper()} {hardware} is already in use by enabled feeder '{existing[0].name}'. Disable that feeder first or use a different {hardware_description}."
+                        body=f"{hardware_type.upper()} {hardware} is already in use by enabled feeder '{existing[0].name}'. Disable that feeder first or use a different {self._get_hardware_description(hardware_type)}."
                     )
             
             # Get and validate servo_config
@@ -2218,11 +2220,9 @@ class terrariumAPI(object):
                 if hardware != feeder_obj.hardware or feeder_obj.enabled is False:
                     existing = orm.select(f for f in Feeder if f.hardware == hardware and f.hardware_type == hardware_type and f.enabled and f.id != feeder)
                     if existing.exists():
-                        # Create dynamic error message based on hardware type
-                        hardware_description = "IP address" if hardware_type == "esp32_wifi" else "GPIO pin"
                         raise HTTPError(
                             status=409,
-                            body=f"{hardware_type.upper()} {hardware} is already in use by enabled feeder '{existing[0].name}'. Disable that feeder first or use a different {hardware_description}."
+                            body=f"{hardware_type.upper()} {hardware} is already in use by enabled feeder '{existing[0].name}'. Disable that feeder first or use a different {self._get_hardware_description(hardware_type)}."
                         )
 
             feeder_obj.hardware = hardware
