@@ -18,6 +18,10 @@ if [ $? -ne 0 ]; then
   fi
 fi
 FFMPEG=$(type -p ffmpeg)
+if [ -z "${FFMPEG}" ]; then
+  echo "Error: ffmpeg not found. Please install ffmpeg to use this script." >&2
+  exit 1
+fi
 
 # Defaults
 if [[ "${NAME}" == "" ]]; then
