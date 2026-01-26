@@ -730,6 +730,7 @@ class terrariumEngine(object):
                             "alarm_max",
                             "limit_min",
                             "limit_max",
+                            "alarm",
                             "unit",
                             "type",
                             "name",
