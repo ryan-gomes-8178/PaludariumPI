@@ -79,14 +79,7 @@ else
   if vcgencmd get_camera 2>/dev/null | grep -q 'supported=1'; then
     streamOld
   else
-    echo "ERROR: Legacy camera stack not enabled. Falling back to libcamera-vid if available." >&2
-    ALT=$(type -p libcamera-vid || true)
-    if [[ "${ALT}" != "" ]]; then
-      RASPIVID="${ALT}"
-      streamNew
-    else
-      echo "ERROR: libcamera-vid not found; live streaming is not possible on this system." >&2
-      exit 1
-    fi
+    echo "ERROR: Legacy camera stack not enabled; live streaming is not possible on this system." >&2
+    exit 1
   fi
 fi
