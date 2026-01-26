@@ -61,8 +61,8 @@
       </CardSettingsTools>
     </svelte:fragment>
 
-    <div class="row" style="min-height: calc(100vh - 250px);">
-      <div class="col-12" style="height: 100%;">
+    <div class="row" style="min-height: 380px">
+      <div class="col-12">
         <Webcam {webcam} />
       </div>
     </div>
