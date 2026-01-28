@@ -84,6 +84,11 @@
   background-color: black;
 }
 
+/* Make webcam map background black to remove gray side gaps around the video */
+.webcam-container .leaflet-container {
+  background: #000;
+}
+
 .nav-item.disabled {
   opacity: 0.6;
   cursor: not-allowed;
