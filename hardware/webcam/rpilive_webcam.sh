@@ -85,11 +85,12 @@ then
   # New libcamera-based stack
   streamNew
 else
-  # Legacy raspivid path only if legacy camera stack is enabled
-  if vcgencmd get_camera 2>/dev/null | grep -q 'supported=1'; then
+  # Legacy raspivid path only if legacy camera stack is enabled and a camera is detected
+  CAMERA_STATUS="$(vcgencmd get_camera 2>/dev/null || true)"
+  if echo "${CAMERA_STATUS}" | grep -q 'supported=1' && echo "${CAMERA_STATUS}" | grep -q 'detected=1'; then
     streamOld
   else
-    echo "ERROR: Legacy camera stack not enabled; live streaming is not possible on this system." >&2
+    echo "ERROR: Legacy camera stack not enabled or camera not detected; live streaming is not possible on this system." >&2
     exit 1
   fi
 fi
