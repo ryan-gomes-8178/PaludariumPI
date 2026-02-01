@@ -2072,6 +2072,35 @@
     },
     "title": "Weather"
   },
+  "monitoring": {
+    "title": "Monitoring",
+    "menu": {
+      "title": "Monitoring"
+    },
+    "enclosure": {
+      "label": "Enclosure",
+      "empty": "No enclosures available"
+    },
+    "actions": {
+      "refresh": "Refresh activity",
+      "refresh_zones": "Reload zones"
+    },
+    "stream": {
+      "title": "Live stream"
+    },
+    "zones": {
+      "title": "Zones",
+      "empty": "No monitoring zones configured yet.",
+      "default_type": "general"
+    },
+    "events": {
+      "title": "Recent activity",
+      "empty": "No detections yet.",
+      "default_label": "Detection",
+      "unknown_zone": "Unknown zone",
+      "confidence": "Confidence"
+    }
+  },
   "webcams": {
     "actions": {
       "delete": "Delete webcam",

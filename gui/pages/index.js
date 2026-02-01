@@ -13,6 +13,7 @@ import Relays from './Relays.svelte';
 import Buttons from './Buttons.svelte';
 import Feeders from './Feeders.svelte';
 import Webcams from './Webcams.svelte';
+import Monitoring from './Monitoring.svelte';
 import AudioFiles from './Audiofiles.svelte';
 import Playlists from './Playlists.svelte';
 import Enclosures from './Enclosures.svelte';
@@ -216,6 +217,15 @@ export const Pages = [
     ],
   },
   {
+    name: 'Monitoring',
+    title: 'monitoring.menu.title',
+    url: '/monitoring/',
+    breadcrumb: [],
+    icon: 'fas fa-eye',
+    hide: false,
+    nesting: false,
+  },
+  {
     name: 'Audio',
     title: 'audio.menu.title',
     url: '/audio/',
@@ -386,6 +396,7 @@ export default {
   [PageUrls.Buttons]: Buttons,
   [PageUrls.Feeders]: Feeders,
   [PageUrls.Webcams]: Webcams,
+  [PageUrls.Monitoring]: Monitoring,
   [PageUrls.audio_files]: AudioFiles,
   [PageUrls.playlists]: Playlists,
   [PageUrls.Enclosures]: Enclosures,
