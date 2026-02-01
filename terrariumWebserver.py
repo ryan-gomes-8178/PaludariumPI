@@ -272,6 +272,74 @@ class terrariumWebserver(object):
 
         return staticfile
 
+    def _get_nocturnal_eye_stream(self):
+        """Return the HLS stream manifest for nocturnal-eye gecko monitoring without authentication"""
+        import glob
+        
+        # Find the latest webcam stream directory
+        webcam_dir = Path("/dev/shm/webcam")
+        if not webcam_dir.exists():
+            return HTTPError(404, "Webcam stream not available")
+        
+        # Get the first (usually only) subdirectory
+        stream_dirs = list(webcam_dir.glob("*/stream.m3u8"))
+        if not stream_dirs:
+            return HTTPError(404, "No active stream found")
+        
+        stream_file = stream_dirs[0]
+        
+        # Read and return the m3u8 file
+        try:
+            response.content_type = "application/vnd.apple.mpegurl"
+            response.set_header("Cache-Control", "no-cache, no-store, must-revalidate")
+            response.set_header("Pragma", "no-cache")
+            response.set_header("Expires", "0")
+            
+            with open(stream_file, 'r') as f:
+                content = f.read()
+            
+            # Convert relative paths to absolute paths pointing to /nocturnal-eye/chunks/
+            import re
+            content = re.sub(r'^(chunk_\d+\.ts)$', r'/nocturnal-eye/chunks/\1', content, flags=re.MULTILINE)
+            
+            return content
+        except Exception as e:
+            logger.error(f"Error reading stream: {e}")
+            return HTTPError(500, "Error reading stream")
+
+    def _get_nocturnal_eye_chunk(self, filename):
+        """Serve HLS stream chunks for nocturnal-eye"""
+        from pathlib import Path
+        
+        # Find the webcam stream directory
+        webcam_dir = Path("/dev/shm/webcam")
+        if not webcam_dir.exists():
+            return HTTPError(404, "Webcam stream not available")
+        
+        # Get the first subdirectory
+        stream_dirs = list(webcam_dir.glob("*/"))
+        if not stream_dirs:
+            return HTTPError(404, "No active stream found")
+        
+        chunk_file = stream_dirs[0] / filename
+        
+        # Verify the file exists and is a valid chunk
+        if not chunk_file.exists() or not (filename.endswith('.ts') or filename.endswith('.jpg')):
+            return HTTPError(404, "Chunk not found")
+        
+        try:
+            response.set_header("Cache-Control", "public, max-age=10")
+            if filename.endswith('.ts'):
+                response.content_type = "video/mp2t"
+            elif filename.endswith('.jpg'):
+                response.content_type = "image/jpeg"
+            
+            with open(chunk_file, 'rb') as f:
+                return f.read()
+        except Exception as e:
+            logger.error(f"Error serving chunk: {e}")
+            return HTTPError(500, "Error reading chunk")
+
     def __file_upload(self, root="media"):
         try:
             upload_file = request.files.get("file", None)
@@ -337,6 +405,20 @@ class terrariumWebserver(object):
         # Static files Svelte app
         self.bottle.route(
             "/<root:re:(css|img|js|webfonts)>/<filename:path>", method="GET", callback=self._static_file_gui
+        )
+
+        # Nocturnal Eye stream bypass - unauthenticated access to live stream for gecko monitoring
+        self.bottle.route(
+            "/nocturnal-eye/stream.m3u8",
+            method="GET",
+            callback=self._get_nocturnal_eye_stream,
+        )
+        
+        # Nocturnal Eye stream chunks
+        self.bottle.route(
+            "/nocturnal-eye/chunks/<filename:path>",
+            method="GET",
+            callback=self._get_nocturnal_eye_chunk,
         )
 
         # Other static files
