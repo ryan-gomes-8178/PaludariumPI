@@ -298,9 +298,10 @@ class terrariumWebserver(object):
             with open(stream_file, 'r') as f:
                 content = f.read()
             
-            # Convert relative paths to absolute paths pointing to /nocturnal-eye/chunks/
+            # Convert relative paths to absolute URLs with proper host:port for HLS protocol compliance
             import re
-            content = re.sub(r'^(chunk_\d+\.ts)$', r'/nocturnal-eye/chunks/\1', content, flags=re.MULTILINE)
+            host = request.headers.get('Host', 'localhost:8090')
+            content = re.sub(r'^(chunk_\d+\.ts)$', f'http://{host}/nocturnal-eye/chunks/\\1', content, flags=re.MULTILINE)
             
             return content
         except Exception as e:
