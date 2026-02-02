@@ -757,7 +757,7 @@ class terrariumAPI(object):
             "/api/monitoring/zones/",
             "GET",
             self.monitoring_zone_list,
-            apply=self.authentication(False),
+            apply=self.authentication(),
             name="api:monitoring_zone_list",
         )
         bottle_app.route(
@@ -771,7 +771,7 @@ class terrariumAPI(object):
             "/api/monitoring/zones/<zone:path>/",
             "GET",
             self.monitoring_zone_detail,
-            apply=self.authentication(False),
+            apply=self.authentication(),
             name="api:monitoring_zone_detail",
         )
         bottle_app.route(
@@ -792,7 +792,7 @@ class terrariumAPI(object):
             "/api/monitoring/events/",
             "GET",
             self.monitoring_event_list,
-            apply=self.authentication(False),
+            apply=self.authentication(),
             name="api:monitoring_event_list",
         )
         bottle_app.route(
@@ -2693,7 +2693,15 @@ class terrariumAPI(object):
 
             timestamp = data.get("timestamp")
             if timestamp is not None:
-                timestamp = datetime.fromtimestamp(float(timestamp))
+                try:
+                    # Convert timestamp to float and validate
+                    timestamp_float = float(timestamp)
+                    # Validate timestamp is within reasonable range (Unix epoch 0 to 4102444800 = Jan 1, 2100)
+                    if timestamp_float < 0 or timestamp_float > 4102444800:
+                        raise ValueError("Timestamp is out of valid range (must be between 1970 and 2100)")
+                    timestamp = datetime.fromtimestamp(timestamp_float)
+                except (ValueError, TypeError, OSError) as e:
+                    raise HTTPError(status=400, body=f"Invalid timestamp value: {e}")
 
             event = MonitoringEvent(
                 enclosure=enclosure,
