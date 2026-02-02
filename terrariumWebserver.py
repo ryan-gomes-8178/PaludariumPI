@@ -276,20 +276,22 @@ class terrariumWebserver(object):
         """Return the HLS stream manifest for nocturnal-eye gecko monitoring without authentication"""
         import glob
 
-        # Set CORS headers for all responses (including errors)
-        response.set_header("Access-Control-Allow-Origin", "*")
-        response.set_header("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS")
-        response.set_header("Access-Control-Allow-Headers", "Origin, Accept, Content-Type, X-Requested-With")
+        # CORS headers for cross-origin access
+        cors_headers = {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
+            "Access-Control-Allow-Headers": "Origin, Accept, Content-Type, X-Requested-With",
+        }
 
         # Find the latest webcam stream directory
         webcam_dir = Path("/dev/shm/webcam")
         if not webcam_dir.exists():
-            return HTTPError(404, "Webcam stream not available")
+            return HTTPError(404, "Webcam stream not available", **cors_headers)
 
         # Get the first (usually only) subdirectory
         stream_dirs = list(webcam_dir.glob("*/stream.m3u8"))
         if not stream_dirs:
-            return HTTPError(404, "No active stream found")
+            return HTTPError(404, "No active stream found", **cors_headers)
 
         stream_file = stream_dirs[0]
 
@@ -299,6 +301,9 @@ class terrariumWebserver(object):
             response.set_header("Cache-Control", "no-cache, no-store, must-revalidate")
             response.set_header("Pragma", "no-cache")
             response.set_header("Expires", "0")
+            # Set CORS headers on response object for successful response
+            for header, value in cors_headers.items():
+                response.set_header(header, value)
 
             with open(stream_file, "r") as f:
                 content = f.read()
@@ -313,7 +318,7 @@ class terrariumWebserver(object):
             return content
         except Exception as e:
             logger.error(f"Error reading stream: {e}")
-            return HTTPError(500, "Error reading stream")
+            return HTTPError(500, "Error reading stream", **cors_headers)
 
     def _get_nocturnal_eye_chunk(self, filename):
         """Serve HLS stream chunks for nocturnal-eye"""
