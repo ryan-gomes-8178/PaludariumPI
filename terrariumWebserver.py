@@ -440,6 +440,31 @@ class terrariumWebserver(object):
             logger.error(f"Error serving chunk: {e}")
             return HTTPError(500, "Error reading chunk")
 
+    def _proxy_nocturnal_eye_api(self, path):
+        """Proxy Nocturnal Eye API requests to avoid browser CORS issues"""
+        try:
+            url = f"http://127.0.0.1:5001/api/{path}"
+            params = dict(request.query)
+            upstream = requests.get(url, params=params, timeout=10)
+            response.status = upstream.status_code
+            response.content_type = upstream.headers.get("Content-Type", "application/json")
+            return upstream.content
+        except Exception as e:
+            logger.error(f"Error proxying Nocturnal Eye API {path}: {e}")
+            return HTTPError(502, "Nocturnal Eye API unavailable")
+
+    def _proxy_nocturnal_eye_static(self, path):
+        """Proxy Nocturnal Eye static files (snapshots, assets)"""
+        try:
+            url = f"http://127.0.0.1:5001/static/{path}"
+            upstream = requests.get(url, stream=True, timeout=10)
+            response.status = upstream.status_code
+            response.content_type = upstream.headers.get("Content-Type", "application/octet-stream")
+            return upstream.content
+        except Exception as e:
+            logger.error(f"Error proxying Nocturnal Eye static {path}: {e}")
+            return HTTPError(502, "Nocturnal Eye static unavailable")
+
     def __file_upload(self, root="media"):
         try:
             upload_file = request.files.get("file", None)
@@ -519,6 +544,20 @@ class terrariumWebserver(object):
             "/nocturnal-eye/chunks/<filename:path>",
             method="GET",
             callback=self._get_nocturnal_eye_chunk,
+        )
+
+        # Nocturnal Eye API proxy
+        self.bottle.route(
+            "/nocturnal-eye/api/<path:path>",
+            method="GET",
+            callback=self._proxy_nocturnal_eye_api,
+        )
+
+        # Nocturnal Eye static proxy (snapshots)
+        self.bottle.route(
+            "/nocturnal-eye/static/<path:path>",
+            method="GET",
+            callback=self._proxy_nocturnal_eye_static,
         )
 
         # Other static files
