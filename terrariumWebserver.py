@@ -311,6 +311,13 @@ class terrariumWebserver(object):
     def _get_nocturnal_eye_chunk(self, filename):
         """Serve HLS stream chunks for nocturnal-eye"""
         from pathlib import Path
+        import re
+        
+        # Validate filename to prevent path traversal attacks
+        # Only allow alphanumeric characters, dots, underscores, and hyphens
+        # This prevents path separators (/, \) and traversal sequences (..)
+        if not re.match(r'^[a-zA-Z0-9._-]+$', filename):
+            return HTTPError(400, "Invalid filename")
         
         # Find the webcam stream directory
         webcam_dir = Path("/dev/shm/webcam")
@@ -324,8 +331,17 @@ class terrariumWebserver(object):
         
         chunk_file = stream_dirs[0] / filename
         
+        # Resolve the path and verify it's still within the stream directory
+        try:
+            resolved_chunk = chunk_file.resolve()
+            resolved_stream_dir = stream_dirs[0].resolve()
+            if not str(resolved_chunk).startswith(str(resolved_stream_dir)):
+                return HTTPError(403, "Access denied")
+        except Exception:
+            return HTTPError(400, "Invalid file path")
+        
         # Verify the file exists and is a valid chunk
-        if not chunk_file.exists() or not (filename.endswith('.ts') or filename.endswith('.jpg')):
+        if not resolved_chunk.exists() or not (filename.endswith('.ts') or filename.endswith('.jpg')):
             return HTTPError(404, "Chunk not found")
         
         try:
@@ -335,7 +351,7 @@ class terrariumWebserver(object):
             elif filename.endswith('.jpg'):
                 response.content_type = "image/jpeg"
             
-            with open(chunk_file, 'rb') as f:
+            with open(resolved_chunk, 'rb') as f:
                 return f.read()
         except Exception as e:
             logger.error(f"Error serving chunk: {e}")
