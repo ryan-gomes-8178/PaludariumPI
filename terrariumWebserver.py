@@ -299,7 +299,6 @@ class terrariumWebserver(object):
                 content = f.read()
             
             # Convert relative paths to absolute URLs with proper host:port for HLS protocol compliance
-            import re
             host = request.headers.get('Host', 'localhost:8090')
             content = re.sub(r'^(chunk_\d+\.ts)$', f'http://{host}/nocturnal-eye/chunks/\\1', content, flags=re.MULTILINE)
             
