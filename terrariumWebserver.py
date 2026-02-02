@@ -273,7 +273,7 @@ class terrariumWebserver(object):
         return staticfile
 
     def _handle_cors(self):
-        """Handle CORS by validating and setting headers for same-origin requests only"""
+        """Handle CORS by validating Origin header and setting headers only when origin matches server origin"""
         request_origin = request.get_header("Origin")
         if request_origin:
             # Validate Origin header format to avoid processing malformed input
@@ -285,13 +285,14 @@ class terrariumWebserver(object):
                 return
             
             expected_origin = f"{request.urlparts.scheme}://{request.urlparts.netloc}"
-            # Case-insensitive comparison per RFC 6454 - this is the actual security check
+            # Case-insensitive comparison per RFC 6454 (scheme and host are case-insensitive, port is numeric)
             if request_origin.lower() == expected_origin.lower():
-                # Allow same-origin requests - echo the validated origin
+                # Allow requests from same origin - echo the validated origin
                 response.set_header("Access-Control-Allow-Origin", request_origin)
                 # Handle OPTIONS preflight requests
                 if request.method == "OPTIONS":
                     response.set_header("Access-Control-Allow-Methods", "GET, OPTIONS")
+                    response.set_header("Access-Control-Max-Age", "86400")  # Cache for 24 hours
                     # Allow requested headers if specified
                     requested_headers = request.get_header("Access-Control-Request-Headers")
                     if requested_headers:
