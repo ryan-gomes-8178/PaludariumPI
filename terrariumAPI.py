@@ -2693,7 +2693,17 @@ class terrariumAPI(object):
 
             timestamp = data.get("timestamp")
             if timestamp is not None:
-                timestamp = datetime.fromtimestamp(float(timestamp))
+                try:
+                    # Validate timestamp is numeric
+                    if not isinstance(timestamp, (int, float, str)):
+                        raise ValueError("Timestamp must be a numeric value")
+                    timestamp_float = float(timestamp)
+                    # Validate timestamp is within reasonable range (1970-2100)
+                    if timestamp_float < 0 or timestamp_float > 4102444800:
+                        raise ValueError("Timestamp is out of valid range")
+                    timestamp = datetime.fromtimestamp(timestamp_float)
+                except (ValueError, TypeError, OSError) as e:
+                    raise HTTPError(status=400, body=f"Invalid timestamp value: {e}")
 
             event = MonitoringEvent(
                 enclosure=enclosure,
