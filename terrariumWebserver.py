@@ -350,7 +350,9 @@ class terrariumWebserver(object):
         
         try:
             response.set_header("Cache-Control", "public, max-age=10")
-            response.set_header("Access-Control-Allow-Origin", "*")
+            # Restrict CORS to this server's origin instead of allowing all origins
+            origin = f"{request.urlparts.scheme}://{request.urlparts.netloc}"
+            response.set_header("Access-Control-Allow-Origin", origin)
             response.set_header("Access-Control-Allow-Methods", "GET, OPTIONS")
             if filename.endswith('.ts'):
                 response.content_type = "video/mp2t"
