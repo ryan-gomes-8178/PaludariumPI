@@ -291,10 +291,13 @@ class terrariumWebserver(object):
         # Read and return the m3u8 file
         try:
             response.content_type = "application/vnd.apple.mpegurl"
-            # Restrict CORS to this server's origin instead of allowing all origins
-            origin = f"{request.urlparts.scheme}://{request.urlparts.netloc}"
-            response.set_header("Access-Control-Allow-Origin", origin)
-            response.set_header("Access-Control-Allow-Methods", "GET, OPTIONS")
+            # Only set CORS headers if Origin header is present and matches our server
+            request_origin = request.get_header("Origin")
+            if request_origin:
+                expected_origin = f"{request.urlparts.scheme}://{request.urlparts.netloc}"
+                if request_origin == expected_origin:
+                    response.set_header("Access-Control-Allow-Origin", request_origin)
+                    response.set_header("Access-Control-Allow-Methods", "GET, OPTIONS")
             response.set_header("Cache-Control", "no-cache, no-store, must-revalidate")
             response.set_header("Pragma", "no-cache")
             response.set_header("Expires", "0")
@@ -350,10 +353,13 @@ class terrariumWebserver(object):
         
         try:
             response.set_header("Cache-Control", "public, max-age=10")
-            # Restrict CORS to this server's origin instead of allowing all origins
-            origin = f"{request.urlparts.scheme}://{request.urlparts.netloc}"
-            response.set_header("Access-Control-Allow-Origin", origin)
-            response.set_header("Access-Control-Allow-Methods", "GET, OPTIONS")
+            # Only set CORS headers if Origin header is present and matches our server
+            request_origin = request.get_header("Origin")
+            if request_origin:
+                expected_origin = f"{request.urlparts.scheme}://{request.urlparts.netloc}"
+                if request_origin == expected_origin:
+                    response.set_header("Access-Control-Allow-Origin", request_origin)
+                    response.set_header("Access-Control-Allow-Methods", "GET, OPTIONS")
             if filename.endswith('.ts'):
                 response.content_type = "video/mp2t"
             elif filename.endswith('.jpg'):
