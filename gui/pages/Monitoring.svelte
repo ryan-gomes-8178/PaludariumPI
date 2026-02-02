@@ -61,23 +61,101 @@
 
   .snapshots-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
     gap: 0.75rem;
     margin-top: 1rem;
   }
 
-  .snapshot-thumb {
-    width: 100%;
+  .snapshot-card {
+    position: relative;
     aspect-ratio: 16/9;
-    object-fit: cover;
     border-radius: 0.25rem;
+    overflow: hidden;
     cursor: pointer;
     border: 2px solid transparent;
     transition: border-color 0.2s;
   }
 
-  .snapshot-thumb:hover {
+  .snapshot-card:hover {
     border-color: #00d4ff;
+  }
+
+  .snapshot-thumb {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .snapshot-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.7) 100%);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 6px;
+    opacity: 1;
+  }
+
+  .snapshot-time {
+    font-size: 0.75rem;
+    color: #00d4ff;
+    font-weight: 600;
+    margin-bottom: 3px;
+  }
+
+  .snapshot-count {
+    font-size: 0.7rem;
+    color: #a0a0a0;
+  }
+
+  .date-filter-row {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .date-input-group {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  .date-input-group label {
+    font-size: 0.85rem;
+    color: #a0a0a0;
+    margin: 0;
+    white-space: nowrap;
+  }
+
+  .date-input-group input {
+    padding: 0.4rem 0.6rem;
+    background: #16213e;
+    border: 1px solid #0f3460;
+    border-radius: 0.25rem;
+    color: #fff;
+    font-size: 0.85rem;
+  }
+
+  .date-input-group input:focus {
+    border-color: #00d4ff;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(0, 212, 255, 0.1);
+  }
+
+  .filter-buttons {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .filter-buttons button {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.85rem;
+    white-space: nowrap;
   }
 
   .pagination-controls {
@@ -85,6 +163,8 @@
     gap: 0.5rem;
     margin-top: 1rem;
     justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
   }
 
   .pagination-controls button {
@@ -92,31 +172,84 @@
     font-size: 0.85rem;
   }
 
+  .pagination-info {
+    font-size: 0.85rem;
+    color: #a0a0a0;
+  }
+
   .hourly-stats {
     margin-top: 1rem;
     padding: 1rem;
     background: #16213e;
     border-radius: 0.25rem;
+    position: relative;
+    height: 150px;
   }
 
-  .hourly-bar {
+  .hourly-chart-container {
     display: flex;
     align-items: flex-end;
-    gap: 0.25rem;
+    justify-content: space-between;
+    gap: 0.2rem;
     height: 100px;
-    margin-top: 0.5rem;
+    position: relative;
+    padding-right: 20px;
+  }
+
+  .hourly-y-axis {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    font-size: 0.65rem;
+    color: #666;
+    width: 40px;
+    text-align: right;
+    padding-right: 5px;
+  }
+
+  .hourly-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.15rem;
+    height: 100%;
+    flex: 1;
+    margin-left: 40px;
   }
 
   .bar {
     flex: 1;
     background: #00d4ff;
     border-radius: 0.15rem;
-    opacity: 0.8;
-    transition: opacity 0.2s;
+    opacity: 0.7;
+    transition: opacity 0.2s, background 0.2s;
+    position: relative;
+    min-height: 2px;
   }
 
   .bar:hover {
     opacity: 1;
+    background: #00ffff;
+  }
+
+  .hourly-x-axis {
+    position: absolute;
+    bottom: 0;
+    left: 40px;
+    right: 0;
+    height: 20px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.65rem;
+    color: #666;
+  }
+
+  .hour-label {
+    flex: 1;
+    text-align: center;
   }
 </style>
 
@@ -143,7 +276,10 @@
   let hlsPlayer;
   let refreshTimer;
   let currentPage = 0;
-  const snapshotsPerPage = 12;
+  let fromDate = '';
+  let toDate = '';
+  
+  const snapshotsPerPage = 20;
 
   const nocturnalEyeApi = `${ApiUrl}/nocturnal-eye/api`;
   const streamUrl = `${ApiUrl}/nocturnal-eye/stream.m3u8`;
@@ -184,6 +320,12 @@
     return path;
   };
 
+  const formatTimeShort = (timestamp) => {
+    if (!timestamp) return '';
+    const date = typeof timestamp === 'number' ? new Date(timestamp * 1000) : new Date(timestamp);
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
   const setupHls = () => {
     if (!videoEl) return;
 
@@ -213,7 +355,9 @@
         summary = await summaryRes.json();
         zones = summary.zones || [];
         hourlyStats = summary.hourly_distribution
-          ? Object.entries(summary.hourly_distribution).map(([hour, count]) => ({ hour, count }))
+          ? Object.entries(summary.hourly_distribution)
+              .map(([hour, count]) => ({ hour: parseInt(hour) || 0, count }))
+              .sort((a, b) => a.hour - b.hour)
           : [];
         snapshotTotal = summary.snapshot_count || 0;
         if (summary.recent_snapshots?.length) {
@@ -243,9 +387,12 @@
   const loadSnapshots = async () => {
     try {
       const offset = currentPage * snapshotsPerPage;
-      const res = await fetch(
-        `${nocturnalEyeApi}/snapshots/recent?limit=${snapshotsPerPage}&offset=${offset}`
-      );
+      let url = `${nocturnalEyeApi}/snapshots/recent?limit=${snapshotsPerPage}&offset=${offset}`;
+      
+      if (fromDate) url += `&from=${fromDate}`;
+      if (toDate) url += `&to=${toDate}`;
+      
+      const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
         snapshots = (data.snapshots || []).map((snap) => ({
@@ -271,6 +418,18 @@
     loadSnapshots();
   };
 
+  const applyDateRange = () => {
+    currentPage = 0;
+    loadSnapshots();
+  };
+
+  const clearDateRange = () => {
+    fromDate = '';
+    toDate = '';
+    currentPage = 0;
+    loadSnapshots();
+  };
+
   const formatDate = (timestamp) => {
     if (!timestamp) return '';
     const date = typeof timestamp === 'number' ? new Date(timestamp * 1000) : new Date(timestamp);
@@ -281,6 +440,12 @@
 
   onMount(() => {
     setCustomPageTitle($_('monitoring.title', { default: 'Monitoring' }));
+    
+    // Initialize date inputs with today's date
+    const today = new Date().toISOString().split('T')[0];
+    toDate = today;
+    fromDate = today;
+    
     setupHls();
     loadData();
 
@@ -366,37 +531,92 @@
         <div class="card">
           <div class="card-header">
             <h3 class="card-title">
-              <i class="fas fa-image mr-2"></i>Recent Snapshots
+              <i class="fas fa-image mr-2"></i>Recent Detections
             </h3>
           </div>
           <div class="card-body">
+            <!-- Date Range Filter -->
+            <div class="date-filter-row">
+              <div class="date-input-group">
+                <label for="fromDate">From</label>
+                <input
+                  type="date"
+                  id="fromDate"
+                  bind:value={fromDate}
+                />
+              </div>
+              <div class="date-input-group">
+                <label for="toDate">To</label>
+                <input
+                  type="date"
+                  id="toDate"
+                  bind:value={toDate}
+                />
+              </div>
+              <div class="filter-buttons">
+                <button
+                  class="btn btn-sm btn-success"
+                  on:click={applyDateRange}
+                >
+                  <i class="fas fa-check"></i> Apply Range
+                </button>
+                <button
+                  class="btn btn-sm btn-outline-secondary"
+                  on:click={clearDateRange}
+                >
+                  <i class="fas fa-times"></i> Clear Range
+                </button>
+              </div>
+            </div>
+
+            <!-- Snapshots Grid -->
             <div class="snapshots-grid">
               {#each snapshots as snapshot}
-                <img
-                  src={snapshot.path}
-                  alt="Snapshot"
-                  class="snapshot-thumb"
-                  title={formatDate(snapshot.timestamp)}
-                />
+                <div class="snapshot-card">
+                  <img
+                    src={snapshot.path}
+                    alt="Snapshot"
+                    class="snapshot-thumb"
+                  />
+                  <div class="snapshot-overlay">
+                    <div class="snapshot-time">
+                      {formatTimeShort(snapshot.timestamp)}
+                    </div>
+                    {#if snapshot.metadata?.detection_count}
+                      <div class="snapshot-count">
+                        {snapshot.metadata.detection_count} detection(s)
+                      </div>
+                    {/if}
+                  </div>
+                </div>
               {/each}
             </div>
+
+            <!-- Pagination Info -->
             <div class="pagination-controls">
               <button
                 class="btn btn-sm btn-outline-secondary"
                 disabled={currentPage === 0}
                 on:click={previousPage}
               >
-                <i class="fas fa-chevron-left"></i> Previous
+                <i class="fas fa-chevron-left"></i> Newer
               </button>
-              <span class="text-muted d-flex align-items-center mx-2">
-                Page {currentPage + 1}
+              <span class="pagination-info">
+                {#if snapshotTotal > 0}
+                  {currentPage * snapshotsPerPage + 1} - {Math.min(
+                    (currentPage + 1) * snapshotsPerPage,
+                    snapshotTotal
+                  )} of {snapshotTotal}
+                {:else}
+                  Page {currentPage + 1}
+                {/if}
               </span>
               <button
                 class="btn btn-sm btn-outline-secondary"
                 disabled={snapshotTotal !== 0 && (currentPage + 1) * snapshotsPerPage >= snapshotTotal}
                 on:click={nextPage}
               >
-                Next <i class="fas fa-chevron-right"></i>
+                Older <i class="fas fa-chevron-right"></i>
               </button>
             </div>
           </div>
@@ -479,18 +699,34 @@
         <div class="card mt-3">
           <div class="card-header">
             <h3 class="card-title">
-              <i class="fas fa-chart-bar mr-2"></i>Activity (Last 24h)
+              <i class="fas fa-chart-bar mr-2"></i>Hourly Activity (24h)
             </h3>
           </div>
           <div class="card-body">
             <div class="hourly-stats">
-              <div class="hourly-bar">
-                {#each hourlyStats as stat}
-                  <div
-                    class="bar"
-                    style="height: {Math.min(100, (stat.count / maxHourlyCount()) * 100)}%"
-                    title="{stat.hour}:00 - {stat.count} events"
-                  ></div>
+              <div class="hourly-y-axis">
+                <div>{Math.round(maxHourlyCount())}</div>
+                <div>{Math.round(maxHourlyCount() / 2)}</div>
+                <div>0</div>
+              </div>
+              <div class="hourly-chart-container">
+                <div class="hourly-bars">
+                  {#each hourlyStats as stat, idx}
+                    <div
+                      class="bar"
+                      style="height: {Math.max(2, (stat.count / maxHourlyCount()) * 100)}%"
+                      title="{stat.hour}:00 - {stat.count} events"
+                    ></div>
+                  {/each}
+                </div>
+              </div>
+              <div class="hourly-x-axis">
+                {#each hourlyStats as stat, idx}
+                  {#if idx % 3 === 0}
+                    <div class="hour-label">{stat.hour}h</div>
+                  {:else}
+                    <div class="hour-label"></div>
+                  {/if}
                 {/each}
               </div>
             </div>
