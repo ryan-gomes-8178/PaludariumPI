@@ -275,11 +275,14 @@ class terrariumWebserver(object):
     def __set_same_origin_cors_headers(self):
         """Set CORS headers to allow same-origin access only"""
         request_origin = request.get_header("Origin")
-        expected_origin = f"{request.urlparts.scheme}://{request.urlparts.netloc}"
-        if not request_origin or request_origin == expected_origin:
-            # Allow same-origin requests (with or without Origin header)
-            response.set_header("Access-Control-Allow-Origin", request_origin or expected_origin)
-            response.set_header("Access-Control-Allow-Methods", "GET, OPTIONS")
+        if request_origin:
+            # Only set CORS headers if Origin header is present
+            expected_origin = f"{request.urlparts.scheme}://{request.urlparts.netloc}"
+            if request_origin == expected_origin:
+                # Allow same-origin requests
+                response.set_header("Access-Control-Allow-Origin", request_origin)
+                response.set_header("Access-Control-Allow-Methods", "GET, OPTIONS")
+        # If no Origin header is present, don't set CORS headers (standard same-origin requests)
 
     def _get_nocturnal_eye_stream(self):
         """Return the HLS stream manifest for nocturnal-eye gecko monitoring without authentication"""
