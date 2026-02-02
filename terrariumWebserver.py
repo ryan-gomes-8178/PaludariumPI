@@ -315,11 +315,8 @@ class terrariumWebserver(object):
         
         # Validate filename to prevent path traversal attacks
         # Only allow alphanumeric characters, dots, underscores, and hyphens
+        # This prevents path separators (/, \) and traversal sequences (..)
         if not re.match(r'^[a-zA-Z0-9._-]+$', filename):
-            return HTTPError(400, "Invalid filename")
-        
-        # Reject any path separators or traversal sequences
-        if '/' in filename or '\\' in filename or '..' in filename:
             return HTTPError(400, "Invalid filename")
         
         # Find the webcam stream directory
