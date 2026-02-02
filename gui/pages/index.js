@@ -22,7 +22,6 @@ import Settings from './Settings.svelte';
 import Log from './Log.svelte';
 import Notifications from './Notifications.svelte';
 import About from './About.svelte';
-import NocRead from './NocRead.svelte';
 
 import NotFound from './NotFound.svelte';
 import Error from './Error.svelte';
