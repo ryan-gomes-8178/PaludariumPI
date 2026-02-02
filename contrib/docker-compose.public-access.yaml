@@ -1,0 +1,135 @@
+# TerrariumPI with Nginx Reverse Proxy - Docker Compose Example
+# This example shows how to deploy TerrariumPI with Nginx and Let's Encrypt SSL support
+# Use this as a reference for your production setup
+
+version: '3.8'
+
+services:
+  # TerrariumPI application
+  terrariumpi:
+    build:
+      context: .
+      dockerfile: Dockerfile.bookworm  # or bullseye, buster depending on your OS
+    container_name: terrariumpi
+    restart: unless-stopped
+    
+    # Environment variables
+    environment:
+      - TZ=UTC  # Change to your timezone
+      # Add other environment variables as needed
+    
+    # Volume mounts for persistence
+    volumes:
+      # Database and data
+      - ./migrations:/app/migrations
+      - ./data:/app/data
+      - ./log:/app/log
+      # Configuration
+      - ./terrariumpi.log:/app/terrariumpi.log
+    
+    # Port binding - only expose internally
+    # (Nginx handles public access)
+    ports:
+      - "127.0.0.1:8080:8080"
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    
+    # Security options
+    security_opt:
+      - no-new-privileges:true
+    
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+    
+    networks:
+      - terrariumpi-network
+    
+    # Capabilities (adjust based on your hardware needs)
+    cap_add:
+      - SYS_RAWIO  # For GPIO access
+    
+    devices:
+      # Add device access as needed
+      # - /dev/i2c-1:/dev/i2c-1
+      # - /dev/gpiomem:/dev/gpiomem
+
+  # Nginx reverse proxy
+  nginx:
+    image: nginx:alpine
+    container_name: terrariumpi-nginx
+    restart: unless-stopped
+    
+    volumes:
+      # Nginx configuration
+      - ./contrib/nginx_terrariumpi.conf:/etc/nginx/conf.d/default.conf:ro
+      # SSL certificates (from Let's Encrypt)
+      - ./ssl/certs:/etc/nginx/certs:ro
+      - ./ssl/keys:/etc/nginx/keys:ro
+      # Logs
+      - ./log/nginx:/var/log/nginx
+    
+    ports:
+      - "80:80"
+      - "443:443"
+    
+    depends_on:
+      - terrariumpi
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    
+    # Security options
+    security_opt:
+      - no-new-privileges:true
+    
+    networks:
+      - terrariumpi-network
+
+networks:
+  terrariumpi-network:
+    driver: bridge
+
+# Manual SSL setup instructions:
+# 
+# 1. Install certbot on your host machine:
+#    sudo apt-get install -y certbot python3-certbot-nginx
+#
+# 2. Obtain Let's Encrypt certificate:
+#    sudo certbot certonly --standalone \
+#      -d yourdomain.com \
+#      -d www.yourdomain.com
+#
+# 3. Create SSL directories:
+#    mkdir -p ssl/certs ssl/keys
+#
+# 4. Copy certificates to the volumes:
+#    cp /etc/letsencrypt/live/yourdomain.com/fullchain.pem ssl/certs/
+#    cp /etc/letsencrypt/live/yourdomain.com/privkey.pem ssl/keys/
+#    chmod 644 ssl/certs/*
+#    chmod 600 ssl/keys/*
+#
+# 5. Update nginx configuration with your domain name
+#
+# 6. Start services:
+#    docker-compose up -d
+#
+# 7. Setup automatic renewal cron job on host:
+#    0 3 * * * certbot renew --quiet && cp /etc/letsencrypt/live/yourdomain.com/* /path/to/ssl/
