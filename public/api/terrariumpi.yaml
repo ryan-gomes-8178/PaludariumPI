@@ -1213,6 +1213,7 @@ paths:
           required: true
           type: string
           enum:
+            - hour
             - day
             - week
             - month
@@ -1280,6 +1281,7 @@ paths:
           required: true
           type: string
           enum:
+            - hour
             - day
             - week
             - month
@@ -1599,6 +1601,7 @@ paths:
           required: true
           type: string
           enum:
+            - hour
             - day
             - week
             - month
@@ -1669,6 +1672,7 @@ paths:
           required: true
           type: string
           enum:
+            - hour
             - day
             - week
             - month

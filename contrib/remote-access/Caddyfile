@@ -1,0 +1,9 @@
+{$TPI_DOMAIN} {
+  encode zstd gzip
+
+  basicauth {
+    {$TPI_AUTH_USER} {$TPI_AUTH_HASH}
+  }
+
+  reverse_proxy {$TPI_UPSTREAM}
+}
