@@ -757,7 +757,7 @@ class terrariumAPI(object):
             "/api/monitoring/zones/",
             "GET",
             self.monitoring_zone_list,
-            apply=self.authentication(False),
+            apply=self.authentication(),
             name="api:monitoring_zone_list",
         )
         bottle_app.route(
@@ -771,7 +771,7 @@ class terrariumAPI(object):
             "/api/monitoring/zones/<zone:path>/",
             "GET",
             self.monitoring_zone_detail,
-            apply=self.authentication(False),
+            apply=self.authentication(),
             name="api:monitoring_zone_detail",
         )
         bottle_app.route(
@@ -792,7 +792,7 @@ class terrariumAPI(object):
             "/api/monitoring/events/",
             "GET",
             self.monitoring_event_list,
-            apply=self.authentication(False),
+            apply=self.authentication(),
             name="api:monitoring_event_list",
         )
         bottle_app.route(
