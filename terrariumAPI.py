@@ -25,6 +25,8 @@ from terrariumDatabase import (
     Enclosure,
     Feeder,
     FeedingHistory,
+    MonitoringEvent,
+    MonitoringZone,
     Playlist,
     NotificationMessage,
     NotificationService,
@@ -749,6 +751,57 @@ class terrariumAPI(object):
             "/api/webcams/", "GET", self.webcam_list, apply=self.authentication(False), name="api:webcam_list"
         )
         bottle_app.route("/api/webcams/", "POST", self.webcam_add, apply=self.authentication(), name="api:webcam_add")
+
+        # Monitoring API
+        bottle_app.route(
+            "/api/monitoring/zones/",
+            "GET",
+            self.monitoring_zone_list,
+            apply=self.authentication(),
+            name="api:monitoring_zone_list",
+        )
+        bottle_app.route(
+            "/api/monitoring/zones/",
+            "POST",
+            self.monitoring_zone_add,
+            apply=self.authentication(),
+            name="api:monitoring_zone_add",
+        )
+        bottle_app.route(
+            "/api/monitoring/zones/<zone:path>/",
+            "GET",
+            self.monitoring_zone_detail,
+            apply=self.authentication(),
+            name="api:monitoring_zone_detail",
+        )
+        bottle_app.route(
+            "/api/monitoring/zones/<zone:path>/",
+            "PUT",
+            self.monitoring_zone_update,
+            apply=self.authentication(),
+            name="api:monitoring_zone_update",
+        )
+        bottle_app.route(
+            "/api/monitoring/zones/<zone:path>/",
+            "DELETE",
+            self.monitoring_zone_delete,
+            apply=self.authentication(),
+            name="api:monitoring_zone_delete",
+        )
+        bottle_app.route(
+            "/api/monitoring/events/",
+            "GET",
+            self.monitoring_event_list,
+            apply=self.authentication(),
+            name="api:monitoring_event_list",
+        )
+        bottle_app.route(
+            "/api/monitoring/events/",
+            "POST",
+            self.monitoring_event_add,
+            apply=self.authentication(),
+            name="api:monitoring_event_add",
+        )
 
         # API DOC
         bottle_app.route(
@@ -2506,3 +2559,167 @@ class terrariumAPI(object):
             raise HTTPError(status=404, body=f"Webcam with id {webcam} does not exists.")
         except Exception as ex:
             raise HTTPError(status=500, body=f"Error deleting webcam {webcam}. {ex}")
+
+    # Monitoring
+    @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
+    def monitoring_zone_list(self):
+        enclosure_id = request.query.get("enclosure")
+
+        zones_query = MonitoringZone.select()
+        if enclosure_id:
+            zones_query = zones_query.select(lambda z: z.enclosure.id == enclosure_id)
+
+        zones = []
+        for zone in zones_query:
+            zone_data = zone.to_dict(exclude="enclosure")
+            zone_data["enclosure"] = zone.enclosure.id
+            zones.append(zone_data)
+
+        return {"data": zones}
+
+    @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
+    def monitoring_zone_detail(self, zone):
+        try:
+            zone = MonitoringZone[zone]
+            zone_data = zone.to_dict(exclude="enclosure")
+            zone_data["enclosure"] = zone.enclosure.id
+            return zone_data
+        except orm.core.ObjectNotFound:
+            raise HTTPError(status=404, body=f"Monitoring zone with id {zone} does not exists.")
+        except Exception as ex:
+            raise HTTPError(status=500, body=f"Error getting monitoring zone {zone}. {ex}")
+
+    @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
+    def monitoring_zone_add(self):
+        try:
+            data = request.json
+            enclosure = Enclosure[data["enclosure"]]
+
+            zone = MonitoringZone(
+                enclosure=enclosure,
+                name=data.get("name", "New zone"),
+                type=data.get("type", "general"),
+                shape=data.get("shape", {}),
+                meta=data.get("meta", {}),
+                enabled=data.get("enabled", True),
+            )
+            orm.commit()
+
+            zone_data = zone.to_dict(exclude="enclosure")
+            zone_data["enclosure"] = zone.enclosure.id
+            return zone_data
+        except orm.core.ObjectNotFound:
+            raise HTTPError(status=404, body="Enclosure for monitoring zone does not exists.")
+        except Exception as ex:
+            raise HTTPError(status=500, body=f"Monitoring zone could not be added. {ex}")
+
+    @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
+    def monitoring_zone_update(self, zone):
+        try:
+            zone = MonitoringZone[zone]
+            data = request.json
+
+            if "enclosure" in data:
+                zone.enclosure = Enclosure[data["enclosure"]]
+            if "name" in data:
+                zone.name = data["name"]
+            if "type" in data:
+                zone.type = data["type"]
+            if "shape" in data:
+                zone.shape = data["shape"]
+            if "meta" in data:
+                zone.meta = data["meta"] or {}
+            if "enabled" in data:
+                zone.enabled = data["enabled"]
+
+            orm.commit()
+
+            zone_data = zone.to_dict(exclude="enclosure")
+            zone_data["enclosure"] = zone.enclosure.id
+            return zone_data
+        except orm.core.ObjectNotFound:
+            raise HTTPError(status=404, body=f"Monitoring zone with id {zone} does not exists.")
+        except Exception as ex:
+            raise HTTPError(status=500, body=f"Error updating monitoring zone {zone}. {ex}")
+
+    @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
+    def monitoring_zone_delete(self, zone):
+        try:
+            zone = MonitoringZone[zone]
+            message = f"Monitoring zone {zone} is deleted."
+            zone.delete()
+            orm.commit()
+            return message
+        except orm.core.ObjectNotFound:
+            raise HTTPError(status=404, body=f"Monitoring zone with id {zone} does not exists.")
+        except Exception as ex:
+            raise HTTPError(status=500, body=f"Error deleting monitoring zone {zone}. {ex}")
+
+    @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
+    def monitoring_event_list(self):
+        enclosure_id = request.query.get("enclosure")
+        zone_id = request.query.get("zone")
+        limit = int(request.query.get("limit", 100))
+        since = request.query.get("since")
+
+        events_query = MonitoringEvent.select()
+
+        if enclosure_id:
+            events_query = events_query.select(lambda e: e.enclosure.id == enclosure_id)
+        if zone_id:
+            events_query = events_query.select(lambda e: e.zone is not None and e.zone.id == zone_id)
+        if since:
+            since_dt = datetime.fromtimestamp(float(since))
+            events_query = events_query.select(lambda e: e.timestamp >= since_dt)
+
+        events_query = events_query.order_by(orm.desc(MonitoringEvent.timestamp))
+        events_query = events_query.limit(limit)
+
+        events = []
+        for event in events_query:
+            event_data = event.to_dict(exclude=["enclosure", "zone"])
+            event_data["enclosure"] = event.enclosure.id
+            event_data["zone"] = event.zone.id if event.zone else None
+            events.append(event_data)
+
+        return {"data": events}
+
+    @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
+    def monitoring_event_add(self):
+        try:
+            data = request.json
+            enclosure = Enclosure[data["enclosure"]]
+            zone = MonitoringZone[data["zone"]] if data.get("zone") else None
+
+            timestamp = data.get("timestamp")
+            if timestamp is not None:
+                try:
+                    # Convert timestamp to float and validate
+                    timestamp_float = float(timestamp)
+                    # Validate timestamp is within reasonable range (Unix epoch 0 to 4102444800 = Jan 1, 2100)
+                    if timestamp_float < 0 or timestamp_float > 4102444800:
+                        raise ValueError("Timestamp is out of valid range (must be between 1970 and 2100)")
+                    timestamp = datetime.fromtimestamp(timestamp_float)
+                except (ValueError, TypeError, OSError) as e:
+                    raise HTTPError(status=400, body=f"Invalid timestamp value: {e}")
+
+            event = MonitoringEvent(
+                enclosure=enclosure,
+                zone=zone,
+                timestamp=timestamp or datetime.now(),
+                label=data.get("label"),
+                confidence=data.get("confidence"),
+                source=data.get("source"),
+                snapshot=data.get("snapshot"),
+                meta=data.get("meta", {}),
+            )
+            orm.commit()
+
+            event_data = event.to_dict(exclude=["enclosure", "zone"])
+            event_data["enclosure"] = event.enclosure.id
+            event_data["zone"] = event.zone.id if event.zone else None
+            return event_data
+        except orm.core.ObjectNotFound:
+            raise HTTPError(status=404, body="Enclosure or zone for monitoring event does not exists.")
+        except Exception as ex:
+            raise HTTPError(status=500, body=f"Monitoring event could not be added. {ex}")

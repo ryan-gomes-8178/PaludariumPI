@@ -245,6 +245,8 @@ class Enclosure(db.Entity):
     doors = orm.Set(lambda: Button)
     webcams = orm.Set(lambda: Webcam)
     feeders = orm.Set(lambda: Feeder)
+    zones = orm.Set(lambda: MonitoringZone)
+    events = orm.Set(lambda: MonitoringEvent)
 
     def __rename_image(self):
         regex = re.compile(f"{self.id}\.(jpg|jpeg|gif|png)$", re.IGNORECASE)
@@ -707,6 +709,37 @@ class Webcam(db.Entity):
 
     def __repr__(self):
         return f"{self.hardware} webcam '{self.name}' at address '{self.address}'"
+
+
+class MonitoringZone(db.Entity):
+    id = orm.PrimaryKey(str, default=terrariumUtils.generate_uuid)
+    enclosure = orm.Required(lambda: Enclosure)
+    name = orm.Required(str)
+    type = orm.Required(str, default="general")
+    shape = orm.Required(orm.Json)
+    meta = orm.Optional(orm.Json, default={})
+    enabled = orm.Optional(bool, default=True)
+
+    events = orm.Set(lambda: MonitoringEvent)
+
+    def __repr__(self):
+        return f"Monitoring zone '{self.name}' ({self.type}) in enclosure {self.enclosure}"
+
+
+class MonitoringEvent(db.Entity):
+    id = orm.PrimaryKey(str, default=terrariumUtils.generate_uuid)
+    enclosure = orm.Required(lambda: Enclosure)
+    zone = orm.Optional(lambda: MonitoringZone)
+    timestamp = orm.Required(datetime, default=datetime.now)
+    label = orm.Optional(str)
+    confidence = orm.Optional(float)
+    source = orm.Optional(str)
+    snapshot = orm.Optional(str)
+    meta = orm.Optional(orm.Json, default={})
+
+    def __repr__(self):
+        return f"Monitoring event '{self.label}' in enclosure {self.enclosure}"
+
 
 class Feeder(db.Entity):
     """Automatic aquarium feeder entity"""

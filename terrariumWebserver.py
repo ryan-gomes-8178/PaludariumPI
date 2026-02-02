@@ -272,6 +272,116 @@ class terrariumWebserver(object):
 
         return staticfile
 
+    def _get_nocturnal_eye_stream(self):
+        """Return the HLS stream manifest for nocturnal-eye gecko monitoring without authentication"""
+        import glob
+        
+        # Find the latest webcam stream directory
+        webcam_dir = Path("/dev/shm/webcam")
+        if not webcam_dir.exists():
+            return HTTPError(404, "Webcam stream not available")
+        
+        # Get the first (usually only) subdirectory
+        stream_dirs = list(webcam_dir.glob("*/stream.m3u8"))
+        if not stream_dirs:
+            return HTTPError(404, "No active stream found")
+        
+        stream_file = stream_dirs[0]
+        
+        # Read and return the m3u8 file
+        try:
+            response.content_type = "application/vnd.apple.mpegurl"
+            response.set_header("Cache-Control", "no-cache, no-store, must-revalidate")
+            response.set_header("Pragma", "no-cache")
+            response.set_header("Expires", "0")
+            
+            with open(stream_file, 'r') as f:
+                content = f.read()
+            
+            # Convert relative paths to absolute URLs with proper host:port for HLS protocol compliance
+            # Use configured host and port instead of untrusted Host header to prevent injection attacks
+            configured_host = f"{self.engine.settings['host']}:{self.engine.settings['port']}"
+            content = re.sub(r'^(chunk_\d+\.ts)$', f'http://{configured_host}/nocturnal-eye/chunks/\\1', content, flags=re.MULTILINE)
+            
+            return content
+        except Exception as e:
+            logger.error(f"Error reading stream: {e}")
+            return HTTPError(500, "Error reading stream")
+
+    def _get_nocturnal_eye_chunk(self, filename):
+        """Serve HLS stream chunks for nocturnal-eye"""
+        from pathlib import Path
+        import re
+        
+        # Validate filename to prevent path traversal attacks
+        # Only allow alphanumeric characters, dots, underscores, and hyphens
+        # This prevents path separators (/, \) and traversal sequences (..)
+        if not re.match(r'^[a-zA-Z0-9._-]+$', filename):
+            return HTTPError(400, "Invalid filename")
+        
+        # Find the webcam stream directory
+        webcam_dir = Path("/dev/shm/webcam")
+        if not webcam_dir.exists():
+            return HTTPError(404, "Webcam stream not available")
+        
+        # Get the first subdirectory
+        stream_dirs = list(webcam_dir.glob("*/"))
+        if not stream_dirs:
+            return HTTPError(404, "No active stream found")
+        
+        chunk_file = stream_dirs[0] / filename
+        
+        # Resolve the path and verify it's still within the stream directory
+        try:
+            resolved_chunk = chunk_file.resolve()
+            resolved_stream_dir = stream_dirs[0].resolve()
+            if not str(resolved_chunk).startswith(str(resolved_stream_dir)):
+                return HTTPError(403, "Access denied")
+        except Exception:
+            return HTTPError(400, "Invalid file path")
+        
+        # Verify the file exists and is a valid chunk
+        if not resolved_chunk.exists() or not (filename.endswith('.ts') or filename.endswith('.jpg')):
+            return HTTPError(404, "Chunk not found")
+        
+        try:
+            response.set_header("Cache-Control", "public, max-age=10")
+            if filename.endswith('.ts'):
+                response.content_type = "video/mp2t"
+            elif filename.endswith('.jpg'):
+                response.content_type = "image/jpeg"
+            
+            with open(resolved_chunk, 'rb') as f:
+                return f.read()
+        except Exception as e:
+            logger.error(f"Error serving chunk: {e}")
+            return HTTPError(500, "Error reading chunk")
+
+    def _proxy_nocturnal_eye_api(self, path):
+        """Proxy Nocturnal Eye API requests to avoid browser CORS issues"""
+        try:
+            url = f"http://127.0.0.1:5001/api/{path}"
+            params = dict(request.query)
+            upstream = requests.get(url, params=params, timeout=10)
+            response.status = upstream.status_code
+            response.content_type = upstream.headers.get("Content-Type", "application/json")
+            return upstream.content
+        except Exception as e:
+            logger.error(f"Error proxying Nocturnal Eye API {path}: {e}")
+            return HTTPError(502, "Nocturnal Eye API unavailable")
+
+    def _proxy_nocturnal_eye_static(self, path):
+        """Proxy Nocturnal Eye static files (snapshots, assets)"""
+        try:
+            url = f"http://127.0.0.1:5001/static/{path}"
+            upstream = requests.get(url, stream=True, timeout=10)
+            response.status = upstream.status_code
+            response.content_type = upstream.headers.get("Content-Type", "application/octet-stream")
+            return upstream.content
+        except Exception as e:
+            logger.error(f"Error proxying Nocturnal Eye static {path}: {e}")
+            return HTTPError(502, "Nocturnal Eye static unavailable")
+
     def __file_upload(self, root="media"):
         try:
             upload_file = request.files.get("file", None)
@@ -337,6 +447,34 @@ class terrariumWebserver(object):
         # Static files Svelte app
         self.bottle.route(
             "/<root:re:(css|img|js|webfonts)>/<filename:path>", method="GET", callback=self._static_file_gui
+        )
+
+        # Nocturnal Eye stream bypass - unauthenticated access to live stream for gecko monitoring
+        self.bottle.route(
+            "/nocturnal-eye/stream.m3u8",
+            method="GET",
+            callback=self._get_nocturnal_eye_stream,
+        )
+        
+        # Nocturnal Eye stream chunks
+        self.bottle.route(
+            "/nocturnal-eye/chunks/<filename:path>",
+            method="GET",
+            callback=self._get_nocturnal_eye_chunk,
+        )
+
+        # Nocturnal Eye API proxy
+        self.bottle.route(
+            "/nocturnal-eye/api/<path:path>",
+            method="GET",
+            callback=self._proxy_nocturnal_eye_api,
+        )
+
+        # Nocturnal Eye static proxy (snapshots)
+        self.bottle.route(
+            "/nocturnal-eye/static/<path:path>",
+            method="GET",
+            callback=self._proxy_nocturnal_eye_static,
         )
 
         # Other static files
