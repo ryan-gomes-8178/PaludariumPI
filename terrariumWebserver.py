@@ -283,7 +283,6 @@ class terrariumWebserver(object):
             "Access-Control-Allow-Headers": "Origin, Accept, Content-Type, X-Requested-With",
         }
 
-        
         # Handle OPTIONS preflight request for CORS
         if request.method == "OPTIONS":
             response.set_header("Access-Control-Allow-Origin", "*")
