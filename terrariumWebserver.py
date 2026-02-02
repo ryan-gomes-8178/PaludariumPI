@@ -276,24 +276,26 @@ class terrariumWebserver(object):
         """Handle CORS by validating and setting headers for same-origin requests only"""
         request_origin = request.get_header("Origin")
         if request_origin:
-            # Validate Origin header format
+            # Validate Origin header format to avoid processing malformed input
             if not request_origin.startswith(("http://", "https://")):
-                # Invalid Origin header format - don't set CORS headers
                 return
             
             # Construct expected origin - validate request parts are present
             if not request.urlparts.scheme or not request.urlparts.netloc:
-                # Invalid request URL - don't set CORS headers
                 return
             
             expected_origin = f"{request.urlparts.scheme}://{request.urlparts.netloc}"
-            # Case-insensitive comparison per RFC 6454
+            # Case-insensitive comparison per RFC 6454 - this is the actual security check
             if request_origin.lower() == expected_origin.lower():
                 # Allow same-origin requests - echo the validated origin
                 response.set_header("Access-Control-Allow-Origin", request_origin)
-                # Only set Allow-Methods for OPTIONS preflight requests
+                # Handle OPTIONS preflight requests
                 if request.method == "OPTIONS":
                     response.set_header("Access-Control-Allow-Methods", "GET, OPTIONS")
+                    # Allow requested headers if specified
+                    requested_headers = request.get_header("Access-Control-Request-Headers")
+                    if requested_headers:
+                        response.set_header("Access-Control-Allow-Headers", requested_headers)
         # If no Origin header is present, don't set CORS headers (standard same-origin requests)
 
     def _get_nocturnal_eye_stream(self):
