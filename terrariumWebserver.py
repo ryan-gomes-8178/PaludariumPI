@@ -294,6 +294,9 @@ class terrariumWebserver(object):
             response.set_header("Cache-Control", "no-cache, no-store, must-revalidate")
             response.set_header("Pragma", "no-cache")
             response.set_header("Expires", "0")
+            response.set_header("Access-Control-Allow-Origin", "*")
+            response.set_header("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS")
+            response.set_header("Access-Control-Allow-Headers", "Origin, Accept, Content-Type, X-Requested-With")
             
             with open(stream_file, 'r') as f:
                 content = f.read()
@@ -346,6 +349,9 @@ class terrariumWebserver(object):
         
         try:
             response.set_header("Cache-Control", "public, max-age=10")
+            response.set_header("Access-Control-Allow-Origin", "*")
+            response.set_header("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS")
+            response.set_header("Access-Control-Allow-Headers", "Origin, Accept, Content-Type, X-Requested-With")
             if filename.endswith('.ts'):
                 response.content_type = "video/mp2t"
             elif filename.endswith('.jpg'):
