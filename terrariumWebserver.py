@@ -272,15 +272,24 @@ class terrariumWebserver(object):
 
         return staticfile
 
-    def _set_same_origin_cors_headers(self):
-        """Set CORS headers to allow same-origin access only"""
+    def _handle_cors(self):
+        """Handle CORS by validating and setting headers for same-origin requests only"""
         request_origin = request.get_header("Origin")
         if request_origin:
-            # Only set CORS headers if Origin header is present
+            # Validate Origin header format
+            if not request_origin.startswith(("http://", "https://")):
+                # Invalid Origin header format - don't set CORS headers
+                return
+            
+            # Construct expected origin - validate request parts are present
+            if not request.urlparts.scheme or not request.urlparts.netloc:
+                # Invalid request URL - don't set CORS headers
+                return
+            
             expected_origin = f"{request.urlparts.scheme}://{request.urlparts.netloc}"
             # Case-insensitive comparison per RFC 6454
             if request_origin.lower() == expected_origin.lower():
-                # Allow same-origin requests
+                # Allow same-origin requests - echo the validated origin
                 response.set_header("Access-Control-Allow-Origin", request_origin)
                 # Only set Allow-Methods for OPTIONS preflight requests
                 if request.method == "OPTIONS":
@@ -306,7 +315,7 @@ class terrariumWebserver(object):
         # Read and return the m3u8 file
         try:
             response.content_type = "application/vnd.apple.mpegurl"
-            self._set_same_origin_cors_headers()
+            self._handle_cors()
             response.set_header("Cache-Control", "no-cache, no-store, must-revalidate")
             response.set_header("Pragma", "no-cache")
             response.set_header("Expires", "0")
@@ -362,7 +371,7 @@ class terrariumWebserver(object):
         
         try:
             response.set_header("Cache-Control", "public, max-age=10")
-            self._set_same_origin_cors_headers()
+            self._handle_cors()
             if filename.endswith('.ts'):
                 response.content_type = "video/mp2t"
             elif filename.endswith('.jpg'):
