@@ -272,6 +272,15 @@ class terrariumWebserver(object):
 
         return staticfile
 
+    def __set_same_origin_cors_headers(self):
+        """Set CORS headers to allow same-origin access only"""
+        request_origin = request.get_header("Origin")
+        expected_origin = f"{request.urlparts.scheme}://{request.urlparts.netloc}"
+        if not request_origin or request_origin == expected_origin:
+            # Allow same-origin requests (with or without Origin header)
+            response.set_header("Access-Control-Allow-Origin", request_origin or expected_origin)
+            response.set_header("Access-Control-Allow-Methods", "GET, OPTIONS")
+
     def _get_nocturnal_eye_stream(self):
         """Return the HLS stream manifest for nocturnal-eye gecko monitoring without authentication"""
         import glob
@@ -291,13 +300,7 @@ class terrariumWebserver(object):
         # Read and return the m3u8 file
         try:
             response.content_type = "application/vnd.apple.mpegurl"
-            # Only set CORS headers if Origin header is present and matches our server
-            request_origin = request.get_header("Origin")
-            if request_origin:
-                expected_origin = f"{request.urlparts.scheme}://{request.urlparts.netloc}"
-                if request_origin == expected_origin:
-                    response.set_header("Access-Control-Allow-Origin", request_origin)
-                    response.set_header("Access-Control-Allow-Methods", "GET, OPTIONS")
+            self.__set_same_origin_cors_headers()
             response.set_header("Cache-Control", "no-cache, no-store, must-revalidate")
             response.set_header("Pragma", "no-cache")
             response.set_header("Expires", "0")
@@ -353,13 +356,7 @@ class terrariumWebserver(object):
         
         try:
             response.set_header("Cache-Control", "public, max-age=10")
-            # Only set CORS headers if Origin header is present and matches our server
-            request_origin = request.get_header("Origin")
-            if request_origin:
-                expected_origin = f"{request.urlparts.scheme}://{request.urlparts.netloc}"
-                if request_origin == expected_origin:
-                    response.set_header("Access-Control-Allow-Origin", request_origin)
-                    response.set_header("Access-Control-Allow-Methods", "GET, OPTIONS")
+            self.__set_same_origin_cors_headers()
             if filename.endswith('.ts'):
                 response.content_type = "video/mp2t"
             elif filename.endswith('.jpg'):
