@@ -245,6 +245,8 @@ class Enclosure(db.Entity):
     doors = orm.Set(lambda: Button)
     webcams = orm.Set(lambda: Webcam)
     feeders = orm.Set(lambda: Feeder)
+    zones = orm.Set(lambda: MonitoringZone)
+    events = orm.Set(lambda: MonitoringEvent)
 
     def __rename_image(self):
         regex = re.compile(f"{self.id}\.(jpg|jpeg|gif|png)$", re.IGNORECASE)
@@ -737,6 +739,7 @@ class MonitoringEvent(db.Entity):
 
     def __repr__(self):
         return f"Monitoring event '{self.label}' in enclosure {self.enclosure}"
+
 
 class Feeder(db.Entity):
     """Automatic aquarium feeder entity"""
