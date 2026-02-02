@@ -136,6 +136,8 @@
   let snapshots = [];
   let summary = {};
   let hourlyStats = [];
+  let systemStatus = '✅';
+  let snapshotTotal = 0;
 
   let videoEl;
   let hlsPlayer;
@@ -143,8 +145,8 @@
   let currentPage = 0;
   const snapshotsPerPage = 12;
 
-  const nocturnaEyeUrl = 'http://localhost:5001';
-  const streamUrl = 'http://localhost:5001/stream.m3u8';
+  const nocturnalEyeApi = `${ApiUrl}/nocturnal-eye/api`;
+  const streamUrl = `${ApiUrl}/nocturnal-eye/stream.m3u8`;
 
   const zoneColors = {
     feeding: '#4caf50',
@@ -156,8 +158,30 @@
 
   const getZoneColor = (zone) => {
     if (zone?.meta?.color) return zone.meta.color;
+    if (zone?.color) {
+      const match = String(zone.color).match(/\[(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\]/);
+      if (match) {
+        return `rgb(${match[1]}, ${match[2]}, ${match[3]})`;
+      }
+    }
     if (zone?.type && zoneColors[zone.type]) return zoneColors[zone.type];
     return zoneColors.default;
+  };
+
+  const mapSnapshotPath = (path) => {
+    if (!path) return '';
+    if (path.startsWith('http')) {
+      try {
+        const url = new URL(path);
+        return `${ApiUrl}/nocturnal-eye${url.pathname}`;
+      } catch (e) {
+        return path;
+      }
+    }
+    if (path.startsWith('/')) {
+      return `${ApiUrl}/nocturnal-eye${path}`;
+    }
+    return path;
   };
 
   const setupHls = () => {
@@ -183,37 +207,34 @@
   const loadData = async () => {
     try {
       loading = true;
-      
-      // Load zones
-      const zonesRes = await fetch(`${nocturnaEyeUrl}/api/zones`);
-      if (zonesRes.ok) {
-        zones = await zonesRes.json();
-      }
 
-      // Load recent events
-      const eventsRes = await fetch(`${nocturnaEyeUrl}/api/events?limit=50`);
-      if (eventsRes.ok) {
-        events = await eventsRes.json();
-      }
-
-      // Load summary stats
-      const summaryRes = await fetch(`${nocturnaEyeUrl}/api/dashboard/summary`);
+      const summaryRes = await fetch(`${nocturnalEyeApi}/dashboard/summary`);
       if (summaryRes.ok) {
         summary = await summaryRes.json();
+        zones = summary.zones || [];
+        hourlyStats = summary.hourly_distribution
+          ? Object.entries(summary.hourly_distribution).map(([hour, count]) => ({ hour, count }))
+          : [];
+        snapshotTotal = summary.snapshot_count || 0;
+        if (summary.recent_snapshots?.length) {
+          events = summary.recent_snapshots.map((snap) => ({
+            label: 'Detection',
+            timestamp: snap.timestamp,
+            zone: null,
+            confidence: null,
+            count: snap.metadata?.detection_count || 0,
+            path: mapSnapshotPath(snap.path),
+          }));
+        }
+        systemStatus = '✅';
+      } else {
+        systemStatus = '❌';
       }
 
-      // Load hourly stats
-      const now = Math.floor(Date.now() / 1000);
-      const day_ago = now - 86400;
-      const hourlyRes = await fetch(`${nocturnaEyeUrl}/api/events/hourly?start=${day_ago}&end=${now}`);
-      if (hourlyRes.ok) {
-        hourlyStats = await hourlyRes.json();
-      }
-
-      // Load snapshots
-      loadSnapshots();
+      await loadSnapshots();
     } catch (err) {
       console.error('Failed to load monitoring data:', err);
+      systemStatus = '❌';
     } finally {
       loading = false;
     }
@@ -223,10 +244,15 @@
     try {
       const offset = currentPage * snapshotsPerPage;
       const res = await fetch(
-        `${nocturnaEyeUrl}/api/snapshots?offset=${offset}&limit=${snapshotsPerPage}`
+        `${nocturnalEyeApi}/snapshots/recent?limit=${snapshotsPerPage}&offset=${offset}`
       );
       if (res.ok) {
-        snapshots = await res.json();
+        const data = await res.json();
+        snapshots = (data.snapshots || []).map((snap) => ({
+          ...snap,
+          path: mapSnapshotPath(snap.path),
+        }));
+        snapshotTotal = data.count || snapshotTotal;
       }
     } catch (err) {
       console.error('Failed to load snapshots:', err);
@@ -247,9 +273,11 @@
 
   const formatDate = (timestamp) => {
     if (!timestamp) return '';
-    const date = new Date(timestamp * 1000);
+    const date = typeof timestamp === 'number' ? new Date(timestamp * 1000) : new Date(timestamp);
     return date.toLocaleString();
   };
+
+  const maxHourlyCount = () => Math.max(...hourlyStats.map((stat) => stat.count || 0), 1);
 
   onMount(() => {
     setCustomPageTitle($_('monitoring.title', { default: 'Monitoring' }));
@@ -284,20 +312,20 @@
     <div class="col-12">
       <div class="stats-grid">
         <div class="stat-card">
-          <div class="stat-label">Total Detections</div>
-          <div class="stat-value">{summary.total_events || 0}</div>
+          <div class="stat-label">Today's Activity</div>
+          <div class="stat-value">{summary?.daily_summary?.total_events || 0}</div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">Today</div>
-          <div class="stat-value">{summary.today_events || 0}</div>
+          <div class="stat-label">Total Snapshots</div>
+          <div class="stat-value">{summary?.snapshot_count || 0}</div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">Last Hour</div>
-          <div class="stat-value">{summary.last_hour_events || 0}</div>
+          <div class="stat-label">Database Events</div>
+          <div class="stat-value">{summary?.database_stats?.total_events || 0}</div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">Active Zones</div>
-          <div class="stat-value">{zones.length}</div>
+          <div class="stat-label">Status</div>
+          <div class="stat-value">{systemStatus}</div>
         </div>
       </div>
     </div>
@@ -365,7 +393,7 @@
               </span>
               <button
                 class="btn btn-sm btn-outline-secondary"
-                disabled={snapshots.length < snapshotsPerPage}
+                disabled={snapshotTotal !== 0 && (currentPage + 1) * snapshotsPerPage >= snapshotTotal}
                 on:click={nextPage}
               >
                 Next <i class="fas fa-chevron-right"></i>
@@ -427,15 +455,17 @@
                     <strong style="font-size: 0.95rem;">{event.label || 'Detection'}</strong>
                     <small class="text-muted">{formatDate(event.timestamp)}</small>
                   </div>
-                  {#if event.zone}
-                    <small class="text-info d-block">
-                      Zone: <strong>{event.zone}</strong>
+                  {#if event.count !== undefined}
+                    <small class="text-muted d-block">
+                      Detections: {event.count}
                     </small>
                   {/if}
-                  {#if event.confidence}
-                    <small class="text-muted d-block">
-                      Confidence: {(event.confidence * 100).toFixed(0)}%
-                    </small>
+                  {#if event.path}
+                    <img
+                      src={event.path}
+                      alt="Detection"
+                      style="width: 100%; border-radius: 0.25rem; margin-top: 6px;"
+                    />
                   {/if}
                 </div>
               {/each}
@@ -458,7 +488,7 @@
                 {#each hourlyStats as stat}
                   <div
                     class="bar"
-                    style="height: {Math.min(100, (stat.count / Math.max(...hourlyStats.map(s => s.count))) * 100)}%"
+                    style="height: {Math.min(100, (stat.count / maxHourlyCount()) * 100)}%"
                     title="{stat.hour}:00 - {stat.count} events"
                   ></div>
                 {/each}
