@@ -291,7 +291,9 @@ class terrariumWebserver(object):
         # Read and return the m3u8 file
         try:
             response.content_type = "application/vnd.apple.mpegurl"
-            response.set_header("Access-Control-Allow-Origin", "*")
+            # Restrict CORS to this server's origin instead of allowing all origins
+            origin = f"{request.urlparts.scheme}://{request.urlparts.netloc}"
+            response.set_header("Access-Control-Allow-Origin", origin)
             response.set_header("Access-Control-Allow-Methods", "GET, OPTIONS")
             response.set_header("Cache-Control", "no-cache, no-store, must-revalidate")
             response.set_header("Pragma", "no-cache")
