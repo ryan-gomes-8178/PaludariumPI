@@ -316,6 +316,11 @@ class terrariumWebserver(object):
         from pathlib import Path
         import re
         
+        # Set CORS headers for all responses (including errors)
+        response.set_header("Access-Control-Allow-Origin", "*")
+        response.set_header("Access-Control-Allow-Methods", "GET, HEAD")
+        response.set_header("Access-Control-Allow-Headers", "Origin, Accept, Content-Type, X-Requested-With")
+        
         # Validate filename to prevent path traversal attacks
         # Only allow alphanumeric characters, dots, underscores, and hyphens
         # This prevents path separators (/, \) and traversal sequences (..)
@@ -349,9 +354,6 @@ class terrariumWebserver(object):
         
         try:
             response.set_header("Cache-Control", "public, max-age=10")
-            response.set_header("Access-Control-Allow-Origin", "*")
-            response.set_header("Access-Control-Allow-Methods", "GET, HEAD")
-            response.set_header("Access-Control-Allow-Headers", "Origin, Accept, Content-Type, X-Requested-With")
             if filename.endswith('.ts'):
                 response.content_type = "video/mp2t"
             elif filename.endswith('.jpg'):
