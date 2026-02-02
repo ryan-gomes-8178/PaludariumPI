@@ -333,6 +333,13 @@ class terrariumWebserver(object):
         from pathlib import Path
         import re
 
+        # Handle CORS preflight requests
+        if request.method == "OPTIONS":
+            response.set_header("Access-Control-Allow-Origin", "*")
+            response.set_header("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS")
+            response.set_header("Access-Control-Allow-Headers", "Origin, Accept, Content-Type, X-Requested-With")
+            response.status = 204
+            return ""
         # Validate filename to prevent path traversal attacks
         # Only allow alphanumeric characters, dots, underscores, and hyphens
         # This prevents path separators (/, \) and traversal sequences (..)
