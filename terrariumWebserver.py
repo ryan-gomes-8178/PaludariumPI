@@ -294,12 +294,16 @@ class terrariumWebserver(object):
         # Find the latest webcam stream directory
         webcam_dir = Path("/dev/shm/webcam")
         if not webcam_dir.exists():
-            return HTTPError(404, "Webcam stream not available", **cors_headers)
+            for header, value in cors_headers.items():
+                response.set_header(header, value)
+            return HTTPError(404, "Webcam stream not available")
 
         # Get the first (usually only) subdirectory
         stream_dirs = list(webcam_dir.glob("*/stream.m3u8"))
         if not stream_dirs:
-            return HTTPError(404, "No active stream found", **cors_headers)
+            for header, value in cors_headers.items():
+                response.set_header(header, value)
+            return HTTPError(404, "No active stream found")
 
         stream_file = stream_dirs[0]
 
@@ -326,7 +330,9 @@ class terrariumWebserver(object):
             return content
         except Exception as e:
             logger.error(f"Error reading stream: {e}")
-            return HTTPError(500, "Error reading stream", **cors_headers)
+            for header, value in cors_headers.items():
+                response.set_header(header, value)
+            return HTTPError(500, "Error reading stream")
 
     def _get_nocturnal_eye_chunk(self, filename):
         """Serve HLS stream chunks for nocturnal-eye"""
