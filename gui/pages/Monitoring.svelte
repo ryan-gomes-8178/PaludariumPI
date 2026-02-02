@@ -5,18 +5,48 @@
     background: #000;
     border-radius: 0.25rem;
     overflow: hidden;
+    aspect-ratio: 16/9;
   }
 
   .monitoring-stream {
     width: 100%;
-    height: auto;
+    height: 100%;
     display: block;
+    object-fit: contain;
   }
 
   .monitoring-overlay {
     position: absolute;
     inset: 0;
     pointer-events: none;
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .stat-card {
+    background: #1a1a2e;
+    border: 1px solid #16213e;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    text-align: center;
+  }
+
+  .stat-value {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #00d4ff;
+    margin: 0.5rem 0;
+  }
+
+  .stat-label {
+    font-size: 0.85rem;
+    color: #a0a0a0;
+    text-transform: uppercase;
   }
 
   .monitoring-zone-list {
@@ -28,6 +58,66 @@
     max-height: 420px;
     overflow: auto;
   }
+
+  .snapshots-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 0.75rem;
+    margin-top: 1rem;
+  }
+
+  .snapshot-thumb {
+    width: 100%;
+    aspect-ratio: 16/9;
+    object-fit: cover;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: border-color 0.2s;
+  }
+
+  .snapshot-thumb:hover {
+    border-color: #00d4ff;
+  }
+
+  .pagination-controls {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    justify-content: center;
+  }
+
+  .pagination-controls button {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+  }
+
+  .hourly-stats {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: #16213e;
+    border-radius: 0.25rem;
+  }
+
+  .hourly-bar {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.25rem;
+    height: 100px;
+    margin-top: 0.5rem;
+  }
+
+  .bar {
+    flex: 1;
+    background: #00d4ff;
+    border-radius: 0.15rem;
+    opacity: 0.8;
+    transition: opacity 0.2s;
+  }
+
+  .bar:hover {
+    opacity: 1;
+  }
 </style>
 
 <script>
@@ -36,28 +126,30 @@
   import { _ } from 'svelte-i18n';
 
   import { setCustomPageTitle, customPageTitleUsed } from '../stores/page-title';
-  import { fetchMonitoringZones, fetchMonitoringEvents, fetchEnclosures } from '../providers/api';
   import { ApiUrl } from '../constants/urls';
 
   import hls from 'hls.js';
 
-  let enclosures = [];
-  let selectedEnclosure = '';
+  let loading = false;
   let zones = [];
   let events = [];
+  let snapshots = [];
+  let summary = {};
+  let hourlyStats = [];
 
   let videoEl;
-  let canvasEl;
   let hlsPlayer;
   let refreshTimer;
-  let resizeObserver;
+  let currentPage = 0;
+  const snapshotsPerPage = 12;
 
-  const streamUrl = `${ApiUrl}/nocturnal-eye/stream.m3u8`;
+  const nocturnaEyeUrl = 'http://localhost:5001';
+  const streamUrl = 'http://localhost:5001/stream.m3u8';
 
   const zoneColors = {
+    feeding: '#4caf50',
     basking: '#ff9800',
     hide: '#3f51b5',
-    feeding: '#4caf50',
     general: '#00bcd4',
     default: '#f44336',
   };
@@ -88,134 +180,92 @@
     }
   };
 
-  const resizeCanvas = () => {
-    if (!videoEl || !canvasEl) return;
-    const rect = videoEl.getBoundingClientRect();
-    canvasEl.width = rect.width;
-    canvasEl.height = rect.height;
-    drawZones();
-  };
-
-  const drawZones = () => {
-    if (!canvasEl) return;
-    const ctx = canvasEl.getContext('2d');
-    if (!ctx) return;
-
-    const width = canvasEl.width;
-    const height = canvasEl.height;
-    ctx.clearRect(0, 0, width, height);
-
-    zones.forEach((zone) => {
-      const shape = zone.shape || {};
-      const color = getZoneColor(zone);
-
-      ctx.strokeStyle = color;
-      ctx.lineWidth = 2;
-      ctx.fillStyle = color + '33';
-      ctx.font = '12px "Source Sans Pro", sans-serif';
-      ctx.textBaseline = 'top';
-
-      if (shape.type === 'polygon' && Array.isArray(shape.points)) {
-        const points = shape.points.map((point) => ({
-          x: point.x * width,
-          y: point.y * height,
-        }));
-        if (points.length > 2) {
-          ctx.beginPath();
-          ctx.moveTo(points[0].x, points[0].y);
-          points.slice(1).forEach((point) => ctx.lineTo(point.x, point.y));
-          ctx.closePath();
-          ctx.fill();
-          ctx.stroke();
-          ctx.fillStyle = color;
-          ctx.fillText(zone.name, points[0].x + 4, points[0].y + 4);
-        }
-      } else if (shape.type === 'rect') {
-        const x = (shape.x || 0) * width;
-        const y = (shape.y || 0) * height;
-        const w = (shape.width || 0) * width;
-        const h = (shape.height || 0) * height;
-        ctx.fillRect(x, y, w, h);
-        ctx.strokeRect(x, y, w, h);
-        ctx.fillStyle = color;
-        ctx.fillText(zone.name, x + 4, y + 4);
+  const loadData = async () => {
+    try {
+      loading = true;
+      
+      // Load zones
+      const zonesRes = await fetch(`${nocturnaEyeUrl}/api/zones`);
+      if (zonesRes.ok) {
+        zones = await zonesRes.json();
       }
-    });
-  };
 
-  const loadEnclosures = () => {
-    fetchEnclosures(false, (data) => {
-      enclosures = data;
-      if (!selectedEnclosure && enclosures.length > 0) {
-        selectedEnclosure = enclosures[0].id;
+      // Load recent events
+      const eventsRes = await fetch(`${nocturnaEyeUrl}/api/events?limit=50`);
+      if (eventsRes.ok) {
+        events = await eventsRes.json();
       }
-      loadZones();
-      loadEvents();
-    });
-  };
 
-  const loadZones = () => {
-    if (!selectedEnclosure) {
-      zones = [];
-      drawZones();
-      return;
+      // Load summary stats
+      const summaryRes = await fetch(`${nocturnaEyeUrl}/api/dashboard/summary`);
+      if (summaryRes.ok) {
+        summary = await summaryRes.json();
+      }
+
+      // Load hourly stats
+      const now = Math.floor(Date.now() / 1000);
+      const day_ago = now - 86400;
+      const hourlyRes = await fetch(`${nocturnaEyeUrl}/api/events/hourly?start=${day_ago}&end=${now}`);
+      if (hourlyRes.ok) {
+        hourlyStats = await hourlyRes.json();
+      }
+
+      // Load snapshots
+      loadSnapshots();
+    } catch (err) {
+      console.error('Failed to load monitoring data:', err);
+    } finally {
+      loading = false;
     }
-    fetchMonitoringZones(selectedEnclosure, (data) => {
-      zones = data || [];
-      drawZones();
-    });
   };
 
-  const loadEvents = () => {
-    if (!selectedEnclosure) {
-      events = [];
-      return;
+  const loadSnapshots = async () => {
+    try {
+      const offset = currentPage * snapshotsPerPage;
+      const res = await fetch(
+        `${nocturnaEyeUrl}/api/snapshots?offset=${offset}&limit=${snapshotsPerPage}`
+      );
+      if (res.ok) {
+        snapshots = await res.json();
+      }
+    } catch (err) {
+      console.error('Failed to load snapshots:', err);
     }
-    fetchMonitoringEvents({ enclosure: selectedEnclosure, limit: 50 }, (data) => {
-      events = data || [];
-    });
   };
 
-  const handleEnclosureChange = () => {
-    loadZones();
-    loadEvents();
+  const previousPage = () => {
+    if (currentPage > 0) {
+      currentPage--;
+      loadSnapshots();
+    }
   };
 
-  const resolveZoneName = (zoneId) => {
-    if (!zoneId) return $_('monitoring.events.unknown_zone', { default: 'Unknown zone' });
-    const zone = zones.find((z) => z.id === zoneId);
-    return zone ? zone.name : $_('monitoring.events.unknown_zone', { default: 'Unknown zone' });
+  const nextPage = () => {
+    currentPage++;
+    loadSnapshots();
+  };
+
+  const formatDate = (timestamp) => {
+    if (!timestamp) return '';
+    const date = new Date(timestamp * 1000);
+    return date.toLocaleString();
   };
 
   onMount(() => {
     setCustomPageTitle($_('monitoring.title', { default: 'Monitoring' }));
     setupHls();
-    loadEnclosures();
+    loadData();
 
     refreshTimer = setInterval(() => {
-      loadEvents();
+      loadData();
     }, 10000);
-
-    window.addEventListener('resize', resizeCanvas);
-
-    resizeObserver = new ResizeObserver(() => {
-      resizeCanvas();
-    });
-    if (videoEl) {
-      resizeObserver.observe(videoEl);
-    }
   });
 
   onDestroy(() => {
     customPageTitleUsed.set(false);
-    window.removeEventListener('resize', resizeCanvas);
 
     if (refreshTimer) {
       clearInterval(refreshTimer);
-    }
-
-    if (resizeObserver) {
-      resizeObserver.disconnect();
     }
 
     if (hlsPlayer) {
@@ -229,33 +279,45 @@
 </PageHeader>
 
 <div class="container-fluid">
-  <div class="row mb-3">
-    <div class="col-md-4">
-      <label>{$_('monitoring.enclosure.label', { default: 'Enclosure' })}</label>
-      <select class="form-control" bind:value={selectedEnclosure} on:change={handleEnclosureChange}>
-        {#if enclosures.length === 0}
-          <option value="">{$_('monitoring.enclosure.empty', { default: 'No enclosures available' })}</option>
-        {/if}
-        {#each enclosures as enclosure}
-          <option value={enclosure.id}>{enclosure.name}</option>
-        {/each}
-      </select>
-    </div>
-    <div class="col-md-8 d-flex align-items-end">
-      <button class="btn btn-primary mr-2" on:click={loadEvents}>
-        <i class="fas fa-sync-alt mr-1"></i>{$_('monitoring.actions.refresh', { default: 'Refresh activity' })}
-      </button>
-      <button class="btn btn-outline-secondary" on:click={loadZones}>
-        <i class="fas fa-border-style mr-1"></i>{$_('monitoring.actions.refresh_zones', { default: 'Reload zones' })}
-      </button>
+  <!-- Stats Row -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Total Detections</div>
+          <div class="stat-value">{summary.total_events || 0}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Today</div>
+          <div class="stat-value">{summary.today_events || 0}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Last Hour</div>
+          <div class="stat-value">{summary.last_hour_events || 0}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Active Zones</div>
+          <div class="stat-value">{zones.length}</div>
+        </div>
+      </div>
     </div>
   </div>
 
+  <!-- Main Content Row -->
   <div class="row">
+    <!-- Left Column: Stream -->
     <div class="col-xl-8">
-      <div class="card">
+      <!-- Live Stream -->
+      <div class="card mb-3">
         <div class="card-header">
-          <h3 class="card-title">{$_('monitoring.stream.title', { default: 'Live stream' })}</h3>
+          <h3 class="card-title">
+            <i class="fas fa-video mr-2"></i>Live Stream
+          </h3>
+          <div class="card-tools">
+            <button class="btn btn-sm btn-default mr-1" on:click={() => window.location.reload()}>
+              <i class="fas fa-sync-alt"></i> Refresh
+            </button>
+          </div>
         </div>
         <div class="card-body">
           <div class="monitoring-stream-wrapper">
@@ -266,31 +328,80 @@
               autoplay
               muted
               playsinline
-              on:loadedmetadata={resizeCanvas}
             ></video>
-            <canvas class="monitoring-overlay" bind:this={canvasEl}></canvas>
           </div>
         </div>
       </div>
+
+      <!-- Snapshots -->
+      {#if snapshots.length > 0}
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="fas fa-image mr-2"></i>Recent Snapshots
+            </h3>
+          </div>
+          <div class="card-body">
+            <div class="snapshots-grid">
+              {#each snapshots as snapshot}
+                <img
+                  src={snapshot.path}
+                  alt="Snapshot"
+                  class="snapshot-thumb"
+                  title={formatDate(snapshot.timestamp)}
+                />
+              {/each}
+            </div>
+            <div class="pagination-controls">
+              <button
+                class="btn btn-sm btn-outline-secondary"
+                disabled={currentPage === 0}
+                on:click={previousPage}
+              >
+                <i class="fas fa-chevron-left"></i> Previous
+              </button>
+              <span class="text-muted d-flex align-items-center mx-2">
+                Page {currentPage + 1}
+              </span>
+              <button
+                class="btn btn-sm btn-outline-secondary"
+                disabled={snapshots.length < snapshotsPerPage}
+                on:click={nextPage}
+              >
+                Next <i class="fas fa-chevron-right"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      {/if}
     </div>
 
+    <!-- Right Column: Info Panels -->
     <div class="col-xl-4">
+      <!-- Monitoring Zones -->
       <div class="card mb-3">
         <div class="card-header">
-          <h3 class="card-title">{$_('monitoring.zones.title', { default: 'Zones' })}</h3>
+          <h3 class="card-title">
+            <i class="fas fa-draw-polygon mr-2"></i>Zones ({zones.length})
+          </h3>
         </div>
         <div class="card-body monitoring-zone-list">
           {#if zones.length === 0}
-            <p class="text-muted">{$_('monitoring.zones.empty', { default: 'No monitoring zones configured yet.' })}</p>
+            <p class="text-muted text-center">No zones configured yet</p>
           {:else}
             <ul class="list-unstyled mb-0">
               {#each zones as zone}
-                <li class="mb-2">
-                  <span class="badge mr-2" style="background:{getZoneColor(zone)}">&nbsp;</span>
-                  <strong>{zone.name}</strong>
-                  <div class="text-muted">
-                    {zone.type || $_('monitoring.zones.default_type', { default: 'general' })}
+                <li class="mb-3">
+                  <div class="d-flex align-items-center mb-1">
+                    <span class="badge mr-2" style="background:{getZoneColor(zone)}">&nbsp;</span>
+                    <strong>{zone.name}</strong>
                   </div>
+                  <small class="text-muted d-block ml-3">
+                    {zone.type || 'general'}
+                    {#if zone.enabled === false}
+                      <span class="badge badge-secondary ml-1">disabled</span>
+                    {/if}
+                  </small>
                 </li>
               {/each}
             </ul>
@@ -298,37 +409,64 @@
         </div>
       </div>
 
+      <!-- Recent Activity -->
       <div class="card">
         <div class="card-header">
-          <h3 class="card-title">{$_('monitoring.events.title', { default: 'Recent activity' })}</h3>
+          <h3 class="card-title">
+            <i class="fas fa-history mr-2"></i>Recent Activity ({events.length})
+          </h3>
         </div>
         <div class="card-body monitoring-events">
           {#if events.length === 0}
-            <p class="text-muted">{$_('monitoring.events.empty', { default: 'No detections yet.' })}</p>
+            <p class="text-muted text-center">No detections yet</p>
           {:else}
-            <ul class="list-group">
+            <div class="timeline">
               {#each events as event}
-                <li class="list-group-item">
-                  <div class="d-flex justify-content-between">
-                    <div>
-                      <strong>{event.label || $_('monitoring.events.default_label', { default: 'Detection' })}</strong>
-                      <div class="text-muted">{resolveZoneName(event.zone)}</div>
-                    </div>
-                    <small class="text-muted">
-                      {new Date(event.timestamp * 1000).toLocaleString()}
-                    </small>
+                <div class="mb-3 pb-3 border-bottom">
+                  <div class="d-flex justify-content-between align-items-start mb-1">
+                    <strong style="font-size: 0.95rem;">{event.label || 'Detection'}</strong>
+                    <small class="text-muted">{formatDate(event.timestamp)}</small>
                   </div>
-                  {#if event.confidence !== null && event.confidence !== undefined}
-                    <div class="text-muted">
-                      {$_('monitoring.events.confidence', { default: 'Confidence' })}: {(event.confidence * 100).toFixed(1)}%
-                    </div>
+                  {#if event.zone}
+                    <small class="text-info d-block">
+                      Zone: <strong>{event.zone}</strong>
+                    </small>
                   {/if}
-                </li>
+                  {#if event.confidence}
+                    <small class="text-muted d-block">
+                      Confidence: {(event.confidence * 100).toFixed(0)}%
+                    </small>
+                  {/if}
+                </div>
               {/each}
-            </ul>
+            </div>
           {/if}
         </div>
       </div>
+
+      <!-- Hourly Stats -->
+      {#if hourlyStats.length > 0}
+        <div class="card mt-3">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="fas fa-chart-bar mr-2"></i>Activity (Last 24h)
+            </h3>
+          </div>
+          <div class="card-body">
+            <div class="hourly-stats">
+              <div class="hourly-bar">
+                {#each hourlyStats as stat}
+                  <div
+                    class="bar"
+                    style="height: {Math.min(100, (stat.count / Math.max(...hourlyStats.map(s => s.count))) * 100)}%"
+                    title="{stat.hour}:00 - {stat.count} events"
+                  ></div>
+                {/each}
+              </div>
+            </div>
+          </div>
+        </div>
+      {/if}
     </div>
   </div>
 </div>
