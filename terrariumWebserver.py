@@ -350,7 +350,7 @@ class terrariumWebserver(object):
         try:
             response.set_header("Cache-Control", "public, max-age=10")
             response.set_header("Access-Control-Allow-Origin", "*")
-            response.set_header("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS")
+            response.set_header("Access-Control-Allow-Methods", "GET, HEAD")
             response.set_header("Access-Control-Allow-Headers", "Origin, Accept, Content-Type, X-Requested-With")
             if filename.endswith('.ts'):
                 response.content_type = "video/mp2t"
