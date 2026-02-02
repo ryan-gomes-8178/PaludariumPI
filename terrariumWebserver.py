@@ -52,6 +52,11 @@ class terrariumWebserver(object):
             {"path": re.compile(r"^/(media|css|img|js|webfonts)/", re.I), "timeout": 1 * 24 * 60 * 60},  # 1 Day
             {"path": re.compile(r"^/(main\..*)", re.I), "timeout": 1 * 24 * 60 * 60},  # 1 Day
         ]
+        
+        # Nocturnal Eye security settings
+        self.__nocturnal_eye_rate_limit = {}  # Track request timestamps per IP
+        self.__nocturnal_eye_rate_limit_window = 60  # 1 minute window
+        self.__nocturnal_eye_rate_limit_max = 600  # Max 600 requests per minute (10 req/sec)
 
         # This secret will change every reboot. So cookies will not work anymore after a reboot.
         self.cookie_secret = uuid4().bytes
@@ -126,6 +131,74 @@ class terrariumWebserver(object):
 
     def __clear_authentication(self, user, password):
         return True
+
+    def __validate_nocturnal_eye_access(self):
+        """Validate access to Nocturnal Eye endpoints with token auth, IP allowlist, and rate limiting"""
+        import time
+        import secrets
+        
+        # Get client IP address
+        # Note: X-Real-Ip header should only be trusted when behind a properly configured reverse proxy
+        # (e.g., nginx with proxy_set_header X-Real-IP $remote_addr)
+        client_ip = request.remote_addr if request.get_header("X-Real-Ip") is None else request.get_header("X-Real-Ip")
+        
+        # Check IP allowlist if configured
+        allowed_ips = self.engine.settings.get("nocturnal_eye_allowed_ips", "").strip()
+        if allowed_ips:
+            allowed_ip_list = [ip.strip() for ip in allowed_ips.split(",") if ip.strip()]
+            if allowed_ip_list and client_ip not in allowed_ip_list:
+                logger.warning(f"Nocturnal Eye access denied from unauthorized IP: {client_ip}")
+                return HTTPError(403, "Access denied: IP not in allowlist")
+        
+        # Check token authentication if configured
+        api_token = self.engine.settings.get("nocturnal_eye_api_token", "").strip()
+        if api_token:
+            # Check for token in Authorization header or query parameter
+            auth_header = request.get_header("Authorization", "")
+            query_token = request.query.get("token", "")
+            
+            provided_token = None
+            if auth_header.startswith("Bearer "):
+                provided_token = auth_header[7:]
+            elif query_token:
+                provided_token = query_token
+            
+            # Use constant-time comparison to prevent timing attacks
+            if not provided_token or not secrets.compare_digest(provided_token, api_token):
+                logger.warning(f"Nocturnal Eye access denied from {client_ip}: Invalid or missing token")
+                return HTTPError(401, "Access denied: Invalid or missing API token")
+        
+        # Rate limiting
+        current_time = time.time()
+        
+        # Clean up old entries (older than the rate limit window)
+        if client_ip in self.__nocturnal_eye_rate_limit:
+            self.__nocturnal_eye_rate_limit[client_ip] = [
+                ts for ts in self.__nocturnal_eye_rate_limit[client_ip]
+                if current_time - ts < self.__nocturnal_eye_rate_limit_window
+            ]
+        else:
+            self.__nocturnal_eye_rate_limit[client_ip] = []
+        
+        # Periodically clean up stale IP entries to prevent memory growth
+        # Remove IPs that haven't made requests in the last window period
+        if len(self.__nocturnal_eye_rate_limit) > 100:  # Only cleanup when dict is large
+            stale_ips = [
+                ip for ip, timestamps in self.__nocturnal_eye_rate_limit.items()
+                if not timestamps or (current_time - max(timestamps) > self.__nocturnal_eye_rate_limit_window)
+            ]
+            for ip in stale_ips:
+                del self.__nocturnal_eye_rate_limit[ip]
+        
+        # Check if rate limit exceeded
+        if len(self.__nocturnal_eye_rate_limit[client_ip]) >= self.__nocturnal_eye_rate_limit_max:
+            logger.warning(f"Nocturnal Eye rate limit exceeded for IP: {client_ip}")
+            return HTTPError(429, "Rate limit exceeded. Please try again later.")
+        
+        # Add current request timestamp
+        self.__nocturnal_eye_rate_limit[client_ip].append(current_time)
+        
+        return None  # Access granted
 
     def __add_caching_headers(self, response, fullpath):
         if 200 == response.status_code:
@@ -273,7 +346,12 @@ class terrariumWebserver(object):
         return staticfile
 
     def _get_nocturnal_eye_stream(self):
-        """Return the HLS stream manifest for nocturnal-eye gecko monitoring without authentication"""
+        """Return the HLS stream manifest for nocturnal-eye gecko monitoring with security validation"""
+        # Validate access with token auth, IP allowlist, and rate limiting
+        access_error = self.__validate_nocturnal_eye_access()
+        if access_error:
+            return access_error
+        
         import glob
         
         # Find the latest webcam stream directory
@@ -309,7 +387,12 @@ class terrariumWebserver(object):
             return HTTPError(500, "Error reading stream")
 
     def _get_nocturnal_eye_chunk(self, filename):
-        """Serve HLS stream chunks for nocturnal-eye"""
+        """Serve HLS stream chunks for nocturnal-eye with security validation"""
+        # Validate access with token auth, IP allowlist, and rate limiting
+        access_error = self.__validate_nocturnal_eye_access()
+        if access_error:
+            return access_error
+        
         from pathlib import Path
         import re
         
@@ -449,14 +532,14 @@ class terrariumWebserver(object):
             "/<root:re:(css|img|js|webfonts)>/<filename:path>", method="GET", callback=self._static_file_gui
         )
 
-        # Nocturnal Eye stream bypass - unauthenticated access to live stream for gecko monitoring
+        # Nocturnal Eye stream routes - secured with token auth, IP allowlist, and rate limiting
         self.bottle.route(
             "/nocturnal-eye/stream.m3u8",
             method="GET",
             callback=self._get_nocturnal_eye_stream,
         )
         
-        # Nocturnal Eye stream chunks
+        # Nocturnal Eye stream chunks - secured with token auth, IP allowlist, and rate limiting
         self.bottle.route(
             "/nocturnal-eye/chunks/<filename:path>",
             method="GET",
