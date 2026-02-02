@@ -272,33 +272,6 @@ class terrariumWebserver(object):
 
         return staticfile
 
-    def _handle_cors(self):
-        """Handle CORS by validating Origin header and setting headers only when origin matches server origin"""
-        request_origin = request.get_header("Origin")
-        if request_origin:
-            # Validate Origin header format to avoid processing malformed input
-            if not request_origin.startswith(("http://", "https://")):
-                return
-            
-            # Construct expected origin - validate request parts are present
-            if not request.urlparts.scheme or not request.urlparts.netloc:
-                return
-            
-            expected_origin = f"{request.urlparts.scheme}://{request.urlparts.netloc}"
-            # Case-insensitive comparison per RFC 6454 (scheme and host are case-insensitive, port is numeric)
-            if request_origin.lower() == expected_origin.lower():
-                # Allow requests from same origin - echo the validated origin
-                response.set_header("Access-Control-Allow-Origin", request_origin)
-                # Handle OPTIONS preflight requests
-                if request.method == "OPTIONS":
-                    response.set_header("Access-Control-Allow-Methods", "GET, OPTIONS")
-                    response.set_header("Access-Control-Max-Age", "86400")  # Cache for 24 hours
-                    # Allow requested headers if specified
-                    requested_headers = request.get_header("Access-Control-Request-Headers")
-                    if requested_headers:
-                        response.set_header("Access-Control-Allow-Headers", requested_headers)
-        # If no Origin header is present, don't set CORS headers (standard same-origin requests)
-
     def _get_nocturnal_eye_stream(self):
         """Return the HLS stream manifest for nocturnal-eye gecko monitoring without authentication"""
         import glob
@@ -318,7 +291,6 @@ class terrariumWebserver(object):
         # Read and return the m3u8 file
         try:
             response.content_type = "application/vnd.apple.mpegurl"
-            self._handle_cors()
             response.set_header("Cache-Control", "no-cache, no-store, must-revalidate")
             response.set_header("Pragma", "no-cache")
             response.set_header("Expires", "0")
@@ -374,7 +346,6 @@ class terrariumWebserver(object):
         
         try:
             response.set_header("Cache-Control", "public, max-age=10")
-            self._handle_cors()
             if filename.endswith('.ts'):
                 response.content_type = "video/mp2t"
             elif filename.endswith('.jpg'):
