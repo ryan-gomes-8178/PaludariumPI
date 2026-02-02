@@ -300,8 +300,9 @@ class terrariumWebserver(object):
             
             # Convert relative paths to absolute URLs with proper host:port for HLS protocol compliance
             import re
-            host = request.headers.get('Host', 'localhost:8090')
-            content = re.sub(r'^(chunk_\d+\.ts)$', f'http://{host}/nocturnal-eye/chunks/\\1', content, flags=re.MULTILINE)
+            # Use configured host and port instead of untrusted Host header to prevent injection attacks
+            configured_host = f"{self.engine.settings['host']}:{self.engine.settings['port']}"
+            content = re.sub(r'^(chunk_\d+\.ts)$', f'http://{configured_host}/nocturnal-eye/chunks/\\1', content, flags=re.MULTILINE)
             
             return content
         except Exception as e:
