@@ -275,21 +275,33 @@ class terrariumWebserver(object):
     def _get_nocturnal_eye_stream(self):
         """Return the HLS stream manifest for nocturnal-eye gecko monitoring without authentication"""
         import glob
+        # Determine allowed CORS origin based on configuration and request
+        request_origin = request.headers.get("Origin")
+        allowed_origins = self.engine.settings.get("nocturnal_eye_allowed_origins", [])
+        cors_origin = None
+        if request_origin and isinstance(allowed_origins, (list, tuple, set)):
+            if request_origin in allowed_origins:
+                cors_origin = request_origin
+        elif request_origin and allowed_origins == "*":
+            # If explicitly configured as "*", allow any origin (opt-in)
+            cors_origin = request_origin
 
-        # CORS headers for cross-origin access
+        # CORS headers for cross-origin access (only if origin is allowed)
         cors_headers = {
-            "Access-Control-Allow-Origin": "*",
             "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
             "Access-Control-Allow-Headers": "Origin, Accept, Content-Type, X-Requested-With",
         }
+        if cors_origin:
+            cors_headers["Access-Control-Allow-Origin"] = cors_origin
 
         # Handle OPTIONS preflight request for CORS
         if request.method == "OPTIONS":
-            response.set_header("Access-Control-Allow-Origin", "*")
-            response.set_header("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS")
-            response.set_header("Access-Control-Allow-Headers", "Origin, Accept, Content-Type, X-Requested-With")
+            if not cors_origin:
+                # Origin not allowed or not configured for CORS access
+                return HTTPError(403, "CORS origin not allowed")
+            for header, value in cors_headers.items():
+                response.set_header(header, value)
             return ""
-        
         # Find the latest webcam stream directory
         webcam_dir = Path("/dev/shm/webcam")
         if not webcam_dir.exists():
@@ -338,6 +350,13 @@ class terrariumWebserver(object):
         from pathlib import Path
         import re
 
+        # Handle CORS preflight requests
+        if request.method == "OPTIONS":
+            response.set_header("Access-Control-Allow-Origin", "*")
+            response.set_header("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS")
+            response.set_header("Access-Control-Allow-Headers", "Origin, Accept, Content-Type, X-Requested-With")
+            response.status = 204
+            return ""
         # Validate filename to prevent path traversal attacks
         # Only allow alphanumeric characters, dots, underscores, and hyphens
         # This prevents path separators (/, \) and traversal sequences (..)
