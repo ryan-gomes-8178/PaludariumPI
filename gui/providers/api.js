@@ -321,6 +321,51 @@ export const deleteWebcam = async (id, cb) => {
 };
 // End Webcam API
 
+// Monitoring API
+export const fetchMonitoringZones = async (enclosureId, cb) => {
+  let url = `${apiHost}/monitoring/zones/`;
+  if (enclosureId) {
+    url += `?enclosure=${enclosureId}`;
+  }
+  await _getData(url, cb);
+};
+
+export const addMonitoringZone = async (data, cb) => {
+  await _postData(`${apiHost}/monitoring/zones/`, data, cb);
+};
+
+export const updateMonitoringZone = async (data, cb) => {
+  if (data.id) {
+    await _updateData(`${apiHost}/monitoring/zones/${data.id}/`, data, cb);
+  } else {
+    await addMonitoringZone(data, cb);
+  }
+};
+
+export const deleteMonitoringZone = async (id, cb) => {
+  await _deleteData(`${apiHost}/monitoring/zones/${id}/`, {}, cb);
+};
+
+export const fetchMonitoringEvents = async (filters, cb) => {
+  const params = new URLSearchParams();
+  if (filters) {
+    if (filters.enclosure) params.append('enclosure', filters.enclosure);
+    if (filters.zone) params.append('zone', filters.zone);
+    if (filters.limit) params.append('limit', filters.limit);
+    if (filters.since) params.append('since', filters.since);
+  }
+  let url = `${apiHost}/monitoring/events/`;
+  if ([...params].length > 0) {
+    url += `?${params.toString()}`;
+  }
+  await _getData(url, cb);
+};
+
+export const addMonitoringEvent = async (data, cb) => {
+  await _postData(`${apiHost}/monitoring/events/`, data, cb);
+};
+// End Monitoring API
+
 // Audio API
 export const fetchSoundcards = async (cb) => {
   await _getData(`${apiHost}/audio/hardware/`, cb);

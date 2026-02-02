@@ -603,15 +603,32 @@ class terrariumEngine(object):
                     logger.warning(
                         f"{self.sensors[sensor.id]} had problems reading a new value during startup in {time.time()-start:.2f} seconds. Will be updated in the next round."
                     )
+                    continue
 
-                elif not sensor.limit_min <= value <= sensor.limit_max:
+                # Convert some values like temperature and distance ...
+                if "temperature" == sensor.type.lower():
+                    if "fahrenheit" == self.settings["temperature_indicator"]:
+                        value = terrariumUtils.to_fahrenheit(value)
+                    elif "kelvin" == self.settings["temperature_indicator"]:
+                        value = terrariumUtils.to_kelvin(value)
+
+                elif "distance" == sensor.type.lower():
+                    if "inch" == self.settings["distance_indicator"]:
+                        value = terrariumUtils.to_inches(value)
+
+                # We have a valid reading from the hardware sensor. Now increase/decrease with the offset
+                value += sensor.offset
+
+                if not sensor.limit_min <= value <= sensor.limit_max:
                     sensorLogger.warning(
-                        f"Measurement for sensor {self.sensors[sensor.id]} of {value:.2f}{self.units[sensor.type]} is outside valid range {sensor.limit_min:.2f}{self.units[sensor.type]} to {sensor.limit_max:.2f}{self.units[sensor.type]} during startup in {time.time()-start:.2f} seconds. Will be updated in the next round."
+                        f"Measurement for sensor {self.sensors[sensor.id]} of {value:.2f}{self.units[sensor.type]} is outside valid range {sensor.limit_min:.2f}{self.units[sensor.type]} to {sensor.limit_max:.2f}{self.units[sensor.type]} during startup in {time.time()-start:.2f} seconds. Recording as out-of-range measurement."
                     )
+                    # Store the out-of-range measurement so users can see what was actually measured
+                    sensor.update(value, out_of_range=True)
 
                 else:
                     # Store the new measurement value in the database
-                    sensor.update(value)
+                    sensor.update(value, out_of_range=False)
                     sensorLogger.info(
                         f"Loaded sensor {self.sensors[sensor.id]} with value {value:.2f}{self.units[sensor.type]} in {time.time()-start:.2f} seconds."
                     )
@@ -709,7 +726,38 @@ class terrariumEngine(object):
 
             if not sensor.limit_min <= new_value <= sensor.limit_max:
                 sensorLogger.warning(
-                    f"Measurement for sensor {self.sensors[sensor.id]} of {new_value:.2f}{self.units[sensor.type]} is outside valid range {sensor.limit_min:.2f}{self.units[sensor.type]} to {sensor.limit_max:.2f}{self.units[sensor.type]}. Skipping this update."
+                    f"Measurement for sensor {self.sensors[sensor.id]} of {new_value:.2f}{self.units[sensor.type]} is outside valid range {sensor.limit_min:.2f}{self.units[sensor.type]} to {sensor.limit_max:.2f}{self.units[sensor.type]}. Recording as out-of-range measurement."
+                )
+                # Store the out-of-range measurement so users can see what was actually measured
+                with orm.db_session():
+                    Sensor[sensor.id].update(new_value, out_of_range=True)
+                    sensor_data = sensor.to_dict()
+
+                db_time = (time.time() - start) - measurement_time
+
+                sensor_data["unit"] = self.units[sensor.type]
+                sensor_data["type"] = sensor.type
+                self.webserver.websocket_message(
+                    "sensor",
+                    {
+                        field: sensor_data[field]
+                        for field in [
+                            "id",
+                            "value",
+                            "error",
+                            "alarm_min",
+                            "alarm_max",
+                            "limit_min",
+                            "limit_max",
+                            "alarm",
+                            "unit",
+                            "type",
+                            "name",
+                        ]
+                    },
+                )
+                sensorLogger.debug(
+                    f"Sensor {self.sensors[sensor.id]} update done in {db_time:.2f} seconds. Took {measurement_time:.2f} seconds to measure."
                 )
                 continue
 
@@ -730,7 +778,7 @@ class terrariumEngine(object):
 
             if new_value is not None:
                 with orm.db_session():
-                    Sensor[sensor.id].update(new_value)
+                    Sensor[sensor.id].update(new_value, out_of_range=False)
                     sensor_data = sensor.to_dict()
 
                 db_time = (time.time() - start) - measurement_time

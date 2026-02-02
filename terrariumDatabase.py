@@ -245,6 +245,8 @@ class Enclosure(db.Entity):
     doors = orm.Set(lambda: Button)
     webcams = orm.Set(lambda: Webcam)
     feeders = orm.Set(lambda: Feeder)
+    zones = orm.Set(lambda: MonitoringZone)
+    events = orm.Set(lambda: MonitoringEvent)
 
     def __rename_image(self):
         regex = re.compile(f"{self.id}\.(jpg|jpeg|gif|png)$", re.IGNORECASE)
@@ -502,21 +504,30 @@ class Sensor(db.Entity):
 
         return not self.alarm_min <= self.value <= self.alarm_max
 
-    @property
-    def value(self):
-        value = (
+    def _get_latest_measurement(self):
+        """Get the latest measurement from history within the max age threshold."""
+        return (
             self.history.filter(lambda h: h.timestamp >= datetime.now() - timedelta(seconds=Sensor.__MAX_VALUE_AGE))
             .order_by(orm.desc(SensorHistory.timestamp))
             .first()
         )
-        if value:
-            return value.value
+
+    @property
+    def value(self):
+        measurement = self._get_latest_measurement()
+        if measurement:
+            return measurement.value
 
         return None
 
     @property
     def error(self):
-        return True if self.value is None else False
+        # Check if there's no value or if the latest measurement is out of range
+        measurement = self._get_latest_measurement()
+        if measurement is None:
+            return True
+        
+        return measurement.out_of_range
 
     @property
     def areas(self):
@@ -524,15 +535,23 @@ class Sensor(db.Entity):
 
     def to_dict(self, only=None, exclude=None, with_collections=False, with_lazy=False, related_objects=False):
         data = copy.deepcopy(super().to_dict(only, exclude, with_collections, with_lazy, related_objects))
+        
+        # Fetch measurement once to avoid duplicate queries
+        measurement = self._get_latest_measurement()
+        
         # Add extra fields
-        data["value"] = self.value
+        data["value"] = measurement.value if measurement else None
         data["offset"] = self.offset
-        data["alarm"] = self.alarm
-        data["error"] = self.error
+        data["error"] = measurement.out_of_range if measurement else True
+        data["alarm"] = (
+            False
+            if data["error"] or data["value"] is None
+            else not (self.alarm_min <= data["value"] <= self.alarm_max)
+        )
 
         return data
 
-    def update(self, value):
+    def update(self, value, out_of_range=False):
         if value is None:
             return
 
@@ -563,6 +582,13 @@ class Sensor(db.Entity):
             )
 
             sensor_data.exclude_avg = self.exclude_avg
+            if self.__VALUE_MODE == 2:
+                sensor_data.out_of_range = (
+                    sensor_data.value < sensor_data.limit_min
+                    or sensor_data.value > sensor_data.limit_max
+                )
+            else:
+                sensor_data.out_of_range = out_of_range
         else:
             # New data
             sensor_data = SensorHistory(
@@ -574,6 +600,7 @@ class Sensor(db.Entity):
                 alarm_min=self.alarm_min,
                 alarm_max=self.alarm_max,
                 exclude_avg=self.exclude_avg,
+                out_of_range=out_of_range,
             )
 
         return sensor_data
@@ -593,6 +620,7 @@ class SensorHistory(db.Entity):
     alarm_max = orm.Required(float)
 
     exclude_avg = orm.Required(bool, default=False)
+    out_of_range = orm.Required(bool, default=False)
 
     orm.PrimaryKey(sensor, timestamp)
 
@@ -681,6 +709,37 @@ class Webcam(db.Entity):
 
     def __repr__(self):
         return f"{self.hardware} webcam '{self.name}' at address '{self.address}'"
+
+
+class MonitoringZone(db.Entity):
+    id = orm.PrimaryKey(str, default=terrariumUtils.generate_uuid)
+    enclosure = orm.Required(lambda: Enclosure)
+    name = orm.Required(str)
+    type = orm.Required(str, default="general")
+    shape = orm.Required(orm.Json)
+    meta = orm.Optional(orm.Json, default={})
+    enabled = orm.Optional(bool, default=True)
+
+    events = orm.Set(lambda: MonitoringEvent)
+
+    def __repr__(self):
+        return f"Monitoring zone '{self.name}' ({self.type}) in enclosure {self.enclosure}"
+
+
+class MonitoringEvent(db.Entity):
+    id = orm.PrimaryKey(str, default=terrariumUtils.generate_uuid)
+    enclosure = orm.Required(lambda: Enclosure)
+    zone = orm.Optional(lambda: MonitoringZone)
+    timestamp = orm.Required(datetime, default=datetime.now)
+    label = orm.Optional(str)
+    confidence = orm.Optional(float)
+    source = orm.Optional(str)
+    snapshot = orm.Optional(str)
+    meta = orm.Optional(orm.Json, default={})
+
+    def __repr__(self):
+        return f"Monitoring event '{self.label}' in enclosure {self.enclosure}"
+
 
 class Feeder(db.Entity):
     """Automatic aquarium feeder entity"""
