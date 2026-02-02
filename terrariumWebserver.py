@@ -135,8 +135,11 @@ class terrariumWebserver(object):
     def __validate_nocturnal_eye_access(self):
         """Validate access to Nocturnal Eye endpoints with token auth, IP allowlist, and rate limiting"""
         import time
+        import secrets
         
         # Get client IP address
+        # Note: X-Real-Ip header should only be trusted when behind a properly configured reverse proxy
+        # (e.g., nginx with proxy_set_header X-Real-IP $remote_addr)
         client_ip = request.remote_addr if request.get_header("X-Real-Ip") is None else request.get_header("X-Real-Ip")
         
         # Check IP allowlist if configured
@@ -160,7 +163,8 @@ class terrariumWebserver(object):
             elif query_token:
                 provided_token = query_token
             
-            if not provided_token or provided_token != api_token:
+            # Use constant-time comparison to prevent timing attacks
+            if not provided_token or not secrets.compare_digest(provided_token, api_token):
                 logger.warning(f"Nocturnal Eye access denied from {client_ip}: Invalid or missing token")
                 return HTTPError(401, "Access denied: Invalid or missing API token")
         
@@ -175,6 +179,16 @@ class terrariumWebserver(object):
             ]
         else:
             self.__nocturnal_eye_rate_limit[client_ip] = []
+        
+        # Periodically clean up stale IP entries to prevent memory growth
+        # Remove IPs that haven't made requests in the last window period
+        if len(self.__nocturnal_eye_rate_limit) > 100:  # Only cleanup when dict is large
+            stale_ips = [
+                ip for ip, timestamps in self.__nocturnal_eye_rate_limit.items()
+                if not timestamps or (current_time - max(timestamps) > self.__nocturnal_eye_rate_limit_window)
+            ]
+            for ip in stale_ips:
+                del self.__nocturnal_eye_rate_limit[ip]
         
         # Check if rate limit exceeded
         if len(self.__nocturnal_eye_rate_limit[client_ip]) >= self.__nocturnal_eye_rate_limit_max:

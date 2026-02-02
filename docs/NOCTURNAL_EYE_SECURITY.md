@@ -37,6 +37,16 @@ Restrict access to Nocturnal Eye endpoints to specific IP addresses only.
 - If empty or not configured: All IPs are allowed (only token auth applies)
 - If configured: Only listed IPs can access the endpoints
 
+**Important Security Note:**
+The IP address is detected from `X-Real-Ip` header (if present) or `request.remote_addr`. When deploying behind a reverse proxy (e.g., nginx, Apache), ensure the proxy is properly configured to set the `X-Real-Ip` header to prevent header spoofing attacks:
+
+```nginx
+# nginx example
+proxy_set_header X-Real-IP $remote_addr;
+```
+
+If not behind a trusted proxy, the `X-Real-Ip` header could be forged by attackers to bypass IP allowlisting.
+
 ### 3. Rate Limiting
 
 Automatic rate limiting prevents abuse and excessive bandwidth consumption.
