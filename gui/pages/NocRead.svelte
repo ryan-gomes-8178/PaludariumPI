@@ -19,7 +19,7 @@
   let snapshotTotal = 0;
   let snapshotMode = 'recent';
 
-  const nocturnalEyeApi = 'http://localhost:5001/api';
+  const nocturnalEyeApi = ApiUrl;
 
   async function loadDashboard() {
     try {
