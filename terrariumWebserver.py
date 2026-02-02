@@ -276,6 +276,13 @@ class terrariumWebserver(object):
         """Return the HLS stream manifest for nocturnal-eye gecko monitoring without authentication"""
         import glob
         
+        # Handle OPTIONS preflight request for CORS
+        if request.method == "OPTIONS":
+            response.set_header("Access-Control-Allow-Origin", "*")
+            response.set_header("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS")
+            response.set_header("Access-Control-Allow-Headers", "Origin, Accept, Content-Type, X-Requested-With")
+            return ""
+        
         # Find the latest webcam stream directory
         webcam_dir = Path("/dev/shm/webcam")
         if not webcam_dir.exists():
@@ -320,6 +327,12 @@ class terrariumWebserver(object):
         response.set_header("Access-Control-Allow-Origin", "*")
         response.set_header("Access-Control-Allow-Methods", "GET, HEAD")
         response.set_header("Access-Control-Allow-Headers", "Origin, Accept, Content-Type, X-Requested-With")
+        # Handle OPTIONS preflight request for CORS
+        if request.method == "OPTIONS":
+            response.set_header("Access-Control-Allow-Origin", "*")
+            response.set_header("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS")
+            response.set_header("Access-Control-Allow-Headers", "Origin, Accept, Content-Type, X-Requested-With")
+            return ""
         
         # Validate filename to prevent path traversal attacks
         # Only allow alphanumeric characters, dots, underscores, and hyphens
@@ -460,14 +473,14 @@ class terrariumWebserver(object):
         # Nocturnal Eye stream bypass - unauthenticated access to live stream for gecko monitoring
         self.bottle.route(
             "/nocturnal-eye/stream.m3u8",
-            method="GET",
+            method=["GET", "OPTIONS"],
             callback=self._get_nocturnal_eye_stream,
         )
         
         # Nocturnal Eye stream chunks
         self.bottle.route(
             "/nocturnal-eye/chunks/<filename:path>",
-            method="GET",
+            method=["GET", "OPTIONS"],
             callback=self._get_nocturnal_eye_chunk,
         )
 
