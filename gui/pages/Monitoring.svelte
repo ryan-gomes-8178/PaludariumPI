@@ -90,7 +90,7 @@
   .snapshot-overlay {
     position: absolute;
     inset: 0;
-    background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.7) 100%);
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.7) 100%);
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
@@ -177,6 +177,48 @@
     color: #a0a0a0;
   }
 
+  .activity-range-row {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .y-axis-label {
+    position: absolute;
+    left: -52px;
+    top: 50%;
+    transform: translateY(-50%) rotate(-90deg);
+    font-size: 0.7rem;
+    color: #666;
+    white-space: nowrap;
+    text-align: center;
+    width: 110px;
+  }
+
+  .chart-legend {
+    display: flex;
+    gap: 1rem;
+    margin-top: 0.75rem;
+    font-size: 0.8rem;
+    color: #a0a0a0;
+    flex-wrap: wrap;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .legend-color {
+    width: 12px;
+    height: 12px;
+    background: #00d4ff;
+    border-radius: 0.15rem;
+  }
+
   .hourly-stats {
     margin-top: 1rem;
     padding: 1rem;
@@ -225,7 +267,9 @@
     background: #00d4ff;
     border-radius: 0.15rem;
     opacity: 0.7;
-    transition: opacity 0.2s, background 0.2s;
+    transition:
+      opacity 0.2s,
+      background 0.2s;
     position: relative;
     min-height: 2px;
   }
@@ -268,7 +312,7 @@
   let events = [];
   let snapshots = [];
   let summary = {};
-  let hourlyStats = [];
+  let activityBuckets = [];
   let systemStatus = '✅';
   let snapshotTotal = 0;
 
@@ -278,7 +322,13 @@
   let currentPage = 0;
   let fromDate = '';
   let toDate = '';
-  
+
+  let activityFromDate = '';
+  let activityFromTime = '00:00';
+  let activityToDate = '';
+  let activityToTime = '23:59';
+  let activityBucketMinutes = 60;
+
   const snapshotsPerPage = 20;
 
   const nocturnalEyeApi = `${ApiUrl}/nocturnal-eye/api`;
@@ -326,6 +376,52 @@
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
+  const formatBucketLabel = (isoTimestamp) => {
+    if (!isoTimestamp) return '';
+    const date = new Date(isoTimestamp);
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const calculateBucketMinutes = (start, end) => {
+    const totalMinutes = Math.max((end.getTime() - start.getTime()) / 60000, 1);
+    const candidateBuckets = [15, 30, 60, 120, 180, 240, 360, 720];
+    const targetBuckets = 12;
+
+    for (const bucket of candidateBuckets) {
+      if (totalMinutes / bucket <= targetBuckets) {
+        return bucket;
+      }
+    }
+
+    return 720;
+  };
+
+  const loadActivityHistogram = async () => {
+    try {
+      if (!activityFromDate || !activityToDate) return;
+
+      const start = new Date(`${activityFromDate}T${activityFromTime}:00`);
+      const end = new Date(`${activityToDate}T${activityToTime}:59`);
+      if (end <= start) {
+        window.alert('The end date and time must be after the start date and time.');
+        return;
+      }
+
+      activityBucketMinutes = calculateBucketMinutes(start, end);
+
+      const url = `${nocturnalEyeApi}/activity/histogram?start=${start.toISOString()}&end=${end.toISOString()}&bucket_minutes=${activityBucketMinutes}`;
+      const res = await fetch(url);
+      if (!res.ok) {
+        console.error('Failed to load activity histogram: HTTP', res.status);
+        return;
+      }
+      const data = await res.json();
+      activityBuckets = data.buckets || [];
+    } catch (err) {
+      console.error('Failed to load activity histogram:', err);
+    }
+  };
+
   const setupHls = () => {
     if (!videoEl) return;
 
@@ -354,11 +450,6 @@
       if (summaryRes.ok) {
         summary = await summaryRes.json();
         zones = summary.zones || [];
-        hourlyStats = summary.hourly_distribution
-          ? Object.entries(summary.hourly_distribution)
-              .map(([hour, count]) => ({ hour: parseInt(hour) || 0, count }))
-              .sort((a, b) => a.hour - b.hour)
-          : [];
         snapshotTotal = summary.snapshot_count || 0;
         if (summary.recent_snapshots?.length) {
           events = summary.recent_snapshots.map((snap) => ({
@@ -376,6 +467,7 @@
       }
 
       await loadSnapshots();
+      await loadActivityHistogram();
     } catch (err) {
       console.error('Failed to load monitoring data:', err);
       systemStatus = '❌';
@@ -388,10 +480,10 @@
     try {
       const offset = currentPage * snapshotsPerPage;
       let url = `${nocturnalEyeApi}/snapshots/recent?limit=${snapshotsPerPage}&offset=${offset}`;
-      
+
       if (fromDate) url += `&from=${fromDate}`;
       if (toDate) url += `&to=${toDate}`;
-      
+
       const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
@@ -436,16 +528,21 @@
     return date.toLocaleString();
   };
 
-  const maxHourlyCount = () => Math.max(...hourlyStats.map((stat) => stat.count || 0), 1);
+  const maxHourlyCount = () => Math.max(...activityBuckets.map((bucket) => bucket.count || 0), 1);
 
   onMount(() => {
     setCustomPageTitle($_('monitoring.title', { default: 'Monitoring' }));
-    
+
     // Initialize date inputs with today's date
     const today = new Date().toISOString().split('T')[0];
     toDate = today;
     fromDate = today;
-    
+
+    activityFromDate = today;
+    activityToDate = today;
+    activityFromTime = '00:00';
+    activityToTime = '23:59';
+
     setupHls();
     loadData();
 
@@ -507,21 +604,14 @@
             <i class="fas fa-video mr-2"></i>Live Stream
           </h3>
           <div class="card-tools">
-            <button class="btn btn-sm btn-default mr-1" on:click={() => window.location.reload()}>
+            <button class="btn btn-sm btn-default mr-1" on:click="{() => window.location.reload()}">
               <i class="fas fa-sync-alt"></i> Refresh
             </button>
           </div>
         </div>
         <div class="card-body">
           <div class="monitoring-stream-wrapper">
-            <video
-              class="monitoring-stream"
-              bind:this={videoEl}
-              controls
-              autoplay
-              muted
-              playsinline
-            ></video>
+            <video class="monitoring-stream" bind:this="{videoEl}" controls autoplay muted playsinline></video>
           </div>
         </div>
       </div>
@@ -539,31 +629,17 @@
             <div class="date-filter-row">
               <div class="date-input-group">
                 <label for="fromDate">From</label>
-                <input
-                  type="date"
-                  id="fromDate"
-                  bind:value={fromDate}
-                />
+                <input type="date" id="fromDate" bind:value="{fromDate}" />
               </div>
               <div class="date-input-group">
                 <label for="toDate">To</label>
-                <input
-                  type="date"
-                  id="toDate"
-                  bind:value={toDate}
-                />
+                <input type="date" id="toDate" bind:value="{toDate}" />
               </div>
               <div class="filter-buttons">
-                <button
-                  class="btn btn-sm btn-success"
-                  on:click={applyDateRange}
-                >
+                <button class="btn btn-sm btn-success" on:click="{applyDateRange}">
                   <i class="fas fa-check"></i> Apply Range
                 </button>
-                <button
-                  class="btn btn-sm btn-outline-secondary"
-                  on:click={clearDateRange}
-                >
+                <button class="btn btn-sm btn-outline-secondary" on:click="{clearDateRange}">
                   <i class="fas fa-times"></i> Clear Range
                 </button>
               </div>
@@ -573,11 +649,7 @@
             <div class="snapshots-grid">
               {#each snapshots as snapshot}
                 <div class="snapshot-card">
-                  <img
-                    src={snapshot.path}
-                    alt="Snapshot"
-                    class="snapshot-thumb"
-                  />
+                  <img src="{snapshot.path}" alt="Snapshot" class="snapshot-thumb" />
                   <div class="snapshot-overlay">
                     <div class="snapshot-time">
                       {formatTimeShort(snapshot.timestamp)}
@@ -594,27 +666,21 @@
 
             <!-- Pagination Info -->
             <div class="pagination-controls">
-              <button
-                class="btn btn-sm btn-outline-secondary"
-                disabled={currentPage === 0}
-                on:click={previousPage}
-              >
+              <button class="btn btn-sm btn-outline-secondary" disabled="{currentPage === 0}" on:click="{previousPage}">
                 <i class="fas fa-chevron-left"></i> Newer
               </button>
               <span class="pagination-info">
                 {#if snapshotTotal > 0}
-                  {currentPage * snapshotsPerPage + 1} - {Math.min(
-                    (currentPage + 1) * snapshotsPerPage,
-                    snapshotTotal
-                  )} of {snapshotTotal}
+                  {currentPage * snapshotsPerPage + 1} - {Math.min((currentPage + 1) * snapshotsPerPage, snapshotTotal)}
+                  of {snapshotTotal}
                 {:else}
                   Page {currentPage + 1}
                 {/if}
               </span>
               <button
                 class="btn btn-sm btn-outline-secondary"
-                disabled={snapshotTotal !== 0 && (currentPage + 1) * snapshotsPerPage >= snapshotTotal}
-                on:click={nextPage}
+                disabled="{snapshotTotal !== 0 && (currentPage + 1) * snapshotsPerPage >= snapshotTotal}"
+                on:click="{nextPage}"
               >
                 Older <i class="fas fa-chevron-right"></i>
               </button>
@@ -682,7 +748,7 @@
                   {/if}
                   {#if event.path}
                     <img
-                      src={event.path}
+                      src="{event.path}"
                       alt="Detection"
                       style="width: 100%; border-radius: 0.25rem; margin-top: 6px;"
                     />
@@ -695,7 +761,7 @@
       </div>
 
       <!-- Hourly Stats -->
-      {#if hourlyStats.length > 0}
+      {#if activityBuckets.length > 0}
         <div class="card mt-3">
           <div class="card-header">
             <h3 class="card-title">
@@ -703,7 +769,31 @@
             </h3>
           </div>
           <div class="card-body">
+            <div class="activity-range-row">
+              <div class="date-input-group">
+                <label for="activityFromDate">From</label>
+                <input type="date" id="activityFromDate" bind:value="{activityFromDate}" />
+              </div>
+              <div class="date-input-group">
+                <label for="activityFromTime">Time</label>
+                <input type="time" id="activityFromTime" bind:value="{activityFromTime}" />
+              </div>
+              <div class="date-input-group">
+                <label for="activityToDate">To</label>
+                <input type="date" id="activityToDate" bind:value="{activityToDate}" />
+              </div>
+              <div class="date-input-group">
+                <label for="activityToTime">Time</label>
+                <input type="time" id="activityToTime" bind:value="{activityToTime}" />
+              </div>
+              <div class="filter-buttons">
+                <button class="btn btn-sm btn-success" on:click="{loadActivityHistogram}">
+                  <i class="fas fa-check"></i> Apply Range
+                </button>
+              </div>
+            </div>
             <div class="hourly-stats">
+              <div class="y-axis-label">Detections per Interval</div>
               <div class="hourly-y-axis">
                 <div>{Math.round(maxHourlyCount())}</div>
                 <div>{Math.round(maxHourlyCount() / 2)}</div>
@@ -711,23 +801,33 @@
               </div>
               <div class="hourly-chart-container">
                 <div class="hourly-bars">
-                  {#each hourlyStats as stat, idx}
+                  {#each activityBuckets as bucket, idx}
                     <div
                       class="bar"
-                      style="height: {Math.max(2, (stat.count / maxHourlyCount()) * 100)}%"
-                      title="{stat.hour}:00 - {stat.count} events"
+                      style="height: {Math.max(2, (bucket.count / maxHourlyCount()) * 100)}%"
+                      title="{formatBucketLabel(bucket.start)} - {bucket.count} detections"
                     ></div>
                   {/each}
                 </div>
               </div>
               <div class="hourly-x-axis">
-                {#each hourlyStats as stat, idx}
-                  {#if idx % 3 === 0}
-                    <div class="hour-label">{stat.hour}h</div>
+                {@const labelStep = Math.max(Math.floor(activityBuckets.length / 6), 1)}
+                {#each activityBuckets as bucket, idx}
+                  {#if idx % labelStep === 0}
+                    <div class="hour-label">{formatBucketLabel(bucket.start)}</div>
                   {:else}
                     <div class="hour-label"></div>
                   {/if}
                 {/each}
+              </div>
+            </div>
+            <div class="chart-legend">
+              <div class="legend-item">
+                <div class="legend-color"></div>
+                <span>Detection Count (per interval)</span>
+              </div>
+              <div class="legend-item">
+                <span style="font-size: 0.75rem; color: #666;">Interval: {activityBucketMinutes} min</span>
               </div>
             </div>
           </div>
