@@ -110,6 +110,94 @@
     color: #a0a0a0;
   }
 
+  .snapshot-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    backdrop-filter: blur(3px);
+  }
+
+  .snapshot-modal-content {
+    position: relative;
+    max-width: 90vw;
+    max-height: 90vh;
+  }
+
+  .snapshot-modal-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    max-height: 85vh;
+    max-width: 90vw;
+  }
+
+  .snapshot-modal-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: #fff;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+    z-index: 2001;
+  }
+
+  .snapshot-modal-close:hover {
+    background: rgba(255, 255, 255, 0.35);
+  }
+
+  .snapshot-modal-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: #fff;
+    width: 46px;
+    height: 46px;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    font-size: 22px;
+    transition: background 0.2s;
+    z-index: 2001;
+  }
+
+  .snapshot-modal-nav:hover {
+    background: rgba(255, 255, 255, 0.35);
+  }
+
+  .snapshot-modal-nav.prev {
+    left: 12px;
+  }
+
+  .snapshot-modal-nav.next {
+    right: 12px;
+  }
+
+  .snapshot-modal-info {
+    position: absolute;
+    bottom: 12px;
+    left: 12px;
+    right: 12px;
+    background: rgba(0, 0, 0, 0.7);
+    color: #fff;
+    padding: 0.8rem 1rem;
+    border-radius: 0.4rem;
+    font-size: 0.85rem;
+  }
+
   .date-filter-row {
     display: flex;
     gap: 1rem;
@@ -271,6 +359,10 @@
   let hourlyStats = [];
   let systemStatus = '✅';
   let snapshotTotal = 0;
+
+  let selectedSnapshot = null;
+  let selectedSnapshotIndex = -1;
+  let modalSnapshots = [];
 
   let videoEl;
   let hlsPlayer;
@@ -436,6 +528,44 @@
     return date.toLocaleString();
   };
 
+  const openSnapshotModal = (snapshot, index = 0, snapshotList = snapshots) => {
+    selectedSnapshot = snapshot;
+    selectedSnapshotIndex = index;
+    modalSnapshots = snapshotList;
+  };
+
+  const closeSnapshotModal = () => {
+    selectedSnapshot = null;
+    selectedSnapshotIndex = -1;
+    modalSnapshots = [];
+  };
+
+  const showPreviousSnapshot = () => {
+    if (selectedSnapshotIndex > 0) {
+      selectedSnapshotIndex -= 1;
+      selectedSnapshot = modalSnapshots[selectedSnapshotIndex];
+    }
+  };
+
+  const showNextSnapshot = () => {
+    if (selectedSnapshotIndex < modalSnapshots.length - 1) {
+      selectedSnapshotIndex += 1;
+      selectedSnapshot = modalSnapshots[selectedSnapshotIndex];
+    }
+  };
+
+  const handleModalKeydown = (event) => {
+    if (!selectedSnapshot) return;
+
+    if (event.key === 'Escape') {
+      closeSnapshotModal();
+    } else if (event.key === 'ArrowLeft') {
+      showPreviousSnapshot();
+    } else if (event.key === 'ArrowRight') {
+      showNextSnapshot();
+    }
+  };
+
   const maxHourlyCount = () => Math.max(...hourlyStats.map((stat) => stat.count || 0), 1);
 
   onMount(() => {
@@ -449,6 +579,8 @@
     setupHls();
     loadData();
 
+    window.addEventListener('keydown', handleModalKeydown);
+
     refreshTimer = setInterval(() => {
       loadData();
     }, 10000);
@@ -456,6 +588,8 @@
 
   onDestroy(() => {
     customPageTitleUsed.set(false);
+
+    window.removeEventListener('keydown', handleModalKeydown);
 
     if (refreshTimer) {
       clearInterval(refreshTimer);
@@ -494,6 +628,46 @@
         </div>
       </div>
     </div>
+
+      {#if selectedSnapshot}
+        <div class="snapshot-modal-overlay" on:click={closeSnapshotModal}>
+          <div class="snapshot-modal-content" on:click|stopPropagation>
+            <button class="snapshot-modal-close" on:click={closeSnapshotModal} title="Close (ESC)">
+              <i class="fas fa-times"></i>
+            </button>
+
+            {#if modalSnapshots.length > 1 && selectedSnapshotIndex > 0}
+              <button class="snapshot-modal-nav prev" on:click={showPreviousSnapshot} title="Previous (←)">
+                <i class="fas fa-chevron-left"></i>
+              </button>
+            {/if}
+
+            <img
+              src={selectedSnapshot.path}
+              alt="Fullscreen snapshot"
+              class="snapshot-modal-image"
+            />
+
+            {#if modalSnapshots.length > 1 && selectedSnapshotIndex < modalSnapshots.length - 1}
+              <button class="snapshot-modal-nav next" on:click={showNextSnapshot} title="Next (→)">
+                <i class="fas fa-chevron-right"></i>
+              </button>
+            {/if}
+
+            <div class="snapshot-modal-info">
+              <div><strong>Detected:</strong> {formatDate(selectedSnapshot.timestamp)}</div>
+              {#if selectedSnapshot.metadata?.detection_count}
+                <div><strong>Detections:</strong> {selectedSnapshot.metadata.detection_count}</div>
+              {/if}
+              {#if modalSnapshots.length > 1}
+                <div style="margin-top: 0.4rem; font-size: 0.75rem; opacity: 0.8;">
+                  {selectedSnapshotIndex + 1} / {modalSnapshots.length} | Arrow keys to navigate
+                </div>
+              {/if}
+            </div>
+          </div>
+        </div>
+      {/if}
   </div>
 
   <!-- Main Content Row -->
@@ -571,8 +745,14 @@
 
             <!-- Snapshots Grid -->
             <div class="snapshots-grid">
-              {#each snapshots as snapshot}
-                <div class="snapshot-card">
+              {#each snapshots as snapshot, idx}
+                <div
+                  class="snapshot-card"
+                  role="button"
+                  tabindex="0"
+                  on:click={() => openSnapshotModal(snapshot, idx, snapshots)}
+                  on:keydown={(event) => event.key === 'Enter' && openSnapshotModal(snapshot, idx, snapshots)}
+                >
                   <img
                     src={snapshot.path}
                     alt="Snapshot"
@@ -684,7 +864,8 @@
                     <img
                       src={event.path}
                       alt="Detection"
-                      style="width: 100%; border-radius: 0.25rem; margin-top: 6px;"
+                      style="width: 100%; border-radius: 0.25rem; margin-top: 6px; cursor: pointer;"
+                      on:click={() => openSnapshotModal(event, 0, [event])}
                     />
                   {/if}
                 </div>
