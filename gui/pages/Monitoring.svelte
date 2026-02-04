@@ -402,7 +402,10 @@
 
       const start = new Date(`${activityFromDate}T${activityFromTime}:00`);
       const end = new Date(`${activityToDate}T${activityToTime}:59`);
-      if (end <= start) return;
+      if (end <= start) {
+        window.alert('The end date and time must be after the start date and time.');
+        return;
+      }
 
       activityBucketMinutes = calculateBucketMinutes(start, end);
 
