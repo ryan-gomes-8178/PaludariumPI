@@ -878,7 +878,15 @@
                       src={event.path}
                       alt="Detection"
                       style="width: 100%; border-radius: 0.25rem; margin-top: 6px; cursor: pointer;"
+                      role="button"
+                      tabindex="0"
                       on:click={() => openSnapshotModal(event, 0, [event])}
+                      on:keydown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          openSnapshotModal(event, 0, [event]);
+                        }
+                      }}
                     />
                   {/if}
                 </div>
