@@ -306,83 +306,6 @@
     background: #00d4ff;
     border-radius: 0.15rem;
   }
-
-  .hourly-stats {
-    margin-top: 1rem;
-    padding: 1rem;
-    background: #16213e;
-    border-radius: 0.25rem;
-    position: relative;
-    height: 150px;
-  }
-
-  .hourly-chart-container {
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: 0.2rem;
-    height: 100px;
-    position: relative;
-    padding-right: 20px;
-  }
-
-  .hourly-y-axis {
-    position: absolute;
-    left: 0;
-    top: 0;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    font-size: 0.65rem;
-    color: #666;
-    width: 40px;
-    text-align: right;
-    padding-right: 5px;
-  }
-
-  .hourly-bars {
-    display: flex;
-    align-items: flex-end;
-    gap: 0.15rem;
-    height: 100%;
-    flex: 1;
-    margin-left: 40px;
-  }
-
-  .bar {
-    flex: 1;
-    background: #00d4ff;
-    border-radius: 0.15rem;
-    opacity: 0.7;
-    transition:
-      opacity 0.2s,
-      background 0.2s;
-    position: relative;
-    min-height: 2px;
-  }
-
-  .bar:hover {
-    opacity: 1;
-    background: #00ffff;
-  }
-
-  .hourly-x-axis {
-    position: absolute;
-    bottom: 0;
-    left: 40px;
-    right: 0;
-    height: 20px;
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.65rem;
-    color: #666;
-  }
-
-  .hour-label {
-    flex: 1;
-    text-align: center;
-  }
 </style>
 
 <script>
@@ -392,10 +315,12 @@
 
   import { setCustomPageTitle, customPageTitleUsed } from '../stores/page-title';
   import { ApiUrl } from '../constants/urls';
+  import ActivityHistogram from '../components/ActivityHistogram.svelte';
 
   import hls from 'hls.js';
 
   let loading = false;
+  let activityLoading = false;
   let zones = [];
   let events = [];
   let snapshots = [];
@@ -474,8 +399,16 @@
 
   const formatBucketLabel = (isoTimestamp) => {
     if (!isoTimestamp) return '';
-    const date = new Date(isoTimestamp);
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    // Parse ISO string without timezone conversion
+    const [datePart, timePart] = isoTimestamp.split('T');
+    if (!timePart) return '';
+    const timeOnly = timePart.split(':').slice(0, 2).join(':');
+    return timeOnly;
+  };
+
+  const formatLocalISOString = (date) => {
+    const pad = (value) => String(value).padStart(2, '0');
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
   };
 
   const calculateBucketMinutes = (start, end) => {
@@ -494,6 +427,7 @@
 
   const loadActivityHistogram = async () => {
     try {
+      activityLoading = true;
       if (!activityFromDate || !activityToDate) return;
 
       const start = new Date(`${activityFromDate}T${activityFromTime}:00`);
@@ -505,7 +439,9 @@
 
       activityBucketMinutes = calculateBucketMinutes(start, end);
 
-      const url = `${nocturnalEyeApi}/activity/histogram?start=${start.toISOString()}&end=${end.toISOString()}&bucket_minutes=${activityBucketMinutes}`;
+      const startLocal = formatLocalISOString(start);
+      const endLocal = formatLocalISOString(end);
+      const url = `${nocturnalEyeApi}/activity/histogram?start=${encodeURIComponent(startLocal)}&end=${encodeURIComponent(endLocal)}&bucket_minutes=${activityBucketMinutes}`;
       const res = await fetch(url);
       if (!res.ok) {
         console.error('Failed to load activity histogram: HTTP', res.status);
@@ -515,6 +451,8 @@
       activityBuckets = data.buckets || [];
     } catch (err) {
       console.error('Failed to load activity histogram:', err);
+    } finally {
+      activityLoading = false;
     }
   };
 
@@ -565,7 +503,6 @@
       }
 
       await loadSnapshots();
-      await loadActivityHistogram();
     } catch (err) {
       console.error('Failed to load monitoring data:', err);
       systemStatus = '❌';
@@ -728,6 +665,8 @@
 
     setupHls();
     loadData();
+    // Load activity histogram once on mount
+    loadActivityHistogram();
 
     window.addEventListener('keydown', handleModalKeydown);
 
@@ -1007,43 +946,11 @@
                 </button>
               </div>
             </div>
-            <div class="hourly-stats">
-              <div class="y-axis-label">Detections per Interval</div>
-              <div class="hourly-y-axis">
-                <div>{Math.round(maxHourlyCount())}</div>
-                <div>{Math.round(maxHourlyCount() / 2)}</div>
-                <div>0</div>
-              </div>
-              <div class="hourly-chart-container">
-                <div class="hourly-bars">
-                  {#each activityBuckets as bucket, idx}
-                    <div
-                      class="bar"
-                      style="height: {Math.max(2, (bucket.count / maxHourlyCount()) * 100)}%"
-                      title="{formatBucketLabel(bucket.start)} - {bucket.count} detections"
-                    ></div>
-                  {/each}
-                </div>
-              </div>
-              <div class="hourly-x-axis">
-                {#each activityBuckets as bucket, idx}
-                  {#if idx % activityLabelStep === 0}
-                    <div class="hour-label">{formatBucketLabel(bucket.start)}</div>
-                  {:else}
-                    <div class="hour-label"></div>
-                  {/if}
-                {/each}
-              </div>
-            </div>
-            <div class="chart-legend">
-              <div class="legend-item">
-                <div class="legend-color"></div>
-                <span>Detection Count (per interval)</span>
-              </div>
-              <div class="legend-item">
-                <span style="font-size: 0.75rem; color: #666;">Interval: {activityBucketMinutes} min</span>
-              </div>
-            </div>
+            <ActivityHistogram
+              buckets="{activityBuckets}"
+              bucketMinutes="{activityBucketMinutes}"
+              loading="{activityLoading}"
+            />
           </div>
         </div>
       {/if}
