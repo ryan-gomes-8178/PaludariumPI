@@ -365,6 +365,8 @@
   let selectedSnapshot = null;
   let selectedSnapshotIndex = -1;
   let modalSnapshots = [];
+  let modalContentEl;
+  let closeButtonEl;
 
   let videoEl;
   let hlsPlayer;
@@ -534,6 +536,13 @@
     selectedSnapshot = snapshot;
     selectedSnapshotIndex = index;
     modalSnapshots = snapshotList;
+
+    // Focus the close button after the modal renders
+    setTimeout(() => {
+      if (closeButtonEl) {
+        closeButtonEl.focus();
+      }
+    }, 0);
   };
 
   const closeSnapshotModal = () => {
@@ -571,6 +580,32 @@
       event.preventDefault();
       event.stopPropagation();
       showNextSnapshot();
+    } else if (event.key === 'Tab') {
+      // Handle focus trap for Tab key
+      event.preventDefault();
+      event.stopPropagation();
+
+      if (!modalContentEl) return;
+
+      const focusableElements = modalContentEl.querySelectorAll(
+        'button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      );
+      const focusableArray = Array.from(focusableElements);
+
+      if (focusableArray.length === 0) return;
+
+      const currentIndex = focusableArray.indexOf(document.activeElement);
+      let nextIndex;
+
+      if (event.shiftKey) {
+        // Shift+Tab: move backwards
+        nextIndex = currentIndex <= 0 ? focusableArray.length - 1 : currentIndex - 1;
+      } else {
+        // Tab: move forwards
+        nextIndex = currentIndex >= focusableArray.length - 1 ? 0 : currentIndex + 1;
+      }
+
+      focusableArray[nextIndex].focus();
     }
   };
 
@@ -639,8 +674,16 @@
 
     {#if selectedSnapshot}
       <div class="snapshot-modal-overlay" on:click="{closeSnapshotModal}">
-        <div class="snapshot-modal-content" on:click|stopPropagation>
+        <div
+          bind:this="{modalContentEl}"
+          class="snapshot-modal-content"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Fullscreen snapshot viewer"
+          on:click|stopPropagation
+        >
           <button
+            bind:this="{closeButtonEl}"
             class="snapshot-modal-close"
             on:click="{closeSnapshotModal}"
             title="Close (ESC)"
@@ -650,16 +693,26 @@
           </button>
 
           {#if modalSnapshots.length > 1 && selectedSnapshotIndex > 0}
-            <button class="snapshot-modal-nav prev" on:click="{showPreviousSnapshot}" title="Previous (←)">
-              <i class="fas fa-chevron-left"></i>
+            <button
+              class="snapshot-modal-nav prev"
+              on:click="{showPreviousSnapshot}"
+              title="Previous (←)"
+              aria-label="Previous snapshot"
+            >
+              <i class="fas fa-chevron-left" aria-hidden="true"></i>
             </button>
           {/if}
 
           <img src="{selectedSnapshot.path}" alt="Fullscreen snapshot" class="snapshot-modal-image" />
 
           {#if modalSnapshots.length > 1 && selectedSnapshotIndex < modalSnapshots.length - 1}
-            <button class="snapshot-modal-nav next" on:click="{showNextSnapshot}" title="Next (→)">
-              <i class="fas fa-chevron-right"></i>
+            <button
+              class="snapshot-modal-nav next"
+              on:click="{showNextSnapshot}"
+              title="Next (→)"
+              aria-label="Next snapshot"
+            >
+              <i class="fas fa-chevron-right" aria-hidden="true"></i>
             </button>
           {/if}
 
