@@ -878,25 +878,25 @@
             <div class="date-filter-row">
               <div class="date-input-group">
                 <label for="fromDate">From</label>
-                <input type="date" id="fromDate" bind:value={fromDate} />
+                <input type="date" id="fromDate" bind:value="{fromDate}" />
               </div>
               <div class="date-input-group">
                 <label for="fromTime">Time</label>
-                <input type="time" id="fromTime" bind:value={fromTime} />
+                <input type="time" id="fromTime" bind:value="{fromTime}" />
               </div>
               <div class="date-input-group">
                 <label for="toDate">To</label>
-                <input type="date" id="toDate" bind:value={toDate} />
+                <input type="date" id="toDate" bind:value="{toDate}" />
               </div>
               <div class="date-input-group">
                 <label for="toTime">Time</label>
-                <input type="time" id="toTime" bind:value={toTime} />
+                <input type="time" id="toTime" bind:value="{toTime}" />
               </div>
               <div class="filter-buttons">
-                <button class="btn btn-sm btn-success" on:click={applyDateRange}>
+                <button class="btn btn-sm btn-success" on:click="{applyDateRange}">
                   <i class="fas fa-check"></i> Apply Range
                 </button>
-                <button class="btn btn-sm btn-outline-secondary" on:click={clearDateRange}>
+                <button class="btn btn-sm btn-outline-secondary" on:click="{clearDateRange}">
                   <i class="fas fa-times"></i> Clear Range
                 </button>
               </div>
@@ -1088,9 +1088,8 @@
                 </div>
               </div>
               <div class="hourly-x-axis">
-                {@const labelStep = Math.max(Math.floor(activityBuckets.length / 6), 1)}
                 {#each activityBuckets as bucket, idx}
-                  {#if idx % labelStep === 0}
+                  {#if idx % activityLabelStep === 0}
                     <div class="hour-label">{formatBucketLabel(bucket.start)}</div>
                   {:else}
                     <div class="hour-label"></div>
