@@ -681,21 +681,36 @@
           aria-label="Fullscreen snapshot viewer"
           on:click|stopPropagation
         >
-          <button class="snapshot-modal-close" on:click="{closeSnapshotModal}" title="Close (ESC)">
-            <i class="fas fa-times"></i>
+          <button
+            class="snapshot-modal-close"
+            on:click="{closeSnapshotModal}"
+            title="Close (ESC)"
+            aria-label="Close snapshot viewer"
+          >
+            <i class="fas fa-times" aria-hidden="true"></i>
           </button>
 
           {#if modalSnapshots.length > 1 && selectedSnapshotIndex > 0}
-            <button class="snapshot-modal-nav prev" on:click="{showPreviousSnapshot}" title="Previous (←)">
-              <i class="fas fa-chevron-left"></i>
+            <button
+              class="snapshot-modal-nav prev"
+              on:click="{showPreviousSnapshot}"
+              title="Previous (←)"
+              aria-label="Previous snapshot"
+            >
+              <i class="fas fa-chevron-left" aria-hidden="true"></i>
             </button>
           {/if}
 
           <img src="{selectedSnapshot.path}" alt="Fullscreen snapshot" class="snapshot-modal-image" />
 
           {#if modalSnapshots.length > 1 && selectedSnapshotIndex < modalSnapshots.length - 1}
-            <button class="snapshot-modal-nav next" on:click="{showNextSnapshot}" title="Next (→)">
-              <i class="fas fa-chevron-right"></i>
+            <button
+              class="snapshot-modal-nav next"
+              on:click="{showNextSnapshot}"
+              title="Next (→)"
+              aria-label="Next snapshot"
+            >
+              <i class="fas fa-chevron-right" aria-hidden="true"></i>
             </button>
           {/if}
 
