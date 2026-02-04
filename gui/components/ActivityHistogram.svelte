@@ -18,7 +18,6 @@
 </style>
 
 <script>
-  import { onMount } from 'svelte';
   import { Bar } from 'svelte-chartjs';
   import { Chart as ChartJS, Title, Tooltip, Legend, CategoryScale, LinearScale, BarElement } from 'chart.js';
 
