@@ -422,6 +422,8 @@
     }
   };
 
+  $: activityLabelStep = Math.max(Math.floor(activityBuckets.length / 6), 1);
+
   const setupHls = () => {
     if (!videoEl) return;
 
