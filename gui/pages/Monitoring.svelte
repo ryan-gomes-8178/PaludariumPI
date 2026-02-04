@@ -328,7 +328,6 @@
   let activityToDate = '';
   let activityToTime = '23:59';
   let activityBucketMinutes = 60;
-  let activityLabelStep = 1;
 
   const snapshotsPerPage = 20;
 
