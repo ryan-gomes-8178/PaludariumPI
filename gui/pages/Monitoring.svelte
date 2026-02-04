@@ -638,8 +638,13 @@
       {#if selectedSnapshot}
         <div class="snapshot-modal-overlay" on:click={closeSnapshotModal}>
           <div class="snapshot-modal-content" on:click|stopPropagation>
-            <button class="snapshot-modal-close" on:click={closeSnapshotModal} title="Close (ESC)">
-              <i class="fas fa-times"></i>
+            <button
+              class="snapshot-modal-close"
+              on:click={closeSnapshotModal}
+              title="Close (ESC)"
+              aria-label="Close snapshot viewer"
+            >
+              <i class="fas fa-times" aria-hidden="true"></i>
             </button>
 
             {#if modalSnapshots.length > 1 && selectedSnapshotIndex > 0}
