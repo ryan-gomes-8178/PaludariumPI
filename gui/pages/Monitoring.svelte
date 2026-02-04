@@ -577,14 +577,18 @@
   const loadSnapshots = async () => {
     try {
       const offset = currentPage * snapshotsPerPage;
-      let url = `${nocturnalEyeApi}/snapshots/recent?limit=${snapshotsPerPage}&offset=${offset}`;
+      let url = `${nocturnalEyeApi}/snapshots/recent?limit=${snapshotsPerPage}`;
 
+      // Use range endpoint only if user has explicitly set both dates
       if (fromDate && toDate) {
         const fromDateTime = `${fromDate}T${fromTime}:00`;
         const toDateTime = `${toDate}T${toTime}:59`;
         url = `${nocturnalEyeApi}/snapshots/range?limit=${snapshotsPerPage}&offset=${offset}`;
         url += `&start=${encodeURIComponent(fromDateTime)}`;
         url += `&end=${encodeURIComponent(toDateTime)}`;
+      } else if (offset > 0) {
+        // Add offset for pagination when not using range filter
+        url += `&offset=${offset}`;
       }
 
       const res = await fetch(url);
@@ -715,13 +719,8 @@
   onMount(() => {
     setCustomPageTitle($_('monitoring.title', { default: 'Monitoring' }));
 
-    // Initialize date inputs with today's date
+    // Initialize activity date inputs with today's date
     const today = new Date().toISOString().split('T')[0];
-    toDate = today;
-    fromDate = today;
-    fromTime = '00:00';
-    toTime = '23:59';
-
     activityFromDate = today;
     activityToDate = today;
     activityFromTime = '00:00';
@@ -779,67 +778,6 @@
         </div>
       </div>
     </div>
-
-    {#if selectedSnapshot}
-      <div class="snapshot-modal-overlay" on:click="{closeSnapshotModal}">
-        <div
-          bind:this="{modalContentEl}"
-          class="snapshot-modal-content"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Fullscreen snapshot viewer"
-          on:click|stopPropagation
-        >
-          <button
-            bind:this="{closeButtonEl}"
-            class="snapshot-modal-close"
-            on:click="{closeSnapshotModal}"
-            title="Close (ESC)"
-            aria-label="Close snapshot viewer"
-          >
-            <i class="fas fa-times" aria-hidden="true"></i>
-          </button>
-
-          {#if modalSnapshots.length > 1 && selectedSnapshotIndex > 0}
-            <button
-              class="snapshot-modal-nav prev"
-              on:click="{showPreviousSnapshot}"
-              title="Previous (←)"
-              aria-label="Previous snapshot"
-            >
-              <i class="fas fa-chevron-left" aria-hidden="true"></i>
-            </button>
-          {/if}
-
-          <img src="{selectedSnapshot.path}" alt="Fullscreen snapshot" class="snapshot-modal-image" />
-
-          {#if modalSnapshots.length > 1 && selectedSnapshotIndex < modalSnapshots.length - 1}
-            <button
-              class="snapshot-modal-nav next"
-              on:click="{showNextSnapshot}"
-              title="Next (→)"
-              aria-label="Next snapshot"
-            >
-              <i class="fas fa-chevron-right" aria-hidden="true"></i>
-            </button>
-          {/if}
-
-          <div class="snapshot-modal-info">
-            <div><strong>Detected:</strong> {formatDate(selectedSnapshot.timestamp)}</div>
-            {#if selectedSnapshot.metadata?.detection_count != null}
-              <div><strong>Detections:</strong> {selectedSnapshot.metadata.detection_count}</div>
-            {:else if selectedSnapshot.count != null}
-              <div><strong>Detections:</strong> {selectedSnapshot.count}</div>
-            {/if}
-            {#if modalSnapshots.length > 1}
-              <div style="margin-top: 0.4rem; font-size: 0.75rem; opacity: 0.8;">
-                {selectedSnapshotIndex + 1} / {modalSnapshots.length} | Arrow keys to navigate
-              </div>
-            {/if}
-          </div>
-        </div>
-      </div>
-    {/if}
   </div>
 
   <!-- Main Content Row -->
@@ -1111,4 +1049,66 @@
       {/if}
     </div>
   </div>
+
+  <!-- Fullscreen Snapshot Modal -->
+  {#if selectedSnapshot}
+    <div class="snapshot-modal-overlay" on:click="{closeSnapshotModal}">
+      <div
+        bind:this="{modalContentEl}"
+        class="snapshot-modal-content"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Fullscreen snapshot viewer"
+        on:click|stopPropagation
+      >
+        <button
+          bind:this="{closeButtonEl}"
+          class="snapshot-modal-close"
+          on:click="{closeSnapshotModal}"
+          title="Close (ESC)"
+          aria-label="Close snapshot viewer"
+        >
+          <i class="fas fa-times" aria-hidden="true"></i>
+        </button>
+
+        {#if modalSnapshots.length > 1 && selectedSnapshotIndex > 0}
+          <button
+            class="snapshot-modal-nav prev"
+            on:click="{showPreviousSnapshot}"
+            title="Previous (←)"
+            aria-label="Previous snapshot"
+          >
+            <i class="fas fa-chevron-left" aria-hidden="true"></i>
+          </button>
+        {/if}
+
+        <img src="{selectedSnapshot.path}" alt="Fullscreen snapshot" class="snapshot-modal-image" />
+
+        {#if modalSnapshots.length > 1 && selectedSnapshotIndex < modalSnapshots.length - 1}
+          <button
+            class="snapshot-modal-nav next"
+            on:click="{showNextSnapshot}"
+            title="Next (→)"
+            aria-label="Next snapshot"
+          >
+            <i class="fas fa-chevron-right" aria-hidden="true"></i>
+          </button>
+        {/if}
+
+        <div class="snapshot-modal-info">
+          <div><strong>Detected:</strong> {formatDate(selectedSnapshot.timestamp)}</div>
+          {#if selectedSnapshot.metadata?.detection_count != null}
+            <div><strong>Detections:</strong> {selectedSnapshot.metadata.detection_count}</div>
+          {:else if selectedSnapshot.count != null}
+            <div><strong>Detections:</strong> {selectedSnapshot.count}</div>
+          {/if}
+          {#if modalSnapshots.length > 1}
+            <div style="margin-top: 0.4rem; font-size: 0.75rem; opacity: 0.8;">
+              {selectedSnapshotIndex + 1} / {modalSnapshots.length} | Arrow keys to navigate
+            </div>
+          {/if}
+        </div>
+      </div>
+    </div>
+  {/if}
 </div>
