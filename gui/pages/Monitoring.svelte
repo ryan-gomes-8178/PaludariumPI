@@ -468,7 +468,6 @@
 
       await loadSnapshots();
       await loadActivityHistogram();
-      await loadActivityHistogram();
     } catch (err) {
       console.error('Failed to load monitoring data:', err);
       systemStatus = '❌';
