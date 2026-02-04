@@ -104,6 +104,8 @@
         },
       ],
     };
+  } else {
+    chartData = { labels: [], datasets: [] };
   }
 </script>
 
