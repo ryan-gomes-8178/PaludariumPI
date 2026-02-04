@@ -365,6 +365,8 @@
   let selectedSnapshot = null;
   let selectedSnapshotIndex = -1;
   let modalSnapshots = [];
+  let modalContentEl;
+  let closeButtonEl;
 
   let videoEl;
   let hlsPlayer;
@@ -537,9 +539,8 @@
 
     // Focus the close button after the modal renders
     setTimeout(() => {
-      const closeButton = document.querySelector('.snapshot-modal-close');
-      if (closeButton) {
-        closeButton.focus();
+      if (closeButtonEl) {
+        closeButtonEl.focus();
       }
     }, 0);
   };
@@ -584,10 +585,9 @@
       event.preventDefault();
       event.stopPropagation();
 
-      const modalContent = document.querySelector('.snapshot-modal-content');
-      if (!modalContent) return;
+      if (!modalContentEl) return;
 
-      const focusableElements = modalContent.querySelectorAll(
+      const focusableElements = modalContentEl.querySelectorAll(
         'button:not([disabled]), [tabindex]:not([tabindex="-1"])',
       );
       const focusableArray = Array.from(focusableElements);
@@ -675,6 +675,7 @@
     {#if selectedSnapshot}
       <div class="snapshot-modal-overlay" on:click="{closeSnapshotModal}">
         <div
+          bind:this="{modalContentEl}"
           class="snapshot-modal-content"
           role="dialog"
           aria-modal="true"
@@ -682,6 +683,7 @@
           on:click|stopPropagation
         >
           <button
+            bind:this="{closeButtonEl}"
             class="snapshot-modal-close"
             on:click="{closeSnapshotModal}"
             title="Close (ESC)"
