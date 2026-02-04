@@ -1,3 +1,19 @@
+<style>
+  .form-section {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+  }
+
+  .form-section h5 {
+    margin-bottom: 15px;
+  }
+
+  .schedule-item {
+    background-color: #f9f9f9;
+  }
+</style>
+
 <script>
   import { Modal, ModalCloseButton } from '@keenmate/svelte-adminlte';
   import { onMount } from 'svelte';
@@ -22,12 +38,12 @@
       rest_angle: 0,
       rotate_duration: 1000,
       feed_hold_duration: 1500,
-      portion_size: 1.0
+      portion_size: 1.0,
     },
     schedule: {
       morning: { time: '08:00', enabled: true, portion_size: 1.0 },
-      night: { time: '20:00', enabled: true, portion_size: 1.0 }
-    }
+      night: { time: '20:00', enabled: true, portion_size: 1.0 },
+    },
   };
 
   let enclosures = [];
@@ -57,14 +73,14 @@
 
     const saveFunction = formData.id ? updateFeeder : addFeeder;
     const action = formData.id ? 'updated' : 'saved';
-    
+
     saveFunction(formData, (data) => {
       console.log('Feeder save response:', data);
       isSaving = false;
       if (data && !data.error) {
         successNotification(
           $_(`notification.feeder.${action}`, { default: `Feeder ${action} successfully` }),
-          $_('feeders.menu.title', { default: 'Feeders' })
+          $_('feeders.menu.title', { default: 'Feeders' }),
         );
         console.log('Dispatching save event to reload feeders list');
         dispatch('save');
@@ -72,10 +88,7 @@
       } else {
         error = data?.error || 'Failed to save feeder';
         console.error('Save error:', error);
-        errorNotification(
-          error,
-          $_('feeders.menu.title', { default: 'Feeders' })
-        );
+        errorNotification(error, $_('feeders.menu.title', { default: 'Feeders' }));
       }
     });
   }
@@ -106,12 +119,12 @@
           rest_angle: 0,
           rotate_duration: 1000,
           feed_hold_duration: 1500,
-          portion_size: 1.0
+          portion_size: 1.0,
         },
         schedule: {
           morning: { time: '08:00', enabled: true, portion_size: 1.0 },
-          night: { time: '20:00', enabled: true, portion_size: 1.0 }
-        }
+          night: { time: '20:00', enabled: true, portion_size: 1.0 },
+        },
       };
     }
     error = '';
@@ -124,24 +137,27 @@
     }
   }
 
-  onMount(() => {
-  });
+  onMount(() => {});
 </script>
 
-<Modal bind:show="{wrapper_show}" bind:hide="{wrapper_hide}" title="{feeder ? $_('edit_feeder', { default: 'Edit Feeder' }) : $_('add_feeder', { default: 'Add Feeder' })}">
+<Modal
+  bind:show="{wrapper_show}"
+  bind:hide="{wrapper_hide}"
+  title="{feeder ? $_('edit_feeder', { default: 'Edit Feeder' }) : $_('add_feeder', { default: 'Add Feeder' })}"
+>
   <ModalCloseButton />
-  
+
   {#if error}
     <div class="alert alert-danger">{error}</div>
   {/if}
 
-  <form on:submit|preventDefault={handleSubmit}>
+  <form on:submit|preventDefault="{handleSubmit}">
     <div class="form-group">
       <label for="name">{$_('name', { default: 'Name' })}:</label>
       <input
         id="name"
         type="text"
-        bind:value={formData.name}
+        bind:value="{formData.name}"
         required
         placeholder="e.g., Main Tank Feeder"
         class="form-control"
@@ -150,10 +166,10 @@
 
     <div class="form-group">
       <label for="enclosure">{$_('enclosure', { default: 'Enclosure' })}:</label>
-      <select id="enclosure" bind:value={formData.enclosure} required class="form-control">
+      <select id="enclosure" bind:value="{formData.enclosure}" required class="form-control">
         <option value="">Select an enclosure</option>
         {#each enclosures as enc (enc.id)}
-          <option value={enc.id}>{enc.name}</option>
+          <option value="{enc.id}">{enc.name}</option>
         {/each}
       </select>
     </div>
@@ -163,7 +179,7 @@
       <input
         id="hardware"
         type="text"
-        bind:value={formData.hardware}
+        bind:value="{formData.hardware}"
         required
         placeholder="e.g., 17"
         class="form-control"
@@ -172,7 +188,7 @@
 
     <div class="form-group">
       <label>
-        <input type="checkbox" bind:checked={formData.enabled} />
+        <input type="checkbox" bind:checked="{formData.enabled}" />
         {$_('enabled', { default: 'Enabled' })}
       </label>
     </div>
@@ -186,7 +202,7 @@
           <input
             id="feed_angle"
             type="number"
-            bind:value={formData.servo_config.feed_angle}
+            bind:value="{formData.servo_config.feed_angle}"
             min="0"
             max="180"
             class="form-control"
@@ -198,7 +214,7 @@
           <input
             id="rest_angle"
             type="number"
-            bind:value={formData.servo_config.rest_angle}
+            bind:value="{formData.servo_config.rest_angle}"
             min="0"
             max="180"
             class="form-control"
@@ -212,7 +228,7 @@
           <input
             id="rotate_duration"
             type="number"
-            bind:value={formData.servo_config.rotate_duration}
+            bind:value="{formData.servo_config.rotate_duration}"
             min="100"
             class="form-control"
           />
@@ -223,7 +239,7 @@
           <input
             id="feed_hold_duration"
             type="number"
-            bind:value={formData.servo_config.feed_hold_duration}
+            bind:value="{formData.servo_config.feed_hold_duration}"
             min="100"
             class="form-control"
           />
@@ -235,7 +251,7 @@
         <input
           id="portion_size"
           type="number"
-          bind:value={formData.servo_config.portion_size}
+          bind:value="{formData.servo_config.portion_size}"
           min="0.1"
           step="0.1"
           class="form-control"
@@ -253,12 +269,7 @@
               <label for="{schedName}-time">
                 {schedName.charAt(0).toUpperCase() + schedName.slice(1)} Time:
               </label>
-              <input
-                id="{schedName}-time"
-                type="time"
-                bind:value={schedData.time}
-                class="form-control"
-              />
+              <input id="{schedName}-time" type="time" bind:value="{schedData.time}" class="form-control" />
             </div>
 
             <div class="form-group col-md-4">
@@ -266,7 +277,7 @@
               <input
                 id="{schedName}-portion"
                 type="number"
-                bind:value={schedData.portion_size}
+                bind:value="{schedData.portion_size}"
                 min="0.1"
                 step="0.1"
                 class="form-control"
@@ -275,7 +286,7 @@
 
             <div class="form-group col-md-4 d-flex align-items-end">
               <label class="mb-0">
-                <input type="checkbox" bind:checked={schedData.enabled} />
+                <input type="checkbox" bind:checked="{schedData.enabled}" />
                 {$_('enabled', { default: 'Enabled' })}
               </label>
             </div>
@@ -285,25 +296,9 @@
     </div>
 
     <div class="form-group">
-      <button type="submit" class="btn btn-primary" disabled={isSaving}>
+      <button type="submit" class="btn btn-primary" disabled="{isSaving}">
         {isSaving ? $_('saving', { default: 'Saving...' }) : $_('save', { default: 'Save' })}
       </button>
     </div>
   </form>
 </Modal>
-
-<style>
-  .form-section {
-    margin-top: 20px;
-    padding-top: 20px;
-    border-top: 1px solid #eee;
-  }
-
-  .form-section h5 {
-    margin-bottom: 15px;
-  }
-
-  .schedule-item {
-    background-color: #f9f9f9;
-  }
-</style>

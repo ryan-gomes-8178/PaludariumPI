@@ -202,7 +202,8 @@ shame if TerrariumPI gets next victim of
 '[A smart fish tank left a casino vulnerable to hackers](http://money.cnn.com/2017/07/19/technology/fish-tank-hack-darktrace/index.html)'
 :P
 
-For a safe remote-access setup, see [docs/_faq/remote_access.md](docs/_faq/remote_access.md).
+For a safe remote-access setup, see
+[docs/\_faq/remote_access.md](docs/_faq/remote_access.md).
 
 ## Updating
 
