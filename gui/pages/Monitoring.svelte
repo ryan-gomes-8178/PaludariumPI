@@ -90,7 +90,7 @@
   .snapshot-overlay {
     position: absolute;
     inset: 0;
-    background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.7) 100%);
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.7) 100%);
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
@@ -225,7 +225,9 @@
     background: #00d4ff;
     border-radius: 0.15rem;
     opacity: 0.7;
-    transition: opacity 0.2s, background 0.2s;
+    transition:
+      opacity 0.2s,
+      background 0.2s;
     position: relative;
     min-height: 2px;
   }
@@ -278,7 +280,9 @@
   let currentPage = 0;
   let fromDate = '';
   let toDate = '';
-  
+  let fromTime = '00:00';
+  let toTime = '23:59';
+
   const snapshotsPerPage = 20;
 
   const nocturnalEyeApi = `${ApiUrl}/nocturnal-eye/api`;
@@ -388,10 +392,15 @@
     try {
       const offset = currentPage * snapshotsPerPage;
       let url = `${nocturnalEyeApi}/snapshots/recent?limit=${snapshotsPerPage}&offset=${offset}`;
-      
-      if (fromDate) url += `&from=${fromDate}`;
-      if (toDate) url += `&to=${toDate}`;
-      
+
+      if (fromDate && toDate) {
+        const fromDateTime = `${fromDate}T${fromTime}:00`;
+        const toDateTime = `${toDate}T${toTime}:59`;
+        url = `${nocturnalEyeApi}/snapshots/range?limit=${snapshotsPerPage}&offset=${offset}`;
+        url += `&start=${encodeURIComponent(fromDateTime)}`;
+        url += `&end=${encodeURIComponent(toDateTime)}`;
+      }
+
       const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
@@ -399,7 +408,7 @@
           ...snap,
           path: mapSnapshotPath(snap.path),
         }));
-        snapshotTotal = data.count || snapshotTotal;
+        snapshotTotal = data.total || data.count || snapshotTotal;
       }
     } catch (err) {
       console.error('Failed to load snapshots:', err);
@@ -426,6 +435,8 @@
   const clearDateRange = () => {
     fromDate = '';
     toDate = '';
+    fromTime = '00:00';
+    toTime = '23:59';
     currentPage = 0;
     loadSnapshots();
   };
@@ -440,12 +451,14 @@
 
   onMount(() => {
     setCustomPageTitle($_('monitoring.title', { default: 'Monitoring' }));
-    
+
     // Initialize date inputs with today's date
     const today = new Date().toISOString().split('T')[0];
     toDate = today;
     fromDate = today;
-    
+    fromTime = '00:00';
+    toTime = '23:59';
+
     setupHls();
     loadData();
 
@@ -507,21 +520,14 @@
             <i class="fas fa-video mr-2"></i>Live Stream
           </h3>
           <div class="card-tools">
-            <button class="btn btn-sm btn-default mr-1" on:click={() => window.location.reload()}>
+            <button class="btn btn-sm btn-default mr-1" on:click="{() => window.location.reload()}">
               <i class="fas fa-sync-alt"></i> Refresh
             </button>
           </div>
         </div>
         <div class="card-body">
           <div class="monitoring-stream-wrapper">
-            <video
-              class="monitoring-stream"
-              bind:this={videoEl}
-              controls
-              autoplay
-              muted
-              playsinline
-            ></video>
+            <video class="monitoring-stream" bind:this="{videoEl}" controls autoplay muted playsinline></video>
           </div>
         </div>
       </div>
@@ -539,31 +545,25 @@
             <div class="date-filter-row">
               <div class="date-input-group">
                 <label for="fromDate">From</label>
-                <input
-                  type="date"
-                  id="fromDate"
-                  bind:value={fromDate}
-                />
+                <input type="date" id="fromDate" bind:value={fromDate} />
+              </div>
+              <div class="date-input-group">
+                <label for="fromTime">Time</label>
+                <input type="time" id="fromTime" bind:value={fromTime} />
               </div>
               <div class="date-input-group">
                 <label for="toDate">To</label>
-                <input
-                  type="date"
-                  id="toDate"
-                  bind:value={toDate}
-                />
+                <input type="date" id="toDate" bind:value={toDate} />
+              </div>
+              <div class="date-input-group">
+                <label for="toTime">Time</label>
+                <input type="time" id="toTime" bind:value={toTime} />
               </div>
               <div class="filter-buttons">
-                <button
-                  class="btn btn-sm btn-success"
-                  on:click={applyDateRange}
-                >
+                <button class="btn btn-sm btn-success" on:click={applyDateRange}>
                   <i class="fas fa-check"></i> Apply Range
                 </button>
-                <button
-                  class="btn btn-sm btn-outline-secondary"
-                  on:click={clearDateRange}
-                >
+                <button class="btn btn-sm btn-outline-secondary" on:click={clearDateRange}>
                   <i class="fas fa-times"></i> Clear Range
                 </button>
               </div>
@@ -573,11 +573,7 @@
             <div class="snapshots-grid">
               {#each snapshots as snapshot}
                 <div class="snapshot-card">
-                  <img
-                    src={snapshot.path}
-                    alt="Snapshot"
-                    class="snapshot-thumb"
-                  />
+                  <img src="{snapshot.path}" alt="Snapshot" class="snapshot-thumb" />
                   <div class="snapshot-overlay">
                     <div class="snapshot-time">
                       {formatTimeShort(snapshot.timestamp)}
@@ -594,27 +590,21 @@
 
             <!-- Pagination Info -->
             <div class="pagination-controls">
-              <button
-                class="btn btn-sm btn-outline-secondary"
-                disabled={currentPage === 0}
-                on:click={previousPage}
-              >
+              <button class="btn btn-sm btn-outline-secondary" disabled="{currentPage === 0}" on:click="{previousPage}">
                 <i class="fas fa-chevron-left"></i> Newer
               </button>
               <span class="pagination-info">
                 {#if snapshotTotal > 0}
-                  {currentPage * snapshotsPerPage + 1} - {Math.min(
-                    (currentPage + 1) * snapshotsPerPage,
-                    snapshotTotal
-                  )} of {snapshotTotal}
+                  {currentPage * snapshotsPerPage + 1} - {Math.min((currentPage + 1) * snapshotsPerPage, snapshotTotal)}
+                  of {snapshotTotal}
                 {:else}
                   Page {currentPage + 1}
                 {/if}
               </span>
               <button
                 class="btn btn-sm btn-outline-secondary"
-                disabled={snapshotTotal !== 0 && (currentPage + 1) * snapshotsPerPage >= snapshotTotal}
-                on:click={nextPage}
+                disabled="{snapshotTotal !== 0 && (currentPage + 1) * snapshotsPerPage >= snapshotTotal}"
+                on:click="{nextPage}"
               >
                 Older <i class="fas fa-chevron-right"></i>
               </button>
@@ -682,7 +672,7 @@
                   {/if}
                   {#if event.path}
                     <img
-                      src={event.path}
+                      src="{event.path}"
                       alt="Detection"
                       style="width: 100%; border-radius: 0.25rem; margin-top: 6px;"
                     />
