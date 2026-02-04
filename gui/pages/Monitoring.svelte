@@ -558,10 +558,16 @@
     if (!selectedSnapshot) return;
 
     if (event.key === 'Escape') {
+      event.preventDefault();
+      event.stopPropagation();
       closeSnapshotModal();
     } else if (event.key === 'ArrowLeft') {
+      event.preventDefault();
+      event.stopPropagation();
       showPreviousSnapshot();
     } else if (event.key === 'ArrowRight') {
+      event.preventDefault();
+      event.stopPropagation();
       showNextSnapshot();
     }
   };
