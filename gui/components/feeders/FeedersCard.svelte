@@ -1,89 +1,3 @@
-<script>
-  import { createEventDispatcher } from 'svelte';
-  import { manualFeed, testFeederServo } from '../../providers/api';
-
-  export let feeder;
-
-  const dispatch = createEventDispatcher();
-  let isFeedingNow = false;
-
-  function triggerManualFeed() {
-    try {
-      isFeedingNow = true;
-      manualFeed(feeder.id, feeder.servo_config.portion_size, (data) => {
-        dispatch('reload');
-        isFeedingNow = false;
-      });
-    } catch (e) {
-      console.error('Feed error:', e);
-      isFeedingNow = false;
-    }
-  }
-
-  function testServo() {
-    try {
-      testFeederServo(feeder.id, (data) => {
-        // Handle servo test result if needed
-      });
-    } catch (e) {
-      console.error('Test error:', e);
-    }
-  }
-</script>
-
-<div class="feeder-card">
-  <div class="card-header">
-    <h3>{feeder.name}</h3>
-    <div class="status">
-      {#if feeder.enabled}
-        <span class="badge badge-success">Enabled</span>
-      {:else}
-        <span class="badge badge-secondary">Disabled</span>
-      {/if}
-    </div>
-  </div>
-
-  <div class="card-body">
-    <div class="info-row">
-      <label>Enclosure:</label>
-      <span>{feeder.enclosure}</span>
-    </div>
-    <div class="info-row">
-      <label>GPIO:</label>
-      <span>{feeder.hardware}</span>
-    </div>
-    <div class="info-row">
-      <label>Portion Size:</label>
-      <span>{feeder.servo_config.portion_size}g</span>
-    </div>
-  </div>
-
-  <div class="card-actions">
-    <button
-      class="btn btn-sm btn-success"
-      on:click={triggerManualFeed}
-      disabled={isFeedingNow || !feeder.enabled}
-      title={feeder.enabled ? 'Feed Now' : 'Feeder is disabled'}
-    >
-      {isFeedingNow ? 'Feeding...' : 'Feed Now'}
-    </button>
-    <button
-      class="btn btn-sm btn-info"
-      on:click={testServo}
-      disabled={!feeder.enabled}
-      title={feeder.enabled ? 'Test Servo' : 'Feeder is disabled'}
-    >
-      Test
-    </button>
-    <button class="btn btn-sm btn-warning" on:click={() => dispatch('edit')}>
-      Edit
-    </button>
-    <button class="btn btn-sm btn-danger" on:click={() => dispatch('delete')}>
-      Delete
-    </button>
-  </div>
-</div>
-
 <style>
   .feeder-card {
     border: 1px solid #ddd;
@@ -167,3 +81,85 @@
     min-width: 70px;
   }
 </style>
+
+<script>
+  import { createEventDispatcher } from 'svelte';
+  import { manualFeed, testFeederServo } from '../../providers/api';
+
+  export let feeder;
+
+  const dispatch = createEventDispatcher();
+  let isFeedingNow = false;
+
+  function triggerManualFeed() {
+    try {
+      isFeedingNow = true;
+      manualFeed(feeder.id, feeder.servo_config.portion_size, (data) => {
+        dispatch('reload');
+        isFeedingNow = false;
+      });
+    } catch (e) {
+      console.error('Feed error:', e);
+      isFeedingNow = false;
+    }
+  }
+
+  function testServo() {
+    try {
+      testFeederServo(feeder.id, (data) => {
+        // Handle servo test result if needed
+      });
+    } catch (e) {
+      console.error('Test error:', e);
+    }
+  }
+</script>
+
+<div class="feeder-card">
+  <div class="card-header">
+    <h3>{feeder.name}</h3>
+    <div class="status">
+      {#if feeder.enabled}
+        <span class="badge badge-success">Enabled</span>
+      {:else}
+        <span class="badge badge-secondary">Disabled</span>
+      {/if}
+    </div>
+  </div>
+
+  <div class="card-body">
+    <div class="info-row">
+      <label>Enclosure:</label>
+      <span>{feeder.enclosure}</span>
+    </div>
+    <div class="info-row">
+      <label>GPIO:</label>
+      <span>{feeder.hardware}</span>
+    </div>
+    <div class="info-row">
+      <label>Portion Size:</label>
+      <span>{feeder.servo_config.portion_size}g</span>
+    </div>
+  </div>
+
+  <div class="card-actions">
+    <button
+      class="btn btn-sm btn-success"
+      on:click="{triggerManualFeed}"
+      disabled="{isFeedingNow || !feeder.enabled}"
+      title="{feeder.enabled ? 'Feed Now' : 'Feeder is disabled'}"
+    >
+      {isFeedingNow ? 'Feeding...' : 'Feed Now'}
+    </button>
+    <button
+      class="btn btn-sm btn-info"
+      on:click="{testServo}"
+      disabled="{!feeder.enabled}"
+      title="{feeder.enabled ? 'Test Servo' : 'Feeder is disabled'}"
+    >
+      Test
+    </button>
+    <button class="btn btn-sm btn-warning" on:click="{() => dispatch('edit')}"> Edit </button>
+    <button class="btn btn-sm btn-danger" on:click="{() => dispatch('delete')}"> Delete </button>
+  </div>
+</div>

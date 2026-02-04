@@ -51,7 +51,7 @@ export const toggleGraphPeriod = (graph, period, customDates = null) => {
     store[graph].customStart = null;
     store[graph].customEnd = null;
   }
-  
+
   store[graph].changed = true;
   graphs.set(store);
 };

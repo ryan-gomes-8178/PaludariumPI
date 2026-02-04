@@ -65,12 +65,7 @@
 </script>
 
 <div class="btn-group">
-  <button
-    type="button"
-    class="btn btn-tool dropdown-toggle"
-    data-toggle="dropdown"
-    on:click={onCalendarClick}
-  >
+  <button type="button" class="btn btn-tool dropdown-toggle" data-toggle="dropdown" on:click="{onCalendarClick}">
     <i class="fas fa-calendar-alt"></i>
   </button>
 
@@ -83,33 +78,34 @@
     <button
       class="dropdown-item"
       class:active="{$graphs[id].period === 'day'}"
-      on:click={() => toggleGraphPeriod(id, 'day')}
-    >{$_('graph.period.day', { default: 'Day' })}</button>
+      on:click="{() => toggleGraphPeriod(id, 'day')}">{$_('graph.period.day', { default: 'Day' })}</button
+    >
 
     <button
       class="dropdown-item"
       class:active="{$graphs[id].period === 'week'}"
-      on:click={() => toggleGraphPeriod(id, 'week')}
-    >{$_('graph.period.week', { default: 'Week' })}</button>
+      on:click="{() => toggleGraphPeriod(id, 'week')}">{$_('graph.period.week', { default: 'Week' })}</button
+    >
 
     <button
       class="dropdown-item"
       class:active="{$graphs[id].period === 'month'}"
-      on:click={() => toggleGraphPeriod(id, 'month')}
-    >{$_('graph.period.month', { default: 'Month' })}</button>
+      on:click="{() => toggleGraphPeriod(id, 'month')}">{$_('graph.period.month', { default: 'Month' })}</button
+    >
 
     <button
       class="dropdown-item"
       class:active="{$graphs[id].period === 'year'}"
-      on:click={() => toggleGraphPeriod(id, 'year')}
-    >{$_('graph.period.year', { default: 'Year' })}</button>
+      on:click="{() => toggleGraphPeriod(id, 'year')}">{$_('graph.period.year', { default: 'Year' })}</button
+    >
 
     {#if replaced}
       <button
         class="dropdown-item"
         class:active="{$graphs[id].period === 'replaced'}"
-        on:click={() => toggleGraphPeriod(id, 'replaced')}
-      >{$_('graph.period.replaced', { default: 'Replaced' })}</button>
+        on:click="{() => toggleGraphPeriod(id, 'replaced')}"
+        >{$_('graph.period.replaced', { default: 'Replaced' })}</button
+      >
     {/if}
 
     <!-- Custom period option: initialize and show date inputs.
@@ -117,45 +113,42 @@
     <button
       class="dropdown-item"
       class:active="{$graphs[id].period === 'custom'}"
-      on:click|stopPropagation={onCustomClick}
-    >Custom</button>
+      on:click|stopPropagation="{onCustomClick}">Custom</button
+    >
 
     {#if showCustom}
-      <div class="dropdown-item" style="white-space: nowrap; display:flex; flex-direction:column; gap:0.5rem;" on:click|stopPropagation role="presentation">
+      <div
+        class="dropdown-item"
+        style="white-space: nowrap; display:flex; flex-direction:column; gap:0.5rem;"
+        on:click|stopPropagation
+        role="presentation"
+      >
         <div style="display:flex; gap:0.5rem; align-items:center;">
           {#if includeTime}
             <input
-              bind:this={customStartInput}
+              bind:this="{customStartInput}"
               type="datetime-local"
-              bind:value={customStart}
-              on:change={onCustomDateChange}
+              bind:value="{customStart}"
+              on:change="{onCustomDateChange}"
             />
           {:else}
             <input
-              bind:this={customStartInput}
+              bind:this="{customStartInput}"
               type="date"
-              bind:value={customStart}
-              on:change={onCustomDateChange}
+              bind:value="{customStart}"
+              on:change="{onCustomDateChange}"
             />
           {/if}
           <span style="align-self:center;">—</span>
           {#if includeTime}
-            <input
-              type="datetime-local"
-              bind:value={customEnd}
-              on:change={onCustomDateChange}
-            />
+            <input type="datetime-local" bind:value="{customEnd}" on:change="{onCustomDateChange}" />
           {:else}
-            <input
-              type="date"
-              bind:value={customEnd}
-              on:change={onCustomDateChange}
-            />
+            <input type="date" bind:value="{customEnd}" on:change="{onCustomDateChange}" />
           {/if}
         </div>
 
         <div style="display:flex; gap:0.5rem; align-items:center;">
-          <input id="include-time-{id}" type="checkbox" bind:checked={includeTime} on:change={toggleIncludeTime} />
+          <input id="include-time-{id}" type="checkbox" bind:checked="{includeTime}" on:change="{toggleIncludeTime}" />
           <label for="include-time-{id}" style="font-size:0.85rem; margin:0;">Include time</label>
         </div>
       </div>
