@@ -384,7 +384,7 @@
   };
 
   const calculateBucketMinutes = (start, end) => {
-    const totalMinutes = Math.max((end - start) / 60000, 1);
+    const totalMinutes = Math.max((end.getTime() - start.getTime()) / 60000, 1);
     const candidateBuckets = [15, 30, 60, 120, 180, 240, 360, 720];
     const targetBuckets = 12;
 
@@ -403,16 +403,21 @@
 
       const start = new Date(`${activityFromDate}T${activityFromTime}:00`);
       const end = new Date(`${activityToDate}T${activityToTime}:59`);
-      if (end <= start) return;
+      if (end <= start) {
+        window.alert('The end date and time must be after the start date and time.');
+        return;
+      }
 
       activityBucketMinutes = calculateBucketMinutes(start, end);
 
       const url = `${nocturnalEyeApi}/activity/histogram?start=${start.toISOString()}&end=${end.toISOString()}&bucket_minutes=${activityBucketMinutes}`;
       const res = await fetch(url);
-      if (res.ok) {
-        const data = await res.json();
-        activityBuckets = data.buckets || [];
+      if (!res.ok) {
+        console.error('Failed to load activity histogram: HTTP', res.status);
+        return;
       }
+      const data = await res.json();
+      activityBuckets = data.buckets || [];
     } catch (err) {
       console.error('Failed to load activity histogram:', err);
     }
@@ -810,8 +815,9 @@
                 </div>
               </div>
               <div class="hourly-x-axis">
+                {@const labelStep = Math.max(Math.floor(activityBuckets.length / 6), 1)}
                 {#each activityBuckets as bucket, idx}
-                  {#if idx % activityLabelStep === 0}
+                  {#if idx % labelStep === 0}
                     <div class="hour-label">{formatBucketLabel(bucket.start)}</div>
                   {:else}
                     <div class="hour-label"></div>
