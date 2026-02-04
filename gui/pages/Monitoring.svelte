@@ -577,14 +577,18 @@
   const loadSnapshots = async () => {
     try {
       const offset = currentPage * snapshotsPerPage;
-      let url = `${nocturnalEyeApi}/snapshots/recent?limit=${snapshotsPerPage}&offset=${offset}`;
+      let url = `${nocturnalEyeApi}/snapshots/recent?limit=${snapshotsPerPage}`;
 
+      // Use range endpoint only if user has explicitly set both dates
       if (fromDate && toDate) {
         const fromDateTime = `${fromDate}T${fromTime}:00`;
         const toDateTime = `${toDate}T${toTime}:59`;
         url = `${nocturnalEyeApi}/snapshots/range?limit=${snapshotsPerPage}&offset=${offset}`;
         url += `&start=${encodeURIComponent(fromDateTime)}`;
         url += `&end=${encodeURIComponent(toDateTime)}`;
+      } else if (offset > 0) {
+        // Add offset for pagination when not using range filter
+        url += `&offset=${offset}`;
       }
 
       const res = await fetch(url);
@@ -715,13 +719,8 @@
   onMount(() => {
     setCustomPageTitle($_('monitoring.title', { default: 'Monitoring' }));
 
-    // Initialize date inputs with today's date
+    // Initialize activity date inputs with today's date
     const today = new Date().toISOString().split('T')[0];
-    toDate = today;
-    fromDate = today;
-    fromTime = '00:00';
-    toTime = '23:59';
-
     activityFromDate = today;
     activityToDate = today;
     activityFromTime = '00:00';
