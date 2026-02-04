@@ -411,10 +411,12 @@
 
       const url = `${nocturnalEyeApi}/activity/histogram?start=${start.toISOString()}&end=${end.toISOString()}&bucket_minutes=${activityBucketMinutes}`;
       const res = await fetch(url);
-      if (res.ok) {
-        const data = await res.json();
-        activityBuckets = data.buckets || [];
+      if (!res.ok) {
+        console.error('Failed to load activity histogram: HTTP', res.status);
+        return;
       }
+      const data = await res.json();
+      activityBuckets = data.buckets || [];
     } catch (err) {
       console.error('Failed to load activity histogram:', err);
     }
