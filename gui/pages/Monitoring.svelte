@@ -718,8 +718,10 @@
 
           <div class="snapshot-modal-info">
             <div><strong>Detected:</strong> {formatDate(selectedSnapshot.timestamp)}</div>
-            {#if selectedSnapshot.metadata?.detection_count}
+            {#if selectedSnapshot.metadata?.detection_count != null}
               <div><strong>Detections:</strong> {selectedSnapshot.metadata.detection_count}</div>
+            {:else if selectedSnapshot.count != null}
+              <div><strong>Detections:</strong> {selectedSnapshot.count}</div>
             {/if}
             {#if modalSnapshots.length > 1}
               <div style="margin-top: 0.4rem; font-size: 0.75rem; opacity: 0.8;">
@@ -792,7 +794,12 @@
                   role="button"
                   tabindex="0"
                   on:click="{() => openSnapshotModal(snapshot, idx, snapshots)}"
-                  on:keydown="{(event) => event.key === 'Enter' && openSnapshotModal(snapshot, idx, snapshots)}"
+                  on:keydown="{(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault();
+                      openSnapshotModal(snapshot, idx, snapshots);
+                    }
+                  }}"
                 >
                   <img src="{snapshot.path}" alt="Snapshot" class="snapshot-thumb" />
                   <div class="snapshot-overlay">
@@ -896,7 +903,15 @@
                       src="{event.path}"
                       alt="Detection"
                       style="width: 100%; border-radius: 0.25rem; margin-top: 6px; cursor: pointer;"
+                      role="button"
+                      tabindex="0"
                       on:click="{() => openSnapshotModal(event, 0, [event])}"
+                      on:keydown="{(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          openSnapshotModal(event, 0, [event]);
+                        }
+                      }}"
                     />
                   {/if}
                 </div>
