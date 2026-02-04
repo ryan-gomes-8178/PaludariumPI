@@ -328,6 +328,7 @@
   let activityToDate = '';
   let activityToTime = '23:59';
   let activityBucketMinutes = 60;
+  let activityLabelStep = 1;
 
   const snapshotsPerPage = 20;
 
@@ -416,6 +417,8 @@
       console.error('Failed to load activity histogram:', err);
     }
   };
+
+  $: activityLabelStep = Math.max(Math.floor(activityBuckets.length / 6), 1);
 
   const setupHls = () => {
     if (!videoEl) return;
@@ -807,9 +810,8 @@
                 </div>
               </div>
               <div class="hourly-x-axis">
-                {@const labelStep = Math.max(Math.floor(activityBuckets.length / 6), 1)}
                 {#each activityBuckets as bucket, idx}
-                  {#if idx % labelStep === 0}
+                  {#if idx % activityLabelStep === 0}
                     <div class="hour-label">{formatBucketLabel(bucket.start)}</div>
                   {:else}
                     <div class="hour-label"></div>
