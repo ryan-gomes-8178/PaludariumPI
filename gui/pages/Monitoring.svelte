@@ -90,7 +90,7 @@
   .snapshot-overlay {
     position: absolute;
     inset: 0;
-    background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.7) 100%);
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.7) 100%);
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
@@ -313,7 +313,9 @@
     background: #00d4ff;
     border-radius: 0.15rem;
     opacity: 0.7;
-    transition: opacity 0.2s, background 0.2s;
+    transition:
+      opacity 0.2s,
+      background 0.2s;
     position: relative;
     min-height: 2px;
   }
@@ -370,7 +372,7 @@
   let currentPage = 0;
   let fromDate = '';
   let toDate = '';
-  
+
   const snapshotsPerPage = 20;
 
   const nocturnalEyeApi = `${ApiUrl}/nocturnal-eye/api`;
@@ -480,10 +482,10 @@
     try {
       const offset = currentPage * snapshotsPerPage;
       let url = `${nocturnalEyeApi}/snapshots/recent?limit=${snapshotsPerPage}&offset=${offset}`;
-      
+
       if (fromDate) url += `&from=${fromDate}`;
       if (toDate) url += `&to=${toDate}`;
-      
+
       const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
@@ -576,12 +578,12 @@
 
   onMount(() => {
     setCustomPageTitle($_('monitoring.title', { default: 'Monitoring' }));
-    
+
     // Initialize date inputs with today's date
     const today = new Date().toISOString().split('T')[0];
     toDate = today;
     fromDate = today;
-    
+
     setupHls();
     loadData();
 
@@ -635,52 +637,48 @@
       </div>
     </div>
 
-      {#if selectedSnapshot}
-        <div class="snapshot-modal-overlay" on:click={closeSnapshotModal}>
-          <div class="snapshot-modal-content" on:click|stopPropagation>
-            <button
-              class="snapshot-modal-close"
-              on:click={closeSnapshotModal}
-              title="Close (ESC)"
-              aria-label="Close snapshot viewer"
-            >
-              <i class="fas fa-times" aria-hidden="true"></i>
+    {#if selectedSnapshot}
+      <div class="snapshot-modal-overlay" on:click="{closeSnapshotModal}">
+        <div class="snapshot-modal-content" on:click|stopPropagation>
+          <button
+            class="snapshot-modal-close"
+            on:click="{closeSnapshotModal}"
+            title="Close (ESC)"
+            aria-label="Close snapshot viewer"
+          >
+            <i class="fas fa-times" aria-hidden="true"></i>
+          </button>
+
+          {#if modalSnapshots.length > 1 && selectedSnapshotIndex > 0}
+            <button class="snapshot-modal-nav prev" on:click="{showPreviousSnapshot}" title="Previous (←)">
+              <i class="fas fa-chevron-left"></i>
             </button>
+          {/if}
 
-            {#if modalSnapshots.length > 1 && selectedSnapshotIndex > 0}
-              <button class="snapshot-modal-nav prev" on:click={showPreviousSnapshot} title="Previous (←)">
-                <i class="fas fa-chevron-left"></i>
-              </button>
+          <img src="{selectedSnapshot.path}" alt="Fullscreen snapshot" class="snapshot-modal-image" />
+
+          {#if modalSnapshots.length > 1 && selectedSnapshotIndex < modalSnapshots.length - 1}
+            <button class="snapshot-modal-nav next" on:click="{showNextSnapshot}" title="Next (→)">
+              <i class="fas fa-chevron-right"></i>
+            </button>
+          {/if}
+
+          <div class="snapshot-modal-info">
+            <div><strong>Detected:</strong> {formatDate(selectedSnapshot.timestamp)}</div>
+            {#if selectedSnapshot.metadata?.detection_count != null}
+              <div><strong>Detections:</strong> {selectedSnapshot.metadata.detection_count}</div>
+            {:else if selectedSnapshot.count != null}
+              <div><strong>Detections:</strong> {selectedSnapshot.count}</div>
             {/if}
-
-            <img
-              src={selectedSnapshot.path}
-              alt="Fullscreen snapshot"
-              class="snapshot-modal-image"
-            />
-
-            {#if modalSnapshots.length > 1 && selectedSnapshotIndex < modalSnapshots.length - 1}
-              <button class="snapshot-modal-nav next" on:click={showNextSnapshot} title="Next (→)">
-                <i class="fas fa-chevron-right"></i>
-              </button>
+            {#if modalSnapshots.length > 1}
+              <div style="margin-top: 0.4rem; font-size: 0.75rem; opacity: 0.8;">
+                {selectedSnapshotIndex + 1} / {modalSnapshots.length} | Arrow keys to navigate
+              </div>
             {/if}
-
-            <div class="snapshot-modal-info">
-              <div><strong>Detected:</strong> {formatDate(selectedSnapshot.timestamp)}</div>
-              {#if selectedSnapshot.metadata?.detection_count != null}
-                <div><strong>Detections:</strong> {selectedSnapshot.metadata.detection_count}</div>
-              {:else if selectedSnapshot.count != null}
-                <div><strong>Detections:</strong> {selectedSnapshot.count}</div>
-              {/if}
-              {#if modalSnapshots.length > 1}
-                <div style="margin-top: 0.4rem; font-size: 0.75rem; opacity: 0.8;">
-                  {selectedSnapshotIndex + 1} / {modalSnapshots.length} | Arrow keys to navigate
-                </div>
-              {/if}
-            </div>
           </div>
         </div>
-      {/if}
+      </div>
+    {/if}
   </div>
 
   <!-- Main Content Row -->
@@ -694,21 +692,14 @@
             <i class="fas fa-video mr-2"></i>Live Stream
           </h3>
           <div class="card-tools">
-            <button class="btn btn-sm btn-default mr-1" on:click={() => window.location.reload()}>
+            <button class="btn btn-sm btn-default mr-1" on:click="{() => window.location.reload()}">
               <i class="fas fa-sync-alt"></i> Refresh
             </button>
           </div>
         </div>
         <div class="card-body">
           <div class="monitoring-stream-wrapper">
-            <video
-              class="monitoring-stream"
-              bind:this={videoEl}
-              controls
-              autoplay
-              muted
-              playsinline
-            ></video>
+            <video class="monitoring-stream" bind:this="{videoEl}" controls autoplay muted playsinline></video>
           </div>
         </div>
       </div>
@@ -726,31 +717,17 @@
             <div class="date-filter-row">
               <div class="date-input-group">
                 <label for="fromDate">From</label>
-                <input
-                  type="date"
-                  id="fromDate"
-                  bind:value={fromDate}
-                />
+                <input type="date" id="fromDate" bind:value="{fromDate}" />
               </div>
               <div class="date-input-group">
                 <label for="toDate">To</label>
-                <input
-                  type="date"
-                  id="toDate"
-                  bind:value={toDate}
-                />
+                <input type="date" id="toDate" bind:value="{toDate}" />
               </div>
               <div class="filter-buttons">
-                <button
-                  class="btn btn-sm btn-success"
-                  on:click={applyDateRange}
-                >
+                <button class="btn btn-sm btn-success" on:click="{applyDateRange}">
                   <i class="fas fa-check"></i> Apply Range
                 </button>
-                <button
-                  class="btn btn-sm btn-outline-secondary"
-                  on:click={clearDateRange}
-                >
+                <button class="btn btn-sm btn-outline-secondary" on:click="{clearDateRange}">
                   <i class="fas fa-times"></i> Clear Range
                 </button>
               </div>
@@ -763,14 +740,15 @@
                   class="snapshot-card"
                   role="button"
                   tabindex="0"
-                  on:click={() => openSnapshotModal(snapshot, idx, snapshots)}
-                  on:keydown={(event) => event.key === 'Enter' && openSnapshotModal(snapshot, idx, snapshots)}
+                  on:click="{() => openSnapshotModal(snapshot, idx, snapshots)}"
+                  on:keydown="{(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault();
+                      openSnapshotModal(snapshot, idx, snapshots);
+                    }
+                  }}"
                 >
-                  <img
-                    src={snapshot.path}
-                    alt="Snapshot"
-                    class="snapshot-thumb"
-                  />
+                  <img src="{snapshot.path}" alt="Snapshot" class="snapshot-thumb" />
                   <div class="snapshot-overlay">
                     <div class="snapshot-time">
                       {formatTimeShort(snapshot.timestamp)}
@@ -787,27 +765,21 @@
 
             <!-- Pagination Info -->
             <div class="pagination-controls">
-              <button
-                class="btn btn-sm btn-outline-secondary"
-                disabled={currentPage === 0}
-                on:click={previousPage}
-              >
+              <button class="btn btn-sm btn-outline-secondary" disabled="{currentPage === 0}" on:click="{previousPage}">
                 <i class="fas fa-chevron-left"></i> Newer
               </button>
               <span class="pagination-info">
                 {#if snapshotTotal > 0}
-                  {currentPage * snapshotsPerPage + 1} - {Math.min(
-                    (currentPage + 1) * snapshotsPerPage,
-                    snapshotTotal
-                  )} of {snapshotTotal}
+                  {currentPage * snapshotsPerPage + 1} - {Math.min((currentPage + 1) * snapshotsPerPage, snapshotTotal)}
+                  of {snapshotTotal}
                 {:else}
                   Page {currentPage + 1}
                 {/if}
               </span>
               <button
                 class="btn btn-sm btn-outline-secondary"
-                disabled={snapshotTotal !== 0 && (currentPage + 1) * snapshotsPerPage >= snapshotTotal}
-                on:click={nextPage}
+                disabled="{snapshotTotal !== 0 && (currentPage + 1) * snapshotsPerPage >= snapshotTotal}"
+                on:click="{nextPage}"
               >
                 Older <i class="fas fa-chevron-right"></i>
               </button>
@@ -875,18 +847,18 @@
                   {/if}
                   {#if event.path}
                     <img
-                      src={event.path}
+                      src="{event.path}"
                       alt="Detection"
                       style="width: 100%; border-radius: 0.25rem; margin-top: 6px; cursor: pointer;"
                       role="button"
                       tabindex="0"
-                      on:click={() => openSnapshotModal(event, 0, [event])}
-                      on:keydown={(e) => {
+                      on:click="{() => openSnapshotModal(event, 0, [event])}"
+                      on:keydown="{(e) => {
                         if (e.key === 'Enter' || e.key === ' ') {
                           e.preventDefault();
                           openSnapshotModal(event, 0, [event]);
                         }
-                      }}
+                      }}"
                     />
                   {/if}
                 </div>
