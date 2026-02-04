@@ -416,6 +416,8 @@
   let currentPage = 0;
   let fromDate = '';
   let toDate = '';
+  let fromTime = '00:00';
+  let toTime = '23:59';
 
   let activityFromDate = '';
   let activityFromTime = '00:00';
@@ -577,8 +579,13 @@
       const offset = currentPage * snapshotsPerPage;
       let url = `${nocturnalEyeApi}/snapshots/recent?limit=${snapshotsPerPage}&offset=${offset}`;
 
-      if (fromDate) url += `&from=${fromDate}`;
-      if (toDate) url += `&to=${toDate}`;
+      if (fromDate && toDate) {
+        const fromDateTime = `${fromDate}T${fromTime}:00`;
+        const toDateTime = `${toDate}T${toTime}:59`;
+        url = `${nocturnalEyeApi}/snapshots/range?limit=${snapshotsPerPage}&offset=${offset}`;
+        url += `&start=${encodeURIComponent(fromDateTime)}`;
+        url += `&end=${encodeURIComponent(toDateTime)}`;
+      }
 
       const res = await fetch(url);
       if (res.ok) {
@@ -587,7 +594,7 @@
           ...snap,
           path: mapSnapshotPath(snap.path),
         }));
-        snapshotTotal = data.count || snapshotTotal;
+        snapshotTotal = data.total || data.count || snapshotTotal;
       }
     } catch (err) {
       console.error('Failed to load snapshots:', err);
@@ -614,6 +621,8 @@
   const clearDateRange = () => {
     fromDate = '';
     toDate = '';
+    fromTime = '00:00';
+    toTime = '23:59';
     currentPage = 0;
     loadSnapshots();
   };
@@ -710,6 +719,8 @@
     const today = new Date().toISOString().split('T')[0];
     toDate = today;
     fromDate = today;
+    fromTime = '00:00';
+    toTime = '23:59';
 
     activityFromDate = today;
     activityToDate = today;
@@ -867,17 +878,25 @@
             <div class="date-filter-row">
               <div class="date-input-group">
                 <label for="fromDate">From</label>
-                <input type="date" id="fromDate" bind:value="{fromDate}" />
+                <input type="date" id="fromDate" bind:value={fromDate} />
+              </div>
+              <div class="date-input-group">
+                <label for="fromTime">Time</label>
+                <input type="time" id="fromTime" bind:value={fromTime} />
               </div>
               <div class="date-input-group">
                 <label for="toDate">To</label>
-                <input type="date" id="toDate" bind:value="{toDate}" />
+                <input type="date" id="toDate" bind:value={toDate} />
+              </div>
+              <div class="date-input-group">
+                <label for="toTime">Time</label>
+                <input type="time" id="toTime" bind:value={toTime} />
               </div>
               <div class="filter-buttons">
-                <button class="btn btn-sm btn-success" on:click="{applyDateRange}">
+                <button class="btn btn-sm btn-success" on:click={applyDateRange}>
                   <i class="fas fa-check"></i> Apply Range
                 </button>
-                <button class="btn btn-sm btn-outline-secondary" on:click="{clearDateRange}">
+                <button class="btn btn-sm btn-outline-secondary" on:click={clearDateRange}>
                   <i class="fas fa-times"></i> Clear Range
                 </button>
               </div>
