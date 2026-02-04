@@ -383,7 +383,7 @@
   };
 
   const calculateBucketMinutes = (start, end) => {
-    const totalMinutes = Math.max((end - start) / 60000, 1);
+    const totalMinutes = Math.max((end.getTime() - start.getTime()) / 60000, 1);
     const candidateBuckets = [15, 30, 60, 120, 180, 240, 360, 720];
     const targetBuckets = 12;
 
