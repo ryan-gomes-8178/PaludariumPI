@@ -310,20 +310,34 @@
   .hourly-stats {
     margin-top: 1rem;
     padding: 1rem;
-    background: #16213e;
-    border-radius: 0.25rem;
+    background: #1a1a2e;
+    border: 1px solid #16213e;
+    border-radius: 0.4rem;
     position: relative;
-    height: 150px;
+    min-height: 320px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .hourly-stats-label {
+    font-size: 0.85rem;
+    color: #a0a0a0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 1rem;
+    font-weight: 500;
   }
 
   .hourly-chart-container {
     display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: 0.2rem;
-    height: 100px;
+    flex: 1;
+    gap: 0;
     position: relative;
-    padding-right: 20px;
+    background: linear-gradient(180deg, rgba(0, 212, 255, 0.05) 0%, transparent 100%);
+    border: 1px solid #16213e;
+    border-radius: 0.25rem;
+    padding: 1rem 1rem 3rem 1rem;
+    min-height: 200px;
   }
 
   .hourly-y-axis {
@@ -334,54 +348,62 @@
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    font-size: 0.65rem;
-    color: #666;
-    width: 40px;
+    font-size: 0.75rem;
+    color: #00d4ff;
+    width: 50px;
     text-align: right;
-    padding-right: 5px;
+    padding: 1rem 0.5rem 3rem 0;
+    font-weight: 500;
   }
 
   .hourly-bars {
     display: flex;
     align-items: flex-end;
-    gap: 0.15rem;
+    gap: 0.3rem;
     height: 100%;
     flex: 1;
-    margin-left: 40px;
+    margin-left: 50px;
+    justify-content: space-around;
+    padding-bottom: 0;
   }
 
   .bar {
     flex: 1;
-    background: #00d4ff;
-    border-radius: 0.15rem;
-    opacity: 0.7;
+    background: linear-gradient(180deg, #00ffff 0%, #00d4ff 100%);
+    border-radius: 0.2rem;
+    opacity: 0.8;
     transition:
       opacity 0.2s,
       background 0.2s;
     position: relative;
     min-height: 2px;
+    border: 1px solid #00d4ff;
+    max-width: 20px;
   }
 
   .bar:hover {
     opacity: 1;
-    background: #00ffff;
+    background: linear-gradient(180deg, #00ffff 0%, #00ffff 100%);
+    box-shadow: 0 0 8px rgba(0, 212, 255, 0.6);
   }
 
   .hourly-x-axis {
     position: absolute;
     bottom: 0;
-    left: 40px;
+    left: 50px;
     right: 0;
-    height: 20px;
+    height: 30px;
     display: flex;
-    justify-content: space-between;
-    font-size: 0.65rem;
-    color: #666;
+    justify-content: space-around;
+    font-size: 0.7rem;
+    color: #a0a0a0;
+    padding: 0.5rem 1rem 0.5rem 0;
+    border-top: 1px solid #16213e;
   }
 
   .hour-label {
-    flex: 1;
     text-align: center;
+    white-space: nowrap;
   }
 </style>
 
@@ -478,6 +500,11 @@
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
+  const formatLocalISOString = (date) => {
+    const pad = (value) => String(value).padStart(2, '0');
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+  };
+
   const calculateBucketMinutes = (start, end) => {
     const totalMinutes = Math.max((end.getTime() - start.getTime()) / 60000, 1);
     const candidateBuckets = [15, 30, 60, 120, 180, 240, 360, 720];
@@ -505,7 +532,9 @@
 
       activityBucketMinutes = calculateBucketMinutes(start, end);
 
-      const url = `${nocturnalEyeApi}/activity/histogram?start=${start.toISOString()}&end=${end.toISOString()}&bucket_minutes=${activityBucketMinutes}`;
+      const startLocal = formatLocalISOString(start);
+      const endLocal = formatLocalISOString(end);
+      const url = `${nocturnalEyeApi}/activity/histogram?start=${encodeURIComponent(startLocal)}&end=${encodeURIComponent(endLocal)}&bucket_minutes=${activityBucketMinutes}`;
       const res = await fetch(url);
       if (!res.ok) {
         console.error('Failed to load activity histogram: HTTP', res.status);
@@ -1008,7 +1037,7 @@
               </div>
             </div>
             <div class="hourly-stats">
-              <div class="y-axis-label">Detections per Interval</div>
+              <div class="hourly-stats-label">Detections per Interval</div>
               <div class="hourly-y-axis">
                 <div>{Math.round(maxHourlyCount())}</div>
                 <div>{Math.round(maxHourlyCount() / 2)}</div>
