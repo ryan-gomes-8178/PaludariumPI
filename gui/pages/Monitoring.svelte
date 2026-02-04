@@ -265,6 +265,48 @@
     color: #a0a0a0;
   }
 
+  .activity-range-row {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .y-axis-label {
+    position: absolute;
+    left: -52px;
+    top: 50%;
+    transform: translateY(-50%) rotate(-90deg);
+    font-size: 0.7rem;
+    color: #666;
+    white-space: nowrap;
+    text-align: center;
+    width: 110px;
+  }
+
+  .chart-legend {
+    display: flex;
+    gap: 1rem;
+    margin-top: 0.75rem;
+    font-size: 0.8rem;
+    color: #a0a0a0;
+    flex-wrap: wrap;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .legend-color {
+    width: 12px;
+    height: 12px;
+    background: #00d4ff;
+    border-radius: 0.15rem;
+  }
+
   .hourly-stats {
     margin-top: 1rem;
     padding: 1rem;
@@ -358,7 +400,7 @@
   let events = [];
   let snapshots = [];
   let summary = {};
-  let hourlyStats = [];
+  let activityBuckets = [];
   let systemStatus = '✅';
   let snapshotTotal = 0;
 
@@ -374,6 +416,12 @@
   let currentPage = 0;
   let fromDate = '';
   let toDate = '';
+
+  let activityFromDate = '';
+  let activityFromTime = '00:00';
+  let activityToDate = '';
+  let activityToTime = '23:59';
+  let activityBucketMinutes = 60;
 
   const snapshotsPerPage = 20;
 
@@ -422,6 +470,54 @@
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
+  const formatBucketLabel = (isoTimestamp) => {
+    if (!isoTimestamp) return '';
+    const date = new Date(isoTimestamp);
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const calculateBucketMinutes = (start, end) => {
+    const totalMinutes = Math.max((end.getTime() - start.getTime()) / 60000, 1);
+    const candidateBuckets = [15, 30, 60, 120, 180, 240, 360, 720];
+    const targetBuckets = 12;
+
+    for (const bucket of candidateBuckets) {
+      if (totalMinutes / bucket <= targetBuckets) {
+        return bucket;
+      }
+    }
+
+    return 720;
+  };
+
+  const loadActivityHistogram = async () => {
+    try {
+      if (!activityFromDate || !activityToDate) return;
+
+      const start = new Date(`${activityFromDate}T${activityFromTime}:00`);
+      const end = new Date(`${activityToDate}T${activityToTime}:59`);
+      if (end <= start) {
+        window.alert('The end date and time must be after the start date and time.');
+        return;
+      }
+
+      activityBucketMinutes = calculateBucketMinutes(start, end);
+
+      const url = `${nocturnalEyeApi}/activity/histogram?start=${start.toISOString()}&end=${end.toISOString()}&bucket_minutes=${activityBucketMinutes}`;
+      const res = await fetch(url);
+      if (!res.ok) {
+        console.error('Failed to load activity histogram: HTTP', res.status);
+        return;
+      }
+      const data = await res.json();
+      activityBuckets = data.buckets || [];
+    } catch (err) {
+      console.error('Failed to load activity histogram:', err);
+    }
+  };
+
+  $: activityLabelStep = Math.max(Math.floor(activityBuckets.length / 6), 1);
+
   const setupHls = () => {
     if (!videoEl) return;
 
@@ -450,11 +546,6 @@
       if (summaryRes.ok) {
         summary = await summaryRes.json();
         zones = summary.zones || [];
-        hourlyStats = summary.hourly_distribution
-          ? Object.entries(summary.hourly_distribution)
-              .map(([hour, count]) => ({ hour: parseInt(hour) || 0, count }))
-              .sort((a, b) => a.hour - b.hour)
-          : [];
         snapshotTotal = summary.snapshot_count || 0;
         if (summary.recent_snapshots?.length) {
           events = summary.recent_snapshots.map((snap) => ({
@@ -472,6 +563,7 @@
       }
 
       await loadSnapshots();
+      await loadActivityHistogram();
     } catch (err) {
       console.error('Failed to load monitoring data:', err);
       systemStatus = '❌';
@@ -609,7 +701,7 @@
     }
   };
 
-  const maxHourlyCount = () => Math.max(...hourlyStats.map((stat) => stat.count || 0), 1);
+  const maxHourlyCount = () => Math.max(...activityBuckets.map((bucket) => bucket.count || 0), 1);
 
   onMount(() => {
     setCustomPageTitle($_('monitoring.title', { default: 'Monitoring' }));
@@ -618,6 +710,11 @@
     const today = new Date().toISOString().split('T')[0];
     toDate = today;
     fromDate = today;
+
+    activityFromDate = today;
+    activityToDate = today;
+    activityFromTime = '00:00';
+    activityToTime = '23:59';
 
     setupHls();
     loadData();
@@ -922,7 +1019,7 @@
       </div>
 
       <!-- Hourly Stats -->
-      {#if hourlyStats.length > 0}
+      {#if activityBuckets.length > 0}
         <div class="card mt-3">
           <div class="card-header">
             <h3 class="card-title">
@@ -930,7 +1027,31 @@
             </h3>
           </div>
           <div class="card-body">
+            <div class="activity-range-row">
+              <div class="date-input-group">
+                <label for="activityFromDate">From</label>
+                <input type="date" id="activityFromDate" bind:value="{activityFromDate}" />
+              </div>
+              <div class="date-input-group">
+                <label for="activityFromTime">Time</label>
+                <input type="time" id="activityFromTime" bind:value="{activityFromTime}" />
+              </div>
+              <div class="date-input-group">
+                <label for="activityToDate">To</label>
+                <input type="date" id="activityToDate" bind:value="{activityToDate}" />
+              </div>
+              <div class="date-input-group">
+                <label for="activityToTime">Time</label>
+                <input type="time" id="activityToTime" bind:value="{activityToTime}" />
+              </div>
+              <div class="filter-buttons">
+                <button class="btn btn-sm btn-success" on:click="{loadActivityHistogram}">
+                  <i class="fas fa-check"></i> Apply Range
+                </button>
+              </div>
+            </div>
             <div class="hourly-stats">
+              <div class="y-axis-label">Detections per Interval</div>
               <div class="hourly-y-axis">
                 <div>{Math.round(maxHourlyCount())}</div>
                 <div>{Math.round(maxHourlyCount() / 2)}</div>
@@ -938,23 +1059,33 @@
               </div>
               <div class="hourly-chart-container">
                 <div class="hourly-bars">
-                  {#each hourlyStats as stat, idx}
+                  {#each activityBuckets as bucket, idx}
                     <div
                       class="bar"
-                      style="height: {Math.max(2, (stat.count / maxHourlyCount()) * 100)}%"
-                      title="{stat.hour}:00 - {stat.count} events"
+                      style="height: {Math.max(2, (bucket.count / maxHourlyCount()) * 100)}%"
+                      title="{formatBucketLabel(bucket.start)} - {bucket.count} detections"
                     ></div>
                   {/each}
                 </div>
               </div>
               <div class="hourly-x-axis">
-                {#each hourlyStats as stat, idx}
-                  {#if idx % 3 === 0}
-                    <div class="hour-label">{stat.hour}h</div>
+                {@const labelStep = Math.max(Math.floor(activityBuckets.length / 6), 1)}
+                {#each activityBuckets as bucket, idx}
+                  {#if idx % labelStep === 0}
+                    <div class="hour-label">{formatBucketLabel(bucket.start)}</div>
                   {:else}
                     <div class="hour-label"></div>
                   {/if}
                 {/each}
+              </div>
+            </div>
+            <div class="chart-legend">
+              <div class="legend-item">
+                <div class="legend-color"></div>
+                <span>Detection Count (per interval)</span>
+              </div>
+              <div class="legend-item">
+                <span style="font-size: 0.75rem; color: #666;">Interval: {activityBucketMinutes} min</span>
               </div>
             </div>
           </div>
