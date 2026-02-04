@@ -110,6 +110,94 @@
     color: #a0a0a0;
   }
 
+  .snapshot-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    backdrop-filter: blur(3px);
+  }
+
+  .snapshot-modal-content {
+    position: relative;
+    max-width: 90vw;
+    max-height: 90vh;
+  }
+
+  .snapshot-modal-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    max-height: 85vh;
+    max-width: 90vw;
+  }
+
+  .snapshot-modal-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: #fff;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+    z-index: 2001;
+  }
+
+  .snapshot-modal-close:hover {
+    background: rgba(255, 255, 255, 0.35);
+  }
+
+  .snapshot-modal-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: #fff;
+    width: 46px;
+    height: 46px;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    font-size: 22px;
+    transition: background 0.2s;
+    z-index: 2001;
+  }
+
+  .snapshot-modal-nav:hover {
+    background: rgba(255, 255, 255, 0.35);
+  }
+
+  .snapshot-modal-nav.prev {
+    left: 12px;
+  }
+
+  .snapshot-modal-nav.next {
+    right: 12px;
+  }
+
+  .snapshot-modal-info {
+    position: absolute;
+    bottom: 12px;
+    left: 12px;
+    right: 12px;
+    background: rgba(0, 0, 0, 0.7);
+    color: #fff;
+    padding: 0.8rem 1rem;
+    border-radius: 0.4rem;
+    font-size: 0.85rem;
+  }
+
   .date-filter-row {
     display: flex;
     gap: 1rem;
@@ -175,6 +263,48 @@
   .pagination-info {
     font-size: 0.85rem;
     color: #a0a0a0;
+  }
+
+  .activity-range-row {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .y-axis-label {
+    position: absolute;
+    left: -52px;
+    top: 50%;
+    transform: translateY(-50%) rotate(-90deg);
+    font-size: 0.7rem;
+    color: #666;
+    white-space: nowrap;
+    text-align: center;
+    width: 110px;
+  }
+
+  .chart-legend {
+    display: flex;
+    gap: 1rem;
+    margin-top: 0.75rem;
+    font-size: 0.8rem;
+    color: #a0a0a0;
+    flex-wrap: wrap;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .legend-color {
+    width: 12px;
+    height: 12px;
+    background: #00d4ff;
+    border-radius: 0.15rem;
   }
 
   .hourly-stats {
@@ -270,9 +400,15 @@
   let events = [];
   let snapshots = [];
   let summary = {};
-  let hourlyStats = [];
+  let activityBuckets = [];
   let systemStatus = '✅';
   let snapshotTotal = 0;
+
+  let selectedSnapshot = null;
+  let selectedSnapshotIndex = -1;
+  let modalSnapshots = [];
+  let modalContentEl;
+  let closeButtonEl;
 
   let videoEl;
   let hlsPlayer;
@@ -282,6 +418,12 @@
   let toDate = '';
   let fromTime = '00:00';
   let toTime = '23:59';
+
+  let activityFromDate = '';
+  let activityFromTime = '00:00';
+  let activityToDate = '';
+  let activityToTime = '23:59';
+  let activityBucketMinutes = 60;
 
   const snapshotsPerPage = 20;
 
@@ -330,6 +472,54 @@
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
+  const formatBucketLabel = (isoTimestamp) => {
+    if (!isoTimestamp) return '';
+    const date = new Date(isoTimestamp);
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const calculateBucketMinutes = (start, end) => {
+    const totalMinutes = Math.max((end.getTime() - start.getTime()) / 60000, 1);
+    const candidateBuckets = [15, 30, 60, 120, 180, 240, 360, 720];
+    const targetBuckets = 12;
+
+    for (const bucket of candidateBuckets) {
+      if (totalMinutes / bucket <= targetBuckets) {
+        return bucket;
+      }
+    }
+
+    return 720;
+  };
+
+  const loadActivityHistogram = async () => {
+    try {
+      if (!activityFromDate || !activityToDate) return;
+
+      const start = new Date(`${activityFromDate}T${activityFromTime}:00`);
+      const end = new Date(`${activityToDate}T${activityToTime}:59`);
+      if (end <= start) {
+        window.alert('The end date and time must be after the start date and time.');
+        return;
+      }
+
+      activityBucketMinutes = calculateBucketMinutes(start, end);
+
+      const url = `${nocturnalEyeApi}/activity/histogram?start=${start.toISOString()}&end=${end.toISOString()}&bucket_minutes=${activityBucketMinutes}`;
+      const res = await fetch(url);
+      if (!res.ok) {
+        console.error('Failed to load activity histogram: HTTP', res.status);
+        return;
+      }
+      const data = await res.json();
+      activityBuckets = data.buckets || [];
+    } catch (err) {
+      console.error('Failed to load activity histogram:', err);
+    }
+  };
+
+  $: activityLabelStep = Math.max(Math.floor(activityBuckets.length / 6), 1);
+
   const setupHls = () => {
     if (!videoEl) return;
 
@@ -358,11 +548,6 @@
       if (summaryRes.ok) {
         summary = await summaryRes.json();
         zones = summary.zones || [];
-        hourlyStats = summary.hourly_distribution
-          ? Object.entries(summary.hourly_distribution)
-              .map(([hour, count]) => ({ hour: parseInt(hour) || 0, count }))
-              .sort((a, b) => a.hour - b.hour)
-          : [];
         snapshotTotal = summary.snapshot_count || 0;
         if (summary.recent_snapshots?.length) {
           events = summary.recent_snapshots.map((snap) => ({
@@ -380,6 +565,7 @@
       }
 
       await loadSnapshots();
+      await loadActivityHistogram();
     } catch (err) {
       console.error('Failed to load monitoring data:', err);
       systemStatus = '❌';
@@ -447,7 +633,84 @@
     return date.toLocaleString();
   };
 
-  const maxHourlyCount = () => Math.max(...hourlyStats.map((stat) => stat.count || 0), 1);
+  const openSnapshotModal = (snapshot, index = 0, snapshotList = snapshots) => {
+    selectedSnapshot = snapshot;
+    selectedSnapshotIndex = index;
+    modalSnapshots = snapshotList;
+
+    // Focus the close button after the modal renders
+    setTimeout(() => {
+      if (closeButtonEl) {
+        closeButtonEl.focus();
+      }
+    }, 0);
+  };
+
+  const closeSnapshotModal = () => {
+    selectedSnapshot = null;
+    selectedSnapshotIndex = -1;
+    modalSnapshots = [];
+  };
+
+  const showPreviousSnapshot = () => {
+    if (selectedSnapshotIndex > 0) {
+      selectedSnapshotIndex -= 1;
+      selectedSnapshot = modalSnapshots[selectedSnapshotIndex];
+    }
+  };
+
+  const showNextSnapshot = () => {
+    if (selectedSnapshotIndex < modalSnapshots.length - 1) {
+      selectedSnapshotIndex += 1;
+      selectedSnapshot = modalSnapshots[selectedSnapshotIndex];
+    }
+  };
+
+  const handleModalKeydown = (event) => {
+    if (!selectedSnapshot) return;
+
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      event.stopPropagation();
+      closeSnapshotModal();
+    } else if (event.key === 'ArrowLeft') {
+      event.preventDefault();
+      event.stopPropagation();
+      showPreviousSnapshot();
+    } else if (event.key === 'ArrowRight') {
+      event.preventDefault();
+      event.stopPropagation();
+      showNextSnapshot();
+    } else if (event.key === 'Tab') {
+      // Handle focus trap for Tab key
+      event.preventDefault();
+      event.stopPropagation();
+
+      if (!modalContentEl) return;
+
+      const focusableElements = modalContentEl.querySelectorAll(
+        'button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      );
+      const focusableArray = Array.from(focusableElements);
+
+      if (focusableArray.length === 0) return;
+
+      const currentIndex = focusableArray.indexOf(document.activeElement);
+      let nextIndex;
+
+      if (event.shiftKey) {
+        // Shift+Tab: move backwards
+        nextIndex = currentIndex <= 0 ? focusableArray.length - 1 : currentIndex - 1;
+      } else {
+        // Tab: move forwards
+        nextIndex = currentIndex >= focusableArray.length - 1 ? 0 : currentIndex + 1;
+      }
+
+      focusableArray[nextIndex].focus();
+    }
+  };
+
+  const maxHourlyCount = () => Math.max(...activityBuckets.map((bucket) => bucket.count || 0), 1);
 
   onMount(() => {
     setCustomPageTitle($_('monitoring.title', { default: 'Monitoring' }));
@@ -459,8 +722,15 @@
     fromTime = '00:00';
     toTime = '23:59';
 
+    activityFromDate = today;
+    activityToDate = today;
+    activityFromTime = '00:00';
+    activityToTime = '23:59';
+
     setupHls();
     loadData();
+
+    window.addEventListener('keydown', handleModalKeydown);
 
     refreshTimer = setInterval(() => {
       loadData();
@@ -469,6 +739,8 @@
 
   onDestroy(() => {
     customPageTitleUsed.set(false);
+
+    window.removeEventListener('keydown', handleModalKeydown);
 
     if (refreshTimer) {
       clearInterval(refreshTimer);
@@ -507,6 +779,67 @@
         </div>
       </div>
     </div>
+
+    {#if selectedSnapshot}
+      <div class="snapshot-modal-overlay" on:click="{closeSnapshotModal}">
+        <div
+          bind:this="{modalContentEl}"
+          class="snapshot-modal-content"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Fullscreen snapshot viewer"
+          on:click|stopPropagation
+        >
+          <button
+            bind:this="{closeButtonEl}"
+            class="snapshot-modal-close"
+            on:click="{closeSnapshotModal}"
+            title="Close (ESC)"
+            aria-label="Close snapshot viewer"
+          >
+            <i class="fas fa-times" aria-hidden="true"></i>
+          </button>
+
+          {#if modalSnapshots.length > 1 && selectedSnapshotIndex > 0}
+            <button
+              class="snapshot-modal-nav prev"
+              on:click="{showPreviousSnapshot}"
+              title="Previous (←)"
+              aria-label="Previous snapshot"
+            >
+              <i class="fas fa-chevron-left" aria-hidden="true"></i>
+            </button>
+          {/if}
+
+          <img src="{selectedSnapshot.path}" alt="Fullscreen snapshot" class="snapshot-modal-image" />
+
+          {#if modalSnapshots.length > 1 && selectedSnapshotIndex < modalSnapshots.length - 1}
+            <button
+              class="snapshot-modal-nav next"
+              on:click="{showNextSnapshot}"
+              title="Next (→)"
+              aria-label="Next snapshot"
+            >
+              <i class="fas fa-chevron-right" aria-hidden="true"></i>
+            </button>
+          {/if}
+
+          <div class="snapshot-modal-info">
+            <div><strong>Detected:</strong> {formatDate(selectedSnapshot.timestamp)}</div>
+            {#if selectedSnapshot.metadata?.detection_count != null}
+              <div><strong>Detections:</strong> {selectedSnapshot.metadata.detection_count}</div>
+            {:else if selectedSnapshot.count != null}
+              <div><strong>Detections:</strong> {selectedSnapshot.count}</div>
+            {/if}
+            {#if modalSnapshots.length > 1}
+              <div style="margin-top: 0.4rem; font-size: 0.75rem; opacity: 0.8;">
+                {selectedSnapshotIndex + 1} / {modalSnapshots.length} | Arrow keys to navigate
+              </div>
+            {/if}
+          </div>
+        </div>
+      </div>
+    {/if}
   </div>
 
   <!-- Main Content Row -->
@@ -571,8 +904,19 @@
 
             <!-- Snapshots Grid -->
             <div class="snapshots-grid">
-              {#each snapshots as snapshot}
-                <div class="snapshot-card">
+              {#each snapshots as snapshot, idx}
+                <div
+                  class="snapshot-card"
+                  role="button"
+                  tabindex="0"
+                  on:click="{() => openSnapshotModal(snapshot, idx, snapshots)}"
+                  on:keydown="{(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault();
+                      openSnapshotModal(snapshot, idx, snapshots);
+                    }
+                  }}"
+                >
                   <img src="{snapshot.path}" alt="Snapshot" class="snapshot-thumb" />
                   <div class="snapshot-overlay">
                     <div class="snapshot-time">
@@ -674,7 +1018,16 @@
                     <img
                       src="{event.path}"
                       alt="Detection"
-                      style="width: 100%; border-radius: 0.25rem; margin-top: 6px;"
+                      style="width: 100%; border-radius: 0.25rem; margin-top: 6px; cursor: pointer;"
+                      role="button"
+                      tabindex="0"
+                      on:click="{() => openSnapshotModal(event, 0, [event])}"
+                      on:keydown="{(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          openSnapshotModal(event, 0, [event]);
+                        }
+                      }}"
                     />
                   {/if}
                 </div>
@@ -685,7 +1038,7 @@
       </div>
 
       <!-- Hourly Stats -->
-      {#if hourlyStats.length > 0}
+      {#if activityBuckets.length > 0}
         <div class="card mt-3">
           <div class="card-header">
             <h3 class="card-title">
@@ -693,7 +1046,31 @@
             </h3>
           </div>
           <div class="card-body">
+            <div class="activity-range-row">
+              <div class="date-input-group">
+                <label for="activityFromDate">From</label>
+                <input type="date" id="activityFromDate" bind:value="{activityFromDate}" />
+              </div>
+              <div class="date-input-group">
+                <label for="activityFromTime">Time</label>
+                <input type="time" id="activityFromTime" bind:value="{activityFromTime}" />
+              </div>
+              <div class="date-input-group">
+                <label for="activityToDate">To</label>
+                <input type="date" id="activityToDate" bind:value="{activityToDate}" />
+              </div>
+              <div class="date-input-group">
+                <label for="activityToTime">Time</label>
+                <input type="time" id="activityToTime" bind:value="{activityToTime}" />
+              </div>
+              <div class="filter-buttons">
+                <button class="btn btn-sm btn-success" on:click="{loadActivityHistogram}">
+                  <i class="fas fa-check"></i> Apply Range
+                </button>
+              </div>
+            </div>
             <div class="hourly-stats">
+              <div class="y-axis-label">Detections per Interval</div>
               <div class="hourly-y-axis">
                 <div>{Math.round(maxHourlyCount())}</div>
                 <div>{Math.round(maxHourlyCount() / 2)}</div>
@@ -701,23 +1078,33 @@
               </div>
               <div class="hourly-chart-container">
                 <div class="hourly-bars">
-                  {#each hourlyStats as stat, idx}
+                  {#each activityBuckets as bucket, idx}
                     <div
                       class="bar"
-                      style="height: {Math.max(2, (stat.count / maxHourlyCount()) * 100)}%"
-                      title="{stat.hour}:00 - {stat.count} events"
+                      style="height: {Math.max(2, (bucket.count / maxHourlyCount()) * 100)}%"
+                      title="{formatBucketLabel(bucket.start)} - {bucket.count} detections"
                     ></div>
                   {/each}
                 </div>
               </div>
               <div class="hourly-x-axis">
-                {#each hourlyStats as stat, idx}
-                  {#if idx % 3 === 0}
-                    <div class="hour-label">{stat.hour}h</div>
+                {@const labelStep = Math.max(Math.floor(activityBuckets.length / 6), 1)}
+                {#each activityBuckets as bucket, idx}
+                  {#if idx % labelStep === 0}
+                    <div class="hour-label">{formatBucketLabel(bucket.start)}</div>
                   {:else}
                     <div class="hour-label"></div>
                   {/if}
                 {/each}
+              </div>
+            </div>
+            <div class="chart-legend">
+              <div class="legend-item">
+                <div class="legend-color"></div>
+                <span>Detection Count (per interval)</span>
+              </div>
+              <div class="legend-item">
+                <span style="font-size: 0.75rem; color: #666;">Interval: {activityBucketMinutes} min</span>
               </div>
             </div>
           </div>

@@ -647,7 +647,7 @@ export const fetchLoglines = async (cb, preview) => {
 
 export const fetchGraphData = async (type, id, period, cb, customDates = null) => {
   period = period || 'day';
-  
+
   if (period === 'custom' && customDates) {
     const { start, end } = customDates;
     const url = `${apiHost}/${type}/${id}/history/custom/?start_date=${start}&end_date=${end}`;
