@@ -667,8 +667,10 @@
 
             <div class="snapshot-modal-info">
               <div><strong>Detected:</strong> {formatDate(selectedSnapshot.timestamp)}</div>
-              {#if selectedSnapshot.metadata?.detection_count}
+              {#if selectedSnapshot.metadata?.detection_count != null}
                 <div><strong>Detections:</strong> {selectedSnapshot.metadata.detection_count}</div>
+              {:else if selectedSnapshot.count != null}
+                <div><strong>Detections:</strong> {selectedSnapshot.count}</div>
               {/if}
               {#if modalSnapshots.length > 1}
                 <div style="margin-top: 0.4rem; font-size: 0.75rem; opacity: 0.8;">
