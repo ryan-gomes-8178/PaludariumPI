@@ -15,7 +15,6 @@ import qrcode
 from io import BytesIO
 import base64
 from datetime import datetime, timedelta
-from pathlib import Path
 
 try:
     import pyotp
