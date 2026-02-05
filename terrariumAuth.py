@@ -103,12 +103,14 @@ class terrariumAuth:
             "two_fa_enabled": True
         }
 
-    def verify_totp_token(self, username, token):
+    def verify_totp_token(self, token):
         """
-        Verify TOTP token for a user.
+        Verify TOTP token.
+        
+        Note: TerrariumPI currently supports single-user authentication,
+        so the 2FA secret is stored globally in self.engine.settings['two_fa_secret'].
 
         Args:
-            username (str): Username
             token (str): 6-digit TOTP token
 
         Returns:
