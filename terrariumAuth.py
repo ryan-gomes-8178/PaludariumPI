@@ -251,7 +251,7 @@ class terrariumAuth:
             del self.sessions[session_token]
             logger.info(f"Session invalidated for user '{username}'")
 
-    def authenticate(self, username, password, ip_address, require_2fa=False):
+    def authenticate(self, username, password, ip_address):
         """
         Authenticate user with username and password.
 
@@ -259,7 +259,6 @@ class terrariumAuth:
             username (str): Username
             password (str): Password (plain text)
             ip_address (str): Client IP address for rate limiting
-            require_2fa (bool): Whether 2FA is required for this user
 
         Returns:
             dict: {
