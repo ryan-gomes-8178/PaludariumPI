@@ -104,8 +104,9 @@ class terrariumAuthAPI:
             forwarded_proto = request.headers.get("X-Forwarded-Proto", "").lower()
             if forwarded_proto == "https":
                 return True
-        # Fallback: check request URL scheme
-        return request.scheme == "https"
+        # Fallback: check request URL scheme using WSGI environ
+        url_scheme = request.environ.get("wsgi.url_scheme", "http")
+        return url_scheme == "https"
 
     def login(self):
         """
