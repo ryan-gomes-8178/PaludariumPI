@@ -374,7 +374,7 @@ class terrariumAuthAPI:
         Register authentication API routes with the bottle application.
 
         Args:
-            bottle_app: Bottle application instance
+            bottle_app (bottle.Bottle): Bottle application instance to register routes with
         """
         # POST /api/login - Authenticate with username/password
         bottle_app.route("/api/login", "POST", self.login, name="api:login")
