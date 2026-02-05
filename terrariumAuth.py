@@ -506,14 +506,15 @@ class terrariumAuth:
         now_timestamp = time.time()
         expired_preauth = []
 
-        for token, context in self.preauth_contexts.items():
+        for token, context in list(self.preauth_contexts.items()):
             if now_timestamp - context["timestamp"] > self.PREAUTH_TIMEOUT:
                 expired_preauth.append(token)
 
         for token in expired_preauth:
-            username = self.preauth_contexts[token].get("username", "unknown")
-            del self.preauth_contexts[token]
-            logger.debug(f"Cleaned up expired pre-auth context for user '{username}'")
+            if token in self.preauth_contexts:
+                username = self.preauth_contexts[token].get("username", "unknown")
+                del self.preauth_contexts[token]
+                logger.debug(f"Cleaned up expired pre-auth context for user '{username}'")
 
         if expired_preauth:
             logger.debug(f"Cleaned up {len(expired_preauth)} expired pre-auth contexts")
