@@ -119,7 +119,8 @@ class terrariumAuthAPI:
                     "success": True,
                     "message": result.get("message", "Login successful"),
                     "session_token": result.get("session_token"),
-                    "requires_2fa": result.get("requires_2fa", False)
+                    "requires_2fa": result.get("requires_2fa", False),
+                    "preauth_token": result.get("preauth_token")  # Include pre-auth token for 2FA
                 }
             else:
                 response.status = 401
@@ -151,7 +152,8 @@ class terrariumAuthAPI:
         Request body:
         {
             "username": "admin",
-            "totp_code": "123456"
+            "totp_code": "123456",
+            "preauth_token": "token_from_login_response"
         }
 
         Response:
@@ -166,12 +168,20 @@ class terrariumAuthAPI:
             data = request.json
             username = data.get("username", "").strip()
             totp_code = data.get("totp_code", "").strip()
+            preauth_token = data.get("preauth_token", "").strip()
 
             if not username or not totp_code:
                 response.status = 400
                 return {
                     "success": False,
                     "error": "Username and TOTP code are required"
+                }
+
+            if not preauth_token:
+                response.status = 400
+                return {
+                    "success": False,
+                    "error": "Pre-auth token is required. Please login again."
                 }
 
             if len(totp_code) != 6 or not totp_code.isdigit():
@@ -184,8 +194,8 @@ class terrariumAuthAPI:
             # Get client IP
             client_ip = self.__get_client_ip()
 
-            # Verify 2FA
-            result = self.auth.complete_2fa_authentication(username, totp_code, client_ip)
+            # Verify 2FA with pre-auth token
+            result = self.auth.complete_2fa_authentication(username, totp_code, client_ip, preauth_token)
 
             if result.get("success"):
                 response.status = 200
