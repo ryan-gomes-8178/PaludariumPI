@@ -6,7 +6,7 @@ from . import terrariumRelay
 from terrariumUtils import terrariumUtils, terrariumAsync, terrariumCache
 
 # pip install python-kasa
-from kasa import Discover
+from kasa import Discover, Credentials
 
 
 class terrariumRelayTPLinkKasa(terrariumRelay):
@@ -16,22 +16,34 @@ class terrariumRelayTPLinkKasa(terrariumRelay):
     URL = "^\d{1,3}\.\d{1,3}\.\d{1,3}(,\d{1,3})?$"
 
     def _load_hardware(self):
-        async def __load_hardware(ip):
-            device = await Discover.discover_single(ip)
+        async def __load_hardware(ip, credentials=None):
+            device = await Discover.discover_single(ip, credentials=credentials)
 
             return device
 
         self._device["device"] = None
         # Input format should be either:
         # - [IP],[POWER_SWITCH_NR]
+        # Credentials are stored in calibration data as:
+        # {"username": "user@example.com", "password": "password"}
 
         # Use an internal caching for speeding things up.
         self.__state_cache = terrariumCache()
         self.__asyncio = terrariumAsync()
 
         address = self._address
+        
+        # Get credentials from calibration data if available
+        credentials = None
+        if self.calibration and isinstance(self.calibration, dict):
+            username = self.calibration.get("username", "").strip()
+            password = self.calibration.get("password", "").strip()
+            if username and password:
+                credentials = Credentials(username=username, password=password)
+                logger.info(f"Using credentials for Kasa device at {address[0]}")
+        
         try:
-            self._device["device"] = self.__asyncio.run(__load_hardware(address[0]))
+            self._device["device"] = self.__asyncio.run(__load_hardware(address[0], credentials))
             self._device["switch"] = 0 if len(address) == 1 else int(address[1]) - 1
         except Exception as ex:
             logger.error(f"Error loading {self} at address {address[0]}: {ex}")
