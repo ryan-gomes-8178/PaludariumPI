@@ -9,7 +9,7 @@ import terrariumLogging
 logger = terrariumLogging.logging.getLogger(__name__)
 
 import json
-from bottle import request, response, HTTPError
+from bottle import request, response
 
 class terrariumAuthAPI:
     """
