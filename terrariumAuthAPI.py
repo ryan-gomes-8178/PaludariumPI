@@ -77,13 +77,21 @@ class terrariumAuthAPI:
         {
             "success": true/false,
             "message": "string",
-            "session_token": "string (if success)",
             "requires_2fa": true/false (if 2FA needed),
             "error": "string (if error)"
         }
+        
+        Note: Session token is set as an HttpOnly cookie, not in response body.
         """
         try:
             data = request.json
+            if data is None:
+                response.status = 400
+                return {
+                    "success": False,
+                    "error": "Invalid or missing JSON in request body"
+                }
+
             username = data.get("username", "").strip()
             password = data.get("password", "")
 
@@ -118,7 +126,6 @@ class terrariumAuthAPI:
                 return {
                     "success": True,
                     "message": result.get("message", "Login successful"),
-                    "session_token": result.get("session_token"),
                     "requires_2fa": result.get("requires_2fa", False)
                 }
             else:
@@ -129,7 +136,7 @@ class terrariumAuthAPI:
                     "error": result.get("error", "Authentication failed")
                 }
 
-        except json.JSONDecodeError:
+        except (json.JSONDecodeError, ValueError):
             response.status = 400
             return {
                 "success": False,
@@ -158,12 +165,20 @@ class terrariumAuthAPI:
         {
             "success": true/false,
             "message": "string",
-            "session_token": "string (if success)",
             "error": "string (if error)"
         }
+        
+        Note: Session token is set as an HttpOnly cookie, not in response body.
         """
         try:
             data = request.json
+            if data is None:
+                response.status = 400
+                return {
+                    "success": False,
+                    "error": "Invalid or missing JSON in request body"
+                }
+
             username = data.get("username", "").strip()
             totp_code = data.get("totp_code", "").strip()
 
@@ -203,8 +218,7 @@ class terrariumAuthAPI:
                 logger.info(f"2FA verification successful for user '{username}' from IP {client_ip}")
                 return {
                     "success": True,
-                    "message": "2FA verification successful",
-                    "session_token": result["session_token"]
+                    "message": "2FA verification successful"
                 }
             else:
                 response.status = 401
@@ -214,7 +228,7 @@ class terrariumAuthAPI:
                     "error": result.get("error", "2FA verification failed")
                 }
 
-        except json.JSONDecodeError:
+        except (json.JSONDecodeError, ValueError):
             response.status = 400
             return {
                 "success": False,
