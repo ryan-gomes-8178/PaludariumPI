@@ -487,9 +487,6 @@ class terrariumWebserver(object):
         # Add Authentication API routes
         self.auth_api.routes(self.bottle)
 
-        # Add Authentication API routes
-        self.auth_api.routes(self.bottle)
-
         # Websocket connection
         self.bottle.route("/live/", callback=self.websocket.connect, apply=websocket, name="websocket_connect")
 
