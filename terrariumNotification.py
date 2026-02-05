@@ -2788,7 +2788,10 @@ class terrariumNotificationServiceTelegram(terrariumNotificationService):
                 logger.exception(f"Error in Telegram run: {ex}")
 
             if len(old_chat_ids) > 0:
-                self.send_message(None, "Reconnected", "TerrariumPI just restarted...")
+                try:
+                    self.send_message(None, "Reconnected", "TerrariumPI just restarted...")
+                except Exception as ex:
+                    logger.warning(f"Could not send Telegram reconnection message: {ex}")
 
     def stop(self):
         async def _stop():
