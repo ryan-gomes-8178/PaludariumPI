@@ -21,11 +21,11 @@ services:
     # Volume mounts for persistence
     volumes:
       # Database and data
-      - ./migrations:/app/migrations
-      - ./data:/app/data
-      - ./log:/app/log
+      - ./migrations:/TerrariumPI/migrations
+      - ./data:/TerrariumPI/data
+      - ./log:/TerrariumPI/log
       # Configuration
-      - ./terrariumpi.log:/app/terrariumpi.log
+      - ./terrariumpi.log:/TerrariumPI/terrariumpi.log
     
     # Port binding - only expose internally
     # (Nginx handles public access)
