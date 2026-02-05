@@ -124,7 +124,7 @@ class terrariumAuth:
         except Exception as e:
             logger.warning(f"Failed to persist 2FA settings: {e}")
 
-        return:
+        return {
             "secret": secret,
             "qr_code": f"data:image/png;base64,{qr_code_base64}",
             "provisioning_uri": provisioning_uri,
