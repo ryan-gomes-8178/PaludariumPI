@@ -49,7 +49,11 @@ class terrariumAuth:
             engine: TerrariumEngine instance
         """
         self.engine = engine
-        self.sessions = {}  # Store active sessions {session_id: {user, timestamp, device_fingerprint}}
+        # Store active sessions {session_id: {user, timestamp, device_fingerprint}}
+        # NOTE: Sessions are stored in-memory only. When the application restarts,
+        # all active sessions will be lost and users will need to re-authenticate.
+        # For persistent sessions across restarts, consider storing them in the database.
+        self.sessions = {}
         self.failed_attempts = {}  # Track failed login attempts {ip: {attempts, timestamp}}
         self.preauth_contexts = {}  # Track pre-auth contexts {token: {username, ip, timestamp, attempts}}
         self.cleanup_task = None
