@@ -100,13 +100,21 @@ class terrariumAuthAPI:
         {
             "success": true/false,
             "message": "string",
-            "session_token": "string (if success)",
             "requires_2fa": true/false (if 2FA needed),
             "error": "string (if error)"
         }
+        
+        Note: Session token is set as an HttpOnly cookie, not in response body.
         """
         try:
             data = request.json
+            if data is None:
+                response.status = 400
+                return {
+                    "success": False,
+                    "error": "Invalid or missing JSON in request body"
+                }
+
             username = data.get("username", "").strip()
             password = data.get("password", "")
 
@@ -141,7 +149,6 @@ class terrariumAuthAPI:
                 return {
                     "success": True,
                     "message": result.get("message", "Login successful"),
-                    "session_token": result.get("session_token"),
                     "requires_2fa": result.get("requires_2fa", False)
                 }
             else:
@@ -152,7 +159,7 @@ class terrariumAuthAPI:
                     "error": result.get("error", "Authentication failed")
                 }
 
-        except json.JSONDecodeError:
+        except (json.JSONDecodeError, ValueError):
             response.status = 400
             return {
                 "success": False,
@@ -181,12 +188,20 @@ class terrariumAuthAPI:
         {
             "success": true/false,
             "message": "string",
-            "session_token": "string (if success)",
             "error": "string (if error)"
         }
+        
+        Note: Session token is set as an HttpOnly cookie, not in response body.
         """
         try:
             data = request.json
+            if data is None:
+                response.status = 400
+                return {
+                    "success": False,
+                    "error": "Invalid or missing JSON in request body"
+                }
+
             username = data.get("username", "").strip()
             totp_code = data.get("totp_code", "").strip()
 
@@ -226,8 +241,7 @@ class terrariumAuthAPI:
                 logger.info(f"2FA verification successful for user '{username}' from IP {client_ip}")
                 return {
                     "success": True,
-                    "message": "2FA verification successful",
-                    "session_token": result["session_token"]
+                    "message": "2FA verification successful"
                 }
             else:
                 response.status = 401
@@ -237,7 +251,7 @@ class terrariumAuthAPI:
                     "error": result.get("error", "2FA verification failed")
                 }
 
-        except json.JSONDecodeError:
+        except (json.JSONDecodeError, ValueError):
             response.status = 400
             return {
                 "success": False,
@@ -391,3 +405,25 @@ class terrariumAuthAPI:
                 "authenticated": False,
                 "error": "Internal server error"
             }
+
+    def routes(self, bottle_app):
+        """
+        Register authentication API routes with the bottle application.
+
+        Args:
+            bottle_app (bottle.Bottle): Bottle application instance to register routes with
+        """
+        # POST /api/login - Authenticate with username/password
+        bottle_app.route("/api/login", "POST", self.login, name="api:login")
+
+        # POST /api/login/2fa - Verify 2FA code
+        bottle_app.route("/api/login/2fa", "POST", self.login_2fa, name="api:login_2fa")
+
+        # POST /api/logout - Invalidate session
+        bottle_app.route("/api/logout", "POST", self.logout, name="api:logout")
+
+        # GET /api/auth/2fa/setup - Get 2FA setup QR code
+        bottle_app.route("/api/auth/2fa/setup", "GET", self.setup_2fa, name="api:auth_2fa_setup")
+
+        # GET /api/auth/verify - Verify current session
+        bottle_app.route("/api/auth/verify", "GET", self.verify_session, name="api:auth_verify")

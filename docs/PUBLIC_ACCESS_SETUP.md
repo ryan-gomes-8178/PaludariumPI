@@ -160,10 +160,6 @@ If your TerrariumPI is behind a home router:
 
 ### Update Python Dependencies
 ```bash
-# Add to requirements.txt:
-# pyotp==2.9.0
-# qrcode==8.0
-
 pip install -r requirements.txt
 ```
 
