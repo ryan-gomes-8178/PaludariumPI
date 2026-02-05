@@ -89,16 +89,21 @@ class terrariumAuthAPI:
     def __is_https(self):
         """
         Detect if the request is over HTTPS.
-        Checks X-Forwarded-Proto header (set by reverse proxy) and request URL scheme.
+        Checks X-Forwarded-Proto header (set by reverse proxy) only when the
+        immediate peer is a trusted proxy, otherwise relies on the request URL
+        scheme.
 
         Returns:
             bool: True if request is over HTTPS, False otherwise
         """
-        # Check X-Forwarded-Proto header (set by reverse proxy like Nginx)
-        forwarded_proto = request.headers.get("X-Forwarded-Proto", "").lower()
-        if forwarded_proto == "https":
-            return True
+        remote_addr = request.remote_addr
 
+        # Only trust X-Forwarded-Proto when the immediate peer is a trusted proxy,
+        # similar to how __get_client_ip handles X-Real-Ip and X-Forwarded-For.
+        if remote_addr in self.trusted_proxies:
+            forwarded_proto = request.headers.get("X-Forwarded-Proto", "").lower()
+            if forwarded_proto == "https":
+                return True
         # Fallback: check request URL scheme
         return request.scheme == "https"
 
