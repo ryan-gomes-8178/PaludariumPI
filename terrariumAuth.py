@@ -492,7 +492,7 @@ class terrariumAuth:
             }
 
         # Verify TOTP token
-        if not self.verify_totp_token(username, token):
+        if not self.verify_totp_token(token):
             self.record_2fa_failure(preauth_token)
             logger.warning(f"Invalid 2FA token for user '{username}' from IP {ip_address} (attempt {context['attempts'] + 1})")
             return {
