@@ -9,14 +9,12 @@ import terrariumLogging
 
 logger = terrariumLogging.logging.getLogger(__name__)
 
-import json
 import time
 import secrets
 import qrcode
 from io import BytesIO
 import base64
 from datetime import datetime, timedelta
-from pathlib import Path
 
 try:
     import pyotp
@@ -41,6 +39,7 @@ class terrariumAuth:
     MAX_LOGIN_ATTEMPTS = 5
     LOCKOUT_DURATION = 900  # 15 minutes in seconds
     SESSION_TIMEOUT = 3600  # 1 hour
+    PREAUTH_TIMEOUT = 300  # 5 minutes for pre-auth context
 
     def __init__(self, engine):
         """
@@ -52,6 +51,7 @@ class terrariumAuth:
         self.engine = engine
         self.sessions = {}  # Store active sessions {session_id: {user, timestamp, device_fingerprint}}
         self.failed_attempts = {}  # Track failed login attempts {ip: {attempts, timestamp}}
+        self.preauth_contexts = {}  # Track pre-auth contexts {token: {username, ip, timestamp, attempts}}
         self.cleanup_task = None
 
     def setup_2fa_for_user(self, username):
@@ -88,10 +88,19 @@ class terrariumAuth:
         img.save(buffered, format="PNG")
         qr_code_base64 = base64.b64encode(buffered.getvalue()).decode()
 
+        # Persist the 2FA secret and enabled flag in engine settings
+        try:
+            if hasattr(self.engine, "settings") and isinstance(self.engine.settings, dict):
+                self.engine.settings["two_fa_secret"] = secret
+                self.engine.settings["two_fa_enabled"] = True
+        except Exception as e:
+            logger.warning(f"Failed to persist 2FA settings: {e}")
+
         return {
             "secret": secret,
             "qr_code": f"data:image/png;base64,{qr_code_base64}",
-            "provisioning_uri": provisioning_uri
+            "provisioning_uri": provisioning_uri,
+            "two_fa_enabled": True
         }
 
     def verify_totp_token(self, token):
@@ -181,6 +190,101 @@ class terrariumAuth:
         if ip_address in self.failed_attempts:
             del self.failed_attempts[ip_address]
 
+    def create_preauth_context(self, username, ip_address):
+        """
+        Create a pre-auth context after successful password verification.
+        This context is required to complete 2FA authentication.
+
+        Args:
+            username (str): Authenticated username
+            ip_address (str): Client IP address
+
+        Returns:
+            str: Pre-auth token
+        """
+        preauth_token = secrets.token_urlsafe(32)
+        self.preauth_contexts[preauth_token] = {
+            "username": username,
+            "ip_address": ip_address,
+            "timestamp": time.time(),
+            "attempts": 0
+        }
+        logger.info(f"Pre-auth context created for user '{username}' from IP {ip_address}")
+        return preauth_token
+
+    def verify_preauth_context(self, preauth_token, ip_address):
+        """
+        Verify a pre-auth context is valid and hasn't expired.
+
+        Args:
+            preauth_token (str): Pre-auth token
+            ip_address (str): Client IP address
+
+        Returns:
+            dict: Pre-auth context if valid, None otherwise
+        """
+        if preauth_token not in self.preauth_contexts:
+            logger.warning(f"Invalid pre-auth token from IP {ip_address}")
+            return None
+
+        context = self.preauth_contexts[preauth_token]
+
+        # Check if expired
+        if time.time() - context["timestamp"] > self.PREAUTH_TIMEOUT:
+            del self.preauth_contexts[preauth_token]
+            logger.warning(f"Expired pre-auth token for user '{context['username']}' from IP {ip_address}")
+            return None
+
+        # Verify IP address matches
+        if context["ip_address"] != ip_address:
+            logger.warning(f"Pre-auth IP mismatch for token. Expected {context['ip_address']}, got {ip_address}")
+            return None
+
+        return context
+
+    def record_2fa_failure(self, preauth_token):
+        """
+        Record a failed 2FA attempt for rate limiting.
+
+        Args:
+            preauth_token (str): Pre-auth token
+        """
+        if preauth_token in self.preauth_contexts:
+            self.preauth_contexts[preauth_token]["attempts"] += 1
+            logger.warning(f"2FA failure recorded for token (attempt {self.preauth_contexts[preauth_token]['attempts']})")
+
+    def check_2fa_rate_limit(self, preauth_token):
+        """
+        Check if 2FA attempts are rate-limited.
+
+        Args:
+            preauth_token (str): Pre-auth token
+
+        Returns:
+            bool: True if rate limited
+        """
+        if preauth_token not in self.preauth_contexts:
+            return False
+
+        context = self.preauth_contexts[preauth_token]
+        if context["attempts"] >= self.MAX_LOGIN_ATTEMPTS:
+            logger.warning(f"2FA rate limit exceeded for user '{context['username']}'")
+            return True
+
+        return False
+
+    def invalidate_preauth_context(self, preauth_token):
+        """
+        Invalidate a pre-auth context after successful 2FA or on error.
+
+        Args:
+            preauth_token (str): Pre-auth token to invalidate
+        """
+        if preauth_token in self.preauth_contexts:
+            username = self.preauth_contexts[preauth_token].get("username", "unknown")
+            del self.preauth_contexts[preauth_token]
+            logger.info(f"Pre-auth context invalidated for user '{username}'")
+
     def create_session(self, username, ip_address, device_fingerprint=None):
         """
         Create a new authenticated session.
@@ -253,7 +357,7 @@ class terrariumAuth:
             del self.sessions[session_token]
             logger.info(f"Session invalidated for user '{username}'")
 
-    def authenticate(self, username, password, ip_address, require_2fa=False):
+    def authenticate(self, username, password, ip_address):
         """
         Authenticate user with username and password.
 
@@ -261,7 +365,6 @@ class terrariumAuth:
             username (str): Username
             password (str): Password (plain text)
             ip_address (str): Client IP address for rate limiting
-            require_2fa (bool): Whether 2FA is required for this user
 
         Returns:
             dict: {
@@ -297,9 +400,12 @@ class terrariumAuth:
         two_fa_enabled = self.engine.settings.get("two_fa_enabled", False)
         if terrariumUtils.is_true(two_fa_enabled):
             logger.info(f"2FA required for user '{username}'")
+            # Create pre-auth context for 2FA verification
+            preauth_token = self.create_preauth_context(username, ip_address)
             return {
                 "success": True,
                 "requires_2fa": True,
+                "preauth_token": preauth_token,
                 "message": "2FA code required"
             }
 
@@ -313,14 +419,16 @@ class terrariumAuth:
             "message": f"Successfully authenticated as '{username}'"
         }
 
-    def complete_2fa_authentication(self, username, token, ip_address):
+    def complete_2fa_authentication(self, username, token, ip_address, preauth_token):
         """
         Complete authentication by verifying 2FA token.
+        Requires a valid pre-auth context from successful password authentication.
 
         Args:
             username (str): Username
             token (str): 6-digit TOTP token
             ip_address (str): Client IP address
+            preauth_token (str): Pre-auth token from password authentication
 
         Returns:
             dict: {
@@ -329,14 +437,43 @@ class terrariumAuth:
                 'error': str (on failure)
             }
         """
-        if not self.verify_totp_token(token):
-            logger.warning(f"Invalid 2FA token for user '{username}' from IP {ip_address}")
+        # Verify pre-auth context exists and is valid
+        context = self.verify_preauth_context(preauth_token, ip_address)
+        if not context:
+            logger.warning(f"Invalid or expired pre-auth context for 2FA attempt from IP {ip_address}")
+            return {
+                "success": False,
+                "error": "Invalid or expired authentication session. Please login again."
+            }
+
+        # Verify username matches pre-auth context
+        if context["username"] != username:
+            logger.warning(f"Username mismatch in 2FA: expected '{context['username']}', got '{username}'")
+            self.invalidate_preauth_context(preauth_token)
+            return {
+                "success": False,
+                "error": "Authentication error. Please login again."
+            }
+
+        # Check 2FA rate limiting
+        if self.check_2fa_rate_limit(preauth_token):
+            self.invalidate_preauth_context(preauth_token)
+            return {
+                "success": False,
+                "error": "Too many failed 2FA attempts. Please login again."
+            }
+
+        # Verify TOTP token
+        if not self.verify_totp_token(username, token):
+            self.record_2fa_failure(preauth_token)
+            logger.warning(f"Invalid 2FA token for user '{username}' from IP {ip_address} (attempt {context['attempts'] + 1})")
             return {
                 "success": False,
                 "error": "Invalid 2FA code"
             }
 
-        # Reset failed attempts and create session
+        # Success: invalidate pre-auth context and create session
+        self.invalidate_preauth_context(preauth_token)
         self.reset_failed_attempts(ip_address)
         session_token = self.create_session(username, ip_address)
         session = self.sessions[session_token]
@@ -351,7 +488,7 @@ class terrariumAuth:
 
     def cleanup_expired_sessions(self):
         """
-        Clean up expired sessions periodically.
+        Clean up expired sessions and pre-auth contexts periodically.
         Should be called by the main engine's cleanup task.
         """
         now = datetime.utcnow()
@@ -372,3 +509,20 @@ class terrariumAuth:
 
         if expired_tokens:
             logger.debug(f"Cleaned up {len(expired_tokens)} expired sessions")
+
+        # Clean up expired pre-auth contexts
+        now_timestamp = time.time()
+        expired_preauth = []
+
+        for token, context in list(self.preauth_contexts.items()):
+            if now_timestamp - context["timestamp"] > self.PREAUTH_TIMEOUT:
+                expired_preauth.append(token)
+
+        for token in expired_preauth:
+            if token in self.preauth_contexts:
+                username = self.preauth_contexts[token].get("username", "unknown")
+                del self.preauth_contexts[token]
+                logger.debug(f"Cleaned up expired pre-auth context for user '{username}'")
+
+        if expired_preauth:
+            logger.debug(f"Cleaned up {len(expired_preauth)} expired pre-auth contexts")
