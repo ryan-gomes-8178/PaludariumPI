@@ -69,6 +69,13 @@ class terrariumAuthAPI:
         """
         try:
             data = request.json
+            if data is None:
+                response.status = 400
+                return {
+                    "success": False,
+                    "error": "Invalid or missing JSON in request body"
+                }
+
             username = data.get("username", "").strip()
             password = data.get("password", "")
 
@@ -114,7 +121,7 @@ class terrariumAuthAPI:
                     "error": result.get("error", "Authentication failed")
                 }
 
-        except json.JSONDecodeError:
+        except (json.JSONDecodeError, ValueError):
             response.status = 400
             return {
                 "success": False,
@@ -149,6 +156,13 @@ class terrariumAuthAPI:
         """
         try:
             data = request.json
+            if data is None:
+                response.status = 400
+                return {
+                    "success": False,
+                    "error": "Invalid or missing JSON in request body"
+                }
+
             username = data.get("username", "").strip()
             totp_code = data.get("totp_code", "").strip()
 
@@ -199,7 +213,7 @@ class terrariumAuthAPI:
                     "error": result.get("error", "2FA verification failed")
                 }
 
-        except json.JSONDecodeError:
+        except (json.JSONDecodeError, ValueError):
             response.status = 400
             return {
                 "success": False,
