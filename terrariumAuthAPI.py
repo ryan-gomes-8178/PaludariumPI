@@ -9,7 +9,7 @@ import terrariumLogging
 logger = terrariumLogging.logging.getLogger(__name__)
 
 import json
-from bottle import request, response, HTTPError
+from bottle import request, response
 
 class terrariumAuthAPI:
     """
@@ -31,22 +31,37 @@ class terrariumAuthAPI:
         self.webserver = webserver
         self.engine = webserver.engine
         self.auth = self.engine.auth
+        # List of IP addresses of trusted reverse proxies.
+        # Only when the immediate peer (request.remote_addr) is in this list
+        # will X-Real-Ip / X-Forwarded-For headers be honored.
+        # If webserver exposes such a configuration, use it; otherwise default to empty.
+        self.trusted_proxies = getattr(webserver, "trusted_proxies", []) or []
 
     def __get_client_ip(self):
         """
-        Get client IP address, respecting reverse proxy headers.
+        Get client IP address, safely handling reverse proxy headers.
 
         Returns:
             str: Client IP address
         """
-        if request.headers.get("X-Real-Ip"):
-            return request.headers.get("X-Real-Ip")
-        elif request.headers.get("X-Forwarded-For"):
-            # Take first IP in case of multiple proxies
-            return request.headers.get("X-Forwarded-For").split(",")[0].strip()
-        else:
-            return request.remote_addr
+        remote_addr = request.remote_addr
 
+        # By default, trust only the direct peer's IP address. Only honor
+        # X-Real-Ip / X-Forwarded-For when the immediate peer is a trusted proxy.
+        if remote_addr not in self.trusted_proxies:
+            return remote_addr
+
+        # request.remote_addr is a trusted proxy; respect proxy headers.
+        real_ip = request.headers.get("X-Real-Ip")
+        if real_ip:
+            return real_ip
+
+        forwarded_for = request.headers.get("X-Forwarded-For")
+        if forwarded_for:
+            # Take first IP in case of multiple proxies
+            return forwarded_for.split(",")[0].strip()
+
+        return remote_addr
     def login(self):
         """
         POST /api/login
@@ -70,6 +85,13 @@ class terrariumAuthAPI:
         """
         try:
             data = request.json
+            if data is None:
+                response.status = 400
+                return {
+                    "success": False,
+                    "error": "Invalid or missing JSON in request body"
+                }
+
             username = data.get("username", "").strip()
             password = data.get("password", "")
 
@@ -114,7 +136,7 @@ class terrariumAuthAPI:
                     "error": result.get("error", "Authentication failed")
                 }
 
-        except json.JSONDecodeError:
+        except (json.JSONDecodeError, ValueError):
             response.status = 400
             return {
                 "success": False,
@@ -150,6 +172,13 @@ class terrariumAuthAPI:
         """
         try:
             data = request.json
+            if data is None:
+                response.status = 400
+                return {
+                    "success": False,
+                    "error": "Invalid or missing JSON in request body"
+                }
+
             username = data.get("username", "").strip()
             totp_code = data.get("totp_code", "").strip()
 
@@ -199,7 +228,7 @@ class terrariumAuthAPI:
                     "error": result.get("error", "2FA verification failed")
                 }
 
-        except json.JSONDecodeError:
+        except (json.JSONDecodeError, ValueError):
             response.status = 400
             return {
                 "success": False,
