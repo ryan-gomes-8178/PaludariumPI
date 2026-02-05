@@ -100,7 +100,7 @@ class terrariumAuthAPI:
             return True
 
         # Fallback: check request URL scheme
-        return request.url.startswith("https://")
+        return request.scheme == "https"
 
     def login(self):
         """
