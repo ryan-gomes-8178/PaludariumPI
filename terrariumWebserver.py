@@ -118,12 +118,12 @@ class terrariumWebserver(object):
                                 err.add_header("WWW-Authenticate", f'Basic realm="{realm}"')
                                 if user is not None or password is not None:
                                     self.engine.notification.message(
-                                        "authentication_error", {"ip": client_ip, "username": user, "password": password}, []
+                                        "authentication_error", {"ip": client_ip, "username": user}, []
                                     )
-                                    password = len(password) * "*"
                                     logger.warning(
-                                        f"Incorrect login detected using username '{user}' and password '{password}' from ip {client_ip}"
+                                        f"Incorrect login detected using username '{user}' from ip {client_ip}"
                                     )
+                                    password = None
                                 return err
 
                 if request.method.lower() in ["get", "head", "options"]:
