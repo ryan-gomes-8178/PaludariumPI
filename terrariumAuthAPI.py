@@ -85,6 +85,23 @@ class terrariumAuthAPI:
             return forwarded_for.split(",")[0].strip()
 
         return remote_addr
+
+    def __is_https(self):
+        """
+        Detect if the request is over HTTPS.
+        Checks X-Forwarded-Proto header (set by reverse proxy) and request URL scheme.
+
+        Returns:
+            bool: True if request is over HTTPS, False otherwise
+        """
+        # Check X-Forwarded-Proto header (set by reverse proxy like Nginx)
+        forwarded_proto = request.headers.get("X-Forwarded-Proto", "").lower()
+        if forwarded_proto == "https":
+            return True
+
+        # Fallback: check request URL scheme
+        return request.scheme == "https"
+
     def login(self):
         """
         POST /api/login
@@ -135,13 +152,14 @@ class terrariumAuthAPI:
                 response.status = 200
                 # Set secure session cookie
                 if result.get("session_token"):
+                    is_https = self.__is_https()
                     response.set_cookie(
                         "session_token",
                         result["session_token"],
                         max_age=3600,  # 1 hour
                         path="/",
                         httponly=True,  # Prevent JavaScript access
-                        secure=True,  # HTTPS only
+                        secure=is_https,  # Only set secure flag for HTTPS
                         samesite="Strict"  # CSRF protection
                     )
 
@@ -238,13 +256,14 @@ class terrariumAuthAPI:
             if result.get("success"):
                 response.status = 200
                 # Set secure session cookie
+                is_https = self.__is_https()
                 response.set_cookie(
                     "session_token",
                     result["session_token"],
                     max_age=3600,  # 1 hour
                     path="/",
                     httponly=True,
-                    secure=True,
+                    secure=is_https,
                     samesite="Strict"
                 )
 
