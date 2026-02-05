@@ -57,6 +57,7 @@ from hardware.button import terrariumButton, terrariumButtonLoadingException
 from hardware.webcam import terrariumWebcam, terrariumWebcamLoadingException
 
 from terrariumNotification import terrariumNotification
+from terrariumAuth import terrariumAuth
 
 
 # https://docs.python.org/3/library/gettext.html#deferred-translations
@@ -139,6 +140,9 @@ class terrariumEngine(object):
 
         # Load settings. This will also load the weather data if available
         self.load_settings()
+
+        # Initialize authentication module
+        self.auth = terrariumAuth(self)
 
         # Notification system
         self.notification = terrariumNotification(self)
