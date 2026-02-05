@@ -1962,9 +1962,17 @@ class terrariumAPI(object):
 
     @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
     def setting_list(self):
-        return {
-            "data": [self.setting_detail(setting.id) for setting in Setting.select(lambda s: not s.id in ["password"])]
-        }
+        result = []
+        for setting in Setting.select(lambda s: not s.id in ["password"]):
+            data = setting.to_dict()
+            if "exclude_ids" == data["id"]:
+                ids = data["value"].split(",")
+                data["value"] = []
+                for part in [Area, Enclosure, Button, Relay, Sensor, Webcam]:
+                    for item in part.select(lambda a: a.id in ids):
+                        data["value"].append({"id": item.id, "name": item.name})
+            result.append(data)
+        return {"data": result}
 
     @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
     def setting_detail(self, setting):

@@ -59,6 +59,9 @@ class terrariumAuthAPI:
         
         # GET /api/auth/verify - Verify current session
         bottle_app.route("/api/auth/verify", method="GET", callback=self.verify_session, name="api:auth_verify")
+        
+        # GET /api/auth/notifications - Get notification settings (stub for UI compatibility)
+        bottle_app.route("/api/auth/notifications", method="GET", callback=self.get_notifications, name="api:auth_notifications")
 
     def __get_client_ip(self):
         """
@@ -440,3 +443,16 @@ class terrariumAuthAPI:
                 "authenticated": False,
                 "error": "Internal server error"
             }
+
+    def get_notifications(self):
+        """
+        GET /api/auth/notifications
+        Get notification settings (stub for UI compatibility).
+
+        Returns empty array until proper notification API is implemented.
+        """
+        response.status = 200
+        return {
+            "success": True,
+            "notifications": []
+        }

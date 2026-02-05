@@ -97,7 +97,7 @@ class terrariumAuth:
             # Always keep the in-memory settings up to date for immediate use
             if hasattr(self.engine, "settings") and isinstance(self.engine.settings, dict):
                 self.engine.settings["two_fa_secret"] = secret
-                self.engine.settings["two_fa_enabled"] = True
+                # DO NOT enable 2FA yet - let the user manually enable it when they toggle the switch
 
             # Attempt to persist settings using common engine helpers, if available
             persist_ok = False
