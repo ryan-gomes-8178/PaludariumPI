@@ -229,6 +229,17 @@ class terrariumAuth:
         if ip_address in self.failed_2fa_attempts:
             del self.failed_2fa_attempts[ip_address]
 
+    def reset_all_failed_attempts(self, ip_address):
+        """
+        Clear both password and 2FA failed attempts for an IP address.
+        Called after successful authentication to reset rate limiting counters.
+
+        Args:
+            ip_address (str): IP address to clear
+        """
+        self.reset_failed_attempts(ip_address)
+        self.reset_failed_2fa_attempts(ip_address)
+
     def reset_failed_attempts(self, ip_address):
         """
         Clear failed login attempts for an IP address after successful login.
@@ -251,6 +262,8 @@ class terrariumAuth:
         Returns:
             str: Challenge token to be used in 2FA verification
         """
+        # Use 32 bytes for challenge token to provide 256 bits of entropy,
+        # which is cryptographically secure and prevents brute-force attacks
         challenge_token = secrets.token_urlsafe(32)
         self.pending_2fa_challenges[challenge_token] = {
             "username": username,
@@ -488,9 +501,8 @@ class terrariumAuth:
         # Invalidate the challenge token (one-time use)
         self.invalidate_2fa_challenge(challenge_token)
 
-        # Reset failed attempts and create session
-        self.reset_failed_attempts(ip_address)
-        self.reset_failed_2fa_attempts(ip_address)
+        # Reset all failed attempts and create session
+        self.reset_all_failed_attempts(ip_address)
         session_token = self.create_session(username, ip_address)
         session = self.sessions[session_token]
         session["two_fa_verified"] = True
