@@ -44,15 +44,9 @@ services:
     security_opt:
       - no-new-privileges:true
     
-    # Resource limits
-    deploy:
-      resources:
-        limits:
-          cpus: '1'
-          memory: 512M
-        reservations:
-          cpus: '0.5'
-          memory: 256M
+    # Note: Resource limits are not configured here because the `deploy.resources`
+    # section is ignored by `docker compose` in non-Swarm mode. Configure resource
+    # limits via Docker/Swarm deployment settings if needed.
     
     networks:
       - terrariumpi-network
