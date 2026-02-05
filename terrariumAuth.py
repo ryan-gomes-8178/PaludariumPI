@@ -224,7 +224,9 @@ class terrariumAuth:
             if now - self.failed_2fa_attempts[ip_address]["timestamp"] > self.LOCKOUT_DURATION:
                 self.failed_2fa_attempts[ip_address] = {"attempts": 1, "timestamp": now}
             else:
+                # Increment attempts and refresh timestamp to base lockout on the most recent failure
                 self.failed_2fa_attempts[ip_address]["attempts"] += 1
+                self.failed_2fa_attempts[ip_address]["timestamp"] = now
 
     def reset_failed_2fa_attempts(self, ip_address):
         """
