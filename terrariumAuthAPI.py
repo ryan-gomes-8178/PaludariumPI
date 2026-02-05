@@ -77,10 +77,11 @@ class terrariumAuthAPI:
         {
             "success": true/false,
             "message": "string",
-            "session_token": "string (if success)",
             "requires_2fa": true/false (if 2FA needed),
             "error": "string (if error)"
         }
+        
+        Note: Session token is set as an HttpOnly cookie, not in response body.
         """
         try:
             data = request.json
@@ -125,7 +126,6 @@ class terrariumAuthAPI:
                 return {
                     "success": True,
                     "message": result.get("message", "Login successful"),
-                    "session_token": result.get("session_token"),
                     "requires_2fa": result.get("requires_2fa", False)
                 }
             else:
@@ -165,9 +165,10 @@ class terrariumAuthAPI:
         {
             "success": true/false,
             "message": "string",
-            "session_token": "string (if success)",
             "error": "string (if error)"
         }
+        
+        Note: Session token is set as an HttpOnly cookie, not in response body.
         """
         try:
             data = request.json
@@ -217,8 +218,7 @@ class terrariumAuthAPI:
                 logger.info(f"2FA verification successful for user '{username}' from IP {client_ip}")
                 return {
                     "success": True,
-                    "message": "2FA verification successful",
-                    "session_token": result["session_token"]
+                    "message": "2FA verification successful"
                 }
             else:
                 response.status = 401
