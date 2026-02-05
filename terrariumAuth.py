@@ -9,7 +9,6 @@ import terrariumLogging
 
 logger = terrariumLogging.logging.getLogger(__name__)
 
-import json
 import time
 import secrets
 import qrcode
