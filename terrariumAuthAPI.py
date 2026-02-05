@@ -100,12 +100,21 @@ class terrariumAuthAPI:
                     )
 
                 logger.info(f"Successful login for user '{username}' from IP {client_ip}")
-                return {
+                return_data = {
                     "success": True,
                     "message": result.get("message", "Login successful"),
-                    "session_token": result.get("session_token"),
                     "requires_2fa": result.get("requires_2fa", False)
                 }
+                
+                # Include session_token if present
+                if result.get("session_token"):
+                    return_data["session_token"] = result["session_token"]
+                
+                # Include challenge_token if 2FA is required
+                if result.get("challenge_token"):
+                    return_data["challenge_token"] = result["challenge_token"]
+                
+                return return_data
             else:
                 response.status = 401
                 logger.warning(f"Failed login attempt for user '{username}' from IP {client_ip}")
@@ -136,7 +145,8 @@ class terrariumAuthAPI:
         Request body:
         {
             "username": "admin",
-            "totp_code": "123456"
+            "totp_code": "123456",
+            "challenge_token": "token_from_password_step"
         }
 
         Response:
@@ -151,12 +161,20 @@ class terrariumAuthAPI:
             data = request.json
             username = data.get("username", "").strip()
             totp_code = data.get("totp_code", "").strip()
+            challenge_token = data.get("challenge_token", "").strip()
 
             if not username or not totp_code:
                 response.status = 400
                 return {
                     "success": False,
                     "error": "Username and TOTP code are required"
+                }
+
+            if not challenge_token:
+                response.status = 400
+                return {
+                    "success": False,
+                    "error": "Challenge token is required. Please login with your password first."
                 }
 
             if len(totp_code) != 6 or not totp_code.isdigit():
@@ -169,8 +187,8 @@ class terrariumAuthAPI:
             # Get client IP
             client_ip = self.__get_client_ip()
 
-            # Verify 2FA
-            result = self.auth.complete_2fa_authentication(username, totp_code, client_ip)
+            # Verify 2FA with challenge token
+            result = self.auth.complete_2fa_authentication(username, totp_code, client_ip, challenge_token)
 
             if result.get("success"):
                 response.status = 200

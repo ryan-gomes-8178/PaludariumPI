@@ -41,6 +41,7 @@ class terrariumAuth:
     MAX_LOGIN_ATTEMPTS = 5
     LOCKOUT_DURATION = 900  # 15 minutes in seconds
     SESSION_TIMEOUT = 3600  # 1 hour
+    TWO_FA_CHALLENGE_TIMEOUT = 300  # 5 minutes for 2FA challenge to be completed
 
     def __init__(self, engine):
         """
@@ -52,6 +53,8 @@ class terrariumAuth:
         self.engine = engine
         self.sessions = {}  # Store active sessions {session_id: {user, timestamp, device_fingerprint}}
         self.failed_attempts = {}  # Track failed login attempts {ip: {attempts, timestamp}}
+        self.pending_2fa_challenges = {}  # Store pending 2FA challenges {challenge_token: {username, ip, timestamp}}
+        self.failed_2fa_attempts = {}  # Track failed 2FA attempts {ip: {attempts, timestamp}}
         self.cleanup_task = None
 
     def setup_2fa_for_user(self, username):
@@ -169,6 +172,63 @@ class terrariumAuth:
             else:
                 self.failed_attempts[ip_address]["attempts"] += 1
 
+    def check_2fa_rate_limit(self, ip_address):
+        """
+        Check if IP address is rate-limited due to failed 2FA attempts.
+
+        Args:
+            ip_address (str): IP address to check
+
+        Returns:
+            tuple: (is_limited, remaining_wait_seconds)
+        """
+        now = time.time()
+
+        if ip_address not in self.failed_2fa_attempts:
+            return False, 0
+
+        attempt_data = self.failed_2fa_attempts[ip_address]
+
+        # Check if lockout period has expired
+        if now - attempt_data["timestamp"] > self.LOCKOUT_DURATION:
+            del self.failed_2fa_attempts[ip_address]
+            return False, 0
+
+        # Check if max attempts exceeded
+        if attempt_data["attempts"] >= self.MAX_LOGIN_ATTEMPTS:
+            remaining = self.LOCKOUT_DURATION - (now - attempt_data["timestamp"])
+            return True, int(remaining)
+
+        return False, 0
+
+    def record_failed_2fa_attempt(self, ip_address):
+        """
+        Record a failed 2FA verification attempt for rate limiting.
+
+        Args:
+            ip_address (str): IP address of failed attempt
+        """
+        now = time.time()
+
+        if ip_address not in self.failed_2fa_attempts:
+            self.failed_2fa_attempts[ip_address] = {"attempts": 1, "timestamp": now}
+        else:
+            # Reset counter if lockout period expired
+            if now - self.failed_2fa_attempts[ip_address]["timestamp"] > self.LOCKOUT_DURATION:
+                self.failed_2fa_attempts[ip_address] = {"attempts": 1, "timestamp": now}
+            else:
+                self.failed_2fa_attempts[ip_address]["attempts"] += 1
+
+    def reset_failed_2fa_attempts(self, ip_address):
+        """
+        Clear failed 2FA attempts for an IP address after successful verification.
+
+        Args:
+            ip_address (str): IP address to clear
+        """
+        if ip_address in self.failed_2fa_attempts:
+            del self.failed_2fa_attempts[ip_address]
+
     def reset_failed_attempts(self, ip_address):
         """
         Clear failed login attempts for an IP address after successful login.
@@ -178,6 +238,72 @@ class terrariumAuth:
         """
         if ip_address in self.failed_attempts:
             del self.failed_attempts[ip_address]
+
+    def create_2fa_challenge(self, username, ip_address):
+        """
+        Create a short-lived challenge token for 2FA authentication.
+        This token proves that the password step was completed successfully.
+
+        Args:
+            username (str): Username that completed password authentication
+            ip_address (str): Client IP address
+
+        Returns:
+            str: Challenge token to be used in 2FA verification
+        """
+        challenge_token = secrets.token_urlsafe(32)
+        self.pending_2fa_challenges[challenge_token] = {
+            "username": username,
+            "ip_address": ip_address,
+            "timestamp": time.time()
+        }
+        
+        logger.info(f"2FA challenge created for user '{username}' from IP {ip_address}")
+        return challenge_token
+
+    def verify_2fa_challenge(self, challenge_token, username, ip_address):
+        """
+        Verify that a 2FA challenge token is valid.
+
+        Args:
+            challenge_token (str): Challenge token from password authentication
+            username (str): Username attempting 2FA verification
+            ip_address (str): Current client IP address
+
+        Returns:
+            tuple: (is_valid, error_message)
+        """
+        if not challenge_token or challenge_token not in self.pending_2fa_challenges:
+            return False, "Invalid or missing 2FA challenge token"
+
+        challenge = self.pending_2fa_challenges[challenge_token]
+        now = time.time()
+
+        # Check if challenge has expired
+        if now - challenge["timestamp"] > self.TWO_FA_CHALLENGE_TIMEOUT:
+            del self.pending_2fa_challenges[challenge_token]
+            return False, "2FA challenge expired. Please login again with your password."
+
+        # Verify username matches
+        if challenge["username"] != username:
+            return False, "Username mismatch with 2FA challenge"
+
+        # Verify IP address matches (prevent session hijacking)
+        if challenge["ip_address"] != ip_address:
+            logger.warning(f"IP mismatch for 2FA challenge: expected {challenge['ip_address']}, got {ip_address}")
+            return False, "IP address mismatch. Please login again from the same network."
+
+        return True, None
+
+    def invalidate_2fa_challenge(self, challenge_token):
+        """
+        Invalidate a 2FA challenge token after use (one-time use).
+
+        Args:
+            challenge_token (str): Challenge token to invalidate
+        """
+        if challenge_token in self.pending_2fa_challenges:
+            del self.pending_2fa_challenges[challenge_token]
 
     def create_session(self, username, ip_address, device_fingerprint=None):
         """
@@ -294,10 +420,13 @@ class terrariumAuth:
         # Check if 2FA is required
         two_fa_enabled = self.engine.settings.get("two_fa_enabled", False)
         if terrariumUtils.is_true(two_fa_enabled):
+            # Create a 2FA challenge token to prove password was verified
+            challenge_token = self.create_2fa_challenge(username, ip_address)
             logger.info(f"2FA required for user '{username}'")
             return {
                 "success": True,
                 "requires_2fa": True,
+                "challenge_token": challenge_token,
                 "message": "2FA code required"
             }
 
@@ -311,14 +440,16 @@ class terrariumAuth:
             "message": f"Successfully authenticated as '{username}'"
         }
 
-    def complete_2fa_authentication(self, username, token, ip_address):
+    def complete_2fa_authentication(self, username, token, ip_address, challenge_token):
         """
         Complete authentication by verifying 2FA token.
+        This method requires a valid challenge token from the password authentication step.
 
         Args:
             username (str): Username
             token (str): 6-digit TOTP token
             ip_address (str): Client IP address
+            challenge_token (str): Challenge token from password authentication
 
         Returns:
             dict: {
@@ -327,15 +458,39 @@ class terrariumAuth:
                 'error': str (on failure)
             }
         """
+        # Check 2FA-specific rate limiting
+        is_limited, wait_time = self.check_2fa_rate_limit(ip_address)
+        if is_limited:
+            logger.warning(f"2FA rate limit exceeded for IP {ip_address}. Wait {wait_time} seconds.")
+            return {
+                "success": False,
+                "error": f"Too many failed 2FA attempts. Please try again in {wait_time} seconds."
+            }
+
+        # Verify the challenge token to ensure password step was completed
+        is_valid, error_msg = self.verify_2fa_challenge(challenge_token, username, ip_address)
+        if not is_valid:
+            logger.warning(f"Invalid 2FA challenge for user '{username}' from IP {ip_address}: {error_msg}")
+            return {
+                "success": False,
+                "error": error_msg
+            }
+
+        # Verify the TOTP token
         if not self.verify_totp_token(username, token):
+            self.record_failed_2fa_attempt(ip_address)
             logger.warning(f"Invalid 2FA token for user '{username}' from IP {ip_address}")
             return {
                 "success": False,
                 "error": "Invalid 2FA code"
             }
 
+        # Invalidate the challenge token (one-time use)
+        self.invalidate_2fa_challenge(challenge_token)
+
         # Reset failed attempts and create session
         self.reset_failed_attempts(ip_address)
+        self.reset_failed_2fa_attempts(ip_address)
         session_token = self.create_session(username, ip_address)
         session = self.sessions[session_token]
         session["two_fa_verified"] = True
@@ -349,7 +504,7 @@ class terrariumAuth:
 
     def cleanup_expired_sessions(self):
         """
-        Clean up expired sessions periodically.
+        Clean up expired sessions and 2FA challenges periodically.
         Should be called by the main engine's cleanup task.
         """
         now = datetime.utcnow()
@@ -370,3 +525,17 @@ class terrariumAuth:
 
         if expired_tokens:
             logger.debug(f"Cleaned up {len(expired_tokens)} expired sessions")
+
+        # Clean up expired 2FA challenges
+        now_timestamp = time.time()
+        expired_challenges = []
+
+        for challenge_token, challenge_data in self.pending_2fa_challenges.items():
+            if now_timestamp - challenge_data["timestamp"] > self.TWO_FA_CHALLENGE_TIMEOUT:
+                expired_challenges.append(challenge_token)
+
+        for challenge_token in expired_challenges:
+            del self.pending_2fa_challenges[challenge_token]
+
+        if expired_challenges:
+            logger.debug(f"Cleaned up {len(expired_challenges)} expired 2FA challenges")
