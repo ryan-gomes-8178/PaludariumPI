@@ -88,10 +88,19 @@ class terrariumAuth:
         img.save(buffered, format="PNG")
         qr_code_base64 = base64.b64encode(buffered.getvalue()).decode()
 
+        # Persist the 2FA secret and enabled flag in engine settings
+        try:
+            if hasattr(self.engine, "settings") and isinstance(self.engine.settings, dict):
+                self.engine.settings["two_fa_secret"] = secret
+                self.engine.settings["two_fa_enabled"] = True
+        except Exception as e:
+            logger.warning(f"Failed to persist 2FA settings: {e}")
+
         return {
             "secret": secret,
             "qr_code": f"data:image/png;base64,{qr_code_base64}",
-            "provisioning_uri": provisioning_uri
+            "provisioning_uri": provisioning_uri,
+            "two_fa_enabled": True
         }
 
     def verify_totp_token(self, username, token):
