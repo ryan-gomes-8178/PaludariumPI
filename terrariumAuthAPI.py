@@ -19,6 +19,7 @@ class terrariumAuthAPI:
     - POST /api/login/2fa - Verify 2FA code
     - POST /api/logout - Invalidate session
     - GET /api/auth/2fa/setup - Get 2FA setup QR code
+    - GET /api/auth/verify - Verify current session is valid
     """
 
     def __init__(self, webserver):
@@ -36,6 +37,28 @@ class terrariumAuthAPI:
         # will X-Real-Ip / X-Forwarded-For headers be honored.
         # If webserver exposes such a configuration, use it; otherwise default to empty.
         self.trusted_proxies = getattr(webserver, "trusted_proxies", []) or []
+
+    def routes(self, bottle_app):
+        """
+        Register authentication API routes with Bottle application.
+        
+        Args:
+            bottle_app: Bottle application instance
+        """
+        # POST /api/login - Authenticate with username/password
+        bottle_app.route("/api/login", method="POST", callback=self.login, name="api:login")
+        
+        # POST /api/login/2fa - Verify 2FA code
+        bottle_app.route("/api/login/2fa", method="POST", callback=self.login_2fa, name="api:login_2fa")
+        
+        # POST /api/logout - Invalidate session
+        bottle_app.route("/api/logout", method="POST", callback=self.logout, name="api:logout")
+        
+        # GET /api/auth/2fa/setup - Get 2FA setup QR code
+        bottle_app.route("/api/auth/2fa/setup", method="GET", callback=self.setup_2fa, name="api:auth_2fa_setup")
+        
+        # GET /api/auth/verify - Verify current session
+        bottle_app.route("/api/auth/verify", method="GET", callback=self.verify_session, name="api:auth_verify")
 
     def __get_client_ip(self):
         """

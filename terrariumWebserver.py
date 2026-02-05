@@ -417,6 +417,9 @@ class terrariumWebserver(object):
 
         # Add API including all the CRUD urls
         self.api.routes(self.bottle)
+        
+        # Add Authentication API routes
+        self.auth_api.routes(self.bottle)
 
         # Add Authentication API routes
         self.auth_api.routes(self.bottle)
