@@ -6,7 +6,12 @@ from . import terrariumRelay
 from terrariumUtils import terrariumUtils, terrariumAsync, terrariumCache
 
 # pip install python-kasa
-from kasa import Discover
+from kasa import Discover, Credentials
+import asyncio
+
+# Global device cache to prevent multiple simultaneous connections to the same device
+_device_connection_cache = {}
+_device_connection_lock = asyncio.Lock()
 
 
 class terrariumRelayTPLinkKasa(terrariumRelay):
@@ -16,22 +21,72 @@ class terrariumRelayTPLinkKasa(terrariumRelay):
     URL = "^\d{1,3}\.\d{1,3}\.\d{1,3}(,\d{1,3})?$"
 
     def _load_hardware(self):
-        async def __load_hardware(ip):
-            device = await Discover.discover_single(ip)
-
-            return device
+        async def __load_hardware(ip, credentials=None):
+            # Use global device cache to avoid multiple simultaneous connections
+            global _device_connection_cache, _device_connection_lock
+            
+            async with _device_connection_lock:
+                cache_key = ip
+                
+                # Check if we already have a connection to this device
+                if cache_key in _device_connection_cache:
+                    cached_device = _device_connection_cache[cache_key]
+                    # Verify the cached device is still valid
+                    try:
+                        await asyncio.wait_for(cached_device.update(), timeout=2.0)
+                        logger.debug(f"Reusing cached connection for Kasa device at {ip}")
+                        return cached_device
+                    except Exception as e:
+                        logger.debug(f"Cached connection invalid for {ip}, reconnecting: {e}")
+                        _device_connection_cache.pop(cache_key, None)
+                
+                # Create new connection via discovery
+                logger.debug(f"Discovering Kasa device at {ip}")
+                device = await asyncio.wait_for(
+                    Discover.discover_single(ip, timeout=5),
+                    timeout=10
+                )
+                logger.debug(f"Device discovered: {device}")
+                
+                # For KLAP devices, we need to set credentials (empty by default for local-only mode)
+                # If credentials are provided, they will override the empty defaults
+                if hasattr(device.protocol, '_transport'):
+                    transport = device.protocol._transport
+                    if hasattr(transport, '_credentials'):
+                        # Use provided credentials or empty credentials as default
+                        creds_to_use = credentials if credentials else Credentials(username="", password="")
+                        transport._credentials = creds_to_use
+                        logger.debug(f"Set credentials for Kasa device at {ip}")
+                
+                # Cache the device connection
+                _device_connection_cache[cache_key] = device
+                
+                return device
 
         self._device["device"] = None
         # Input format should be either:
         # - [IP],[POWER_SWITCH_NR]
+        # Optional credentials stored in calibration data as:
+        # {"username": "user@example.com", "password": "password"}
+        # If no credentials are provided, device will use empty/default credentials (local-only mode)
 
         # Use an internal caching for speeding things up.
         self.__state_cache = terrariumCache()
         self.__asyncio = terrariumAsync()
 
         address = self._address
+        
+        # Get credentials from calibration data if available
+        credentials = None
+        if self.calibration and isinstance(self.calibration, dict):
+            username = self.calibration.get("username", "").strip()
+            password = self.calibration.get("password", "").strip()
+            if username and password:
+                credentials = Credentials(username=username, password=password)
+                logger.info(f"Using stored credentials for Kasa device at {address[0]}")
+        
         try:
-            self._device["device"] = self.__asyncio.run(__load_hardware(address[0]))
+            self._device["device"] = self.__asyncio.run(__load_hardware(address[0], credentials))
             self._device["switch"] = 0 if len(address) == 1 else int(address[1]) - 1
         except Exception as ex:
             logger.error(f"Error loading {self} at address {address[0]}: {ex}")
