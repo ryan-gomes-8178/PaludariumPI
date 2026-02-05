@@ -9,12 +9,15 @@
   import Field from '../components/form/Field.svelte';
   import PasswordField from '../components/form/PasswordField.svelte';
   import Helper from '../components/form/Helper.svelte';
-  import { doLogin } from '../stores/authentication';
+  import { doLogin, doLogin2fa } from '../stores/authentication';
 
   let wrapper_show;
   let wrapper_hide;
   let validated = false;
   let login_error = false;
+  let requires_2fa = false;
+  let preauth_token = null;
+  let username_cache = null;
 
   let editForm;
 
@@ -22,19 +25,50 @@
     validated = true;
     login_error = false;
     if (context.form.checkValidity()) {
-      let login = await doLogin(values.username, values.password);
-      if (login) {
-        successNotification(
-          $_('notification.login.message.ok', { default: 'You are successfully logged in.' }),
-          $_('notification.login.title', { default: 'Login' }),
-        );
-        hide();
+      if (!requires_2fa) {
+        let login = await doLogin(values.username, values.password);
+        if (login && login.success) {
+          if (login.requires_2fa) {
+            requires_2fa = true;
+            preauth_token = login.preauth_token;
+            username_cache = values.username;
+            validated = false;
+            setTimeout(() => {
+              const tokenInput = document.querySelector('form input[name="totp_code"]');
+              if (tokenInput) {
+                tokenInput.focus();
+              }
+            }, 50);
+            return;
+          }
+
+          successNotification(
+            $_('notification.login.message.ok', { default: 'You are successfully logged in.' }),
+            $_('notification.login.title', { default: 'Login' }),
+          );
+          hide();
+        } else {
+          errorNotification(
+            $_('notification.login.message.error', { derfault: 'Sorry, but login is invalid' }),
+            $_('notification.login.title', { default: 'Login' }),
+          );
+          login_error = true;
+        }
       } else {
-        errorNotification(
-          $_('notification.login.message.error', { derfault: 'Sorry, but login is invalid' }),
-          $_('notification.login.title', { default: 'Login' }),
-        );
-        login_error = true;
+        let result = await doLogin2fa(username_cache, values.totp_code, preauth_token);
+        if (result && result.success) {
+          successNotification(
+            $_('notification.login.message.ok', { default: 'You are successfully logged in.' }),
+            $_('notification.login.title', { default: 'Login' }),
+          );
+          hide();
+        } else {
+          errorNotification(
+            result?.error || $_('notification.login.message.error', { derfault: 'Sorry, but login is invalid' }),
+            $_('notification.login.title', { default: 'Login' }),
+          );
+          login_error = true;
+        }
       }
       validated = false;
     }
@@ -51,10 +85,17 @@
   export const show = () => {
     reset();
     validated = false;
+    login_error = false;
+    requires_2fa = false;
+    preauth_token = null;
+    username_cache = null;
     wrapper_show();
 
     setTimeout(() => {
-      document.querySelector('form input[name="username"]').focus();
+      const input = document.querySelector('form input[name="username"]');
+      if (input) {
+        input.focus();
+      }
     }, 650);
   };
 
@@ -88,6 +129,7 @@
       name="username"
       class="col-8"
       required="{true}"
+      disabled="{requires_2fa}"
       horizontal="{true}"
       label="{$_('modal.login.form.username.label', { default: 'Username' })}"
       help="{$_('modal.login.form.username.help', { default: 'Enter the username' })}"
@@ -97,11 +139,24 @@
       name="password"
       class="col-8"
       required="{true}"
+      disabled="{requires_2fa}"
       horizontal="{true}"
       label="{$_('modal.login.form.password.label', { default: 'Password' })}"
       help="{$_('modal.login.form.password.help', { default: 'Enter the password' })}"
       invalid="{$_('modal.login.form.password.invalid', { default: 'Password cannot be empty' })}"
     />
+    {#if requires_2fa}
+      <Field
+        type="text"
+        name="totp_code"
+        class="col-8"
+        required="{true}"
+        horizontal="{true}"
+        label="{$_('modal.login.form.totp.label', { default: '2FA code' })}"
+        help="{$_('modal.login.form.totp.help', { default: 'Enter the 6-digit code from your authenticator app.' })}"
+        invalid="{$_('modal.login.form.totp.invalid', { default: '2FA code is required.' })}"
+      />
+    {/if}
     <!-- We need this nasty hack to make submit with enter key to work -->
     <button type="submit" style="display:none"> </button>
   </form>

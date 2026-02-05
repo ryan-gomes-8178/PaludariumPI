@@ -11,7 +11,7 @@
   import { autoDarkMode } from '../helpers/color-helpers';
   import { formToJSON, invalid_form_fields } from '../helpers/form-helpers';
   import { languageFlag } from '../helpers/string-helpers';
-  import { fetchSystemSettings, updateSystemSettings, uploadFile } from '../providers/api';
+  import { fetchSystemSettings, updateSystemSettings, uploadFile, fetchTwoFaSetup } from '../providers/api';
   import { changeLang, languages, currencies, currency } from '../locale/i18n';
   import { isDay, isDarkDesktop } from '../stores/terrariumpi';
 
@@ -121,6 +121,38 @@
   let loading = true;
   let validated = false;
   let excluded_ids = [];
+  let twoFaQrCode = null;
+  let twoFaProvisioningUri = null;
+  let twoFaSecret = null;
+  let twoFaLoading = false;
+  let twoFaError = null;
+
+  const setupTwoFa = async () => {
+    twoFaLoading = true;
+    twoFaError = null;
+    twoFaQrCode = null;
+    twoFaProvisioningUri = null;
+    twoFaSecret = null;
+
+    try {
+      await fetchTwoFaSetup((result) => {
+        if (!result.success) {
+          twoFaError = result.error || 'Unable to set up 2FA.';
+          return;
+        }
+
+        twoFaQrCode = result.qr_code;
+        twoFaProvisioningUri = result.provisioning_uri;
+        twoFaSecret = result.secret;
+        $formData.two_fa_enabled = true;
+        setFields($formData);
+      });
+    } catch (error) {
+      twoFaError = error.message || 'Unable to set up 2FA.';
+    } finally {
+      twoFaLoading = false;
+    }
+  };
 
   onMount(() => {
     (async () => {
@@ -424,6 +456,83 @@
               default: 'Please enter a minimum value of {value}.',
             })}"
           />
+        </Card>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col">
+        <Card {loading}>
+          <svelte:fragment slot="header">
+            <i class="fas fa-shield-alt mr-2"></i>{$_('system.settings.header.security', { default: 'Security' })}
+          </svelte:fragment>
+
+          <svelte:fragment slot="tools">
+            <CardSettingsTools />
+          </svelte:fragment>
+
+          <Switch
+            name="two_fa_enabled"
+            value="{$formData.two_fa_enabled}"
+            horizontal="{true}"
+            label="{$_('system.settings.two_fa_enabled.label', { default: 'Require 2FA authentication' })}"
+            help="{$_('system.settings.two_fa_enabled.help', {
+              default: 'Enable two-factor authentication for all changes and secure actions.',
+            })}"
+          />
+
+          <div class="form-group row">
+            <label
+              for="two_fa_setup"
+              title="{$_('system.settings.two_fa_setup.label', { default: '2FA setup' })}"
+              class="col col-form-label text-truncate"
+              >{$_('system.settings.two_fa_setup.label', { default: '2FA setup' })}</label
+            >
+            <div class="col">
+              <button
+                id="two_fa_setup"
+                type="button"
+                class="btn btn-outline-primary"
+                disabled="{twoFaLoading}"
+                on:click="{setupTwoFa}"
+              >
+                <span
+                  class="spinner-border spinner-border-sm"
+                  role="status"
+                  aria-hidden="true"
+                  class:d-none="{!twoFaLoading}"
+                ></span>
+                {$_('system.settings.two_fa_setup.button', { default: 'Generate 2FA QR code' })}
+              </button>
+
+              {#if twoFaError}
+                <div class="text-danger mt-2">{twoFaError}</div>
+              {/if}
+
+              {#if twoFaQrCode}
+                <div class="mt-3">
+                  <img
+                    src="{twoFaQrCode}"
+                    alt="{$_('system.settings.two_fa_setup.qr_alt', { default: '2FA QR code' })}"
+                    class="img-fluid"
+                    style="max-width: 220px;"
+                  />
+                  {#if twoFaProvisioningUri}
+                    <div class="small text-muted mt-2">
+                      {$_('system.settings.two_fa_setup.uri', { default: 'Provisioning URI:' })}
+                      <br />
+                      <span class="text-monospace">{twoFaProvisioningUri}</span>
+                    </div>
+                  {/if}
+                  {#if twoFaSecret}
+                    <div class="small text-muted mt-2">
+                      {$_('system.settings.two_fa_setup.secret', { default: 'Secret:' })}
+                      <span class="text-monospace">{twoFaSecret}</span>
+                    </div>
+                  {/if}
+                </div>
+              {/if}
+            </div>
+          </div>
         </Card>
       </div>
     </div>
