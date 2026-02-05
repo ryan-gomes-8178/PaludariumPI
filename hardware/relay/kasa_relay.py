@@ -40,9 +40,23 @@ class terrariumRelayTPLinkKasa(terrariumRelay):
                         logger.debug(f"Cached connection invalid for {ip}, reconnecting: {e}")
                         _device_connection_cache.pop(cache_key, None)
                 
-                # Create new connection with rate limiting
-                logger.debug(f"Creating new connection to Kasa device at {ip}")
-                device = await Discover.discover_single(ip, credentials=credentials, timeout=5)
+                # Create new connection via discovery
+                logger.debug(f"Discovering Kasa device at {ip}")
+                device = await asyncio.wait_for(
+                    Discover.discover_single(ip, timeout=5),
+                    timeout=10
+                )
+                logger.debug(f"Device discovered: {device}")
+                
+                # For KLAP devices, we need to set credentials (empty by default for local-only mode)
+                # If credentials are provided, they will override the empty defaults
+                if hasattr(device.protocol, '_transport'):
+                    transport = device.protocol._transport
+                    if hasattr(transport, '_credentials'):
+                        # Use provided credentials or empty credentials as default
+                        creds_to_use = credentials if credentials else Credentials(username="", password="")
+                        transport._credentials = creds_to_use
+                        logger.debug(f"Set credentials for Kasa device at {ip}")
                 
                 # Cache the device connection
                 _device_connection_cache[cache_key] = device
@@ -52,8 +66,9 @@ class terrariumRelayTPLinkKasa(terrariumRelay):
         self._device["device"] = None
         # Input format should be either:
         # - [IP],[POWER_SWITCH_NR]
-        # Credentials are stored in calibration data as:
+        # Optional credentials stored in calibration data as:
         # {"username": "user@example.com", "password": "password"}
+        # If no credentials are provided, device will use empty/default credentials (local-only mode)
 
         # Use an internal caching for speeding things up.
         self.__state_cache = terrariumCache()
@@ -68,7 +83,7 @@ class terrariumRelayTPLinkKasa(terrariumRelay):
             password = self.calibration.get("password", "").strip()
             if username and password:
                 credentials = Credentials(username=username, password=password)
-                logger.info(f"Using credentials for Kasa device at {address[0]}")
+                logger.info(f"Using stored credentials for Kasa device at {address[0]}")
         
         try:
             self._device["device"] = self.__asyncio.run(__load_hardware(address[0], credentials))
