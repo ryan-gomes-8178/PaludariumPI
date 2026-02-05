@@ -15,6 +15,7 @@ import qrcode
 from io import BytesIO
 import base64
 from datetime import datetime, timedelta
+from pony import orm
 
 try:
     import pyotp
@@ -23,6 +24,7 @@ except ImportError:
     pyotp = None
 
 from terrariumUtils import terrariumUtils
+from terrariumDatabase import Setting
 
 
 class terrariumAuth:
@@ -99,7 +101,18 @@ class terrariumAuth:
                 self.engine.settings["two_fa_secret"] = secret
                 # DO NOT enable 2FA yet - let the user manually enable it when they toggle the switch
 
-            # Attempt to persist settings using common engine helpers, if available
+            # Persist to database directly to avoid stale secrets after refresh
+            try:
+                with orm.db_session:
+                    setting = Setting.get(id="two_fa_secret")
+                    if setting:
+                        setting.value = secret
+                    else:
+                        Setting(id="two_fa_secret", value=secret)
+            except Exception as e:
+                logger.warning(f"Failed to persist 2FA secret to database: {e}")
+
+            # Attempt to persist settings using common engine helpers, if possible
             persist_ok = False
             for method_name in ("save_setting", "update_setting", "setting_update"):
                 method = getattr(self.engine, method_name, None)

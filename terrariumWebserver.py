@@ -112,18 +112,19 @@ class terrariumWebserver(object):
                             err.add_header("WWW-Authenticate", f'Basic realm="{realm}"')
                             return err
                     else:
-                        if user is None or not check(user, password):
-                            err = HTTPError(401, text)
-                            err.add_header("WWW-Authenticate", f'Basic realm="{realm}"')
-                            if user is not None or password is not None:
-                                self.engine.notification.message(
-                                    "authentication_error", {"ip": client_ip, "username": user, "password": password}, []
-                                )
-                                password = len(password) * "*"
-                                logger.warning(
-                                    f"Incorrect login detected using username '{user}' and password '{password}' from ip {client_ip}"
-                                )
-                            return err
+                            # If user has a valid session, they're authenticated via session token
+                            if not session_authenticated and (user is None or not check(user, password)):
+                                err = HTTPError(401, text)
+                                err.add_header("WWW-Authenticate", f'Basic realm="{realm}"')
+                                if user is not None or password is not None:
+                                    self.engine.notification.message(
+                                        "authentication_error", {"ip": client_ip, "username": user, "password": password}, []
+                                    )
+                                    password = len(password) * "*"
+                                    logger.warning(
+                                        f"Incorrect login detected using username '{user}' and password '{password}' from ip {client_ip}"
+                                    )
+                                return err
 
                 if request.method.lower() in ["get", "head", "options"]:
                     self.__add_caching_headers(response, request.fullpath)
