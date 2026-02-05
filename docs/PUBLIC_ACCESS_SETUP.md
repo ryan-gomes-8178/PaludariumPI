@@ -12,6 +12,17 @@ This setup provides:
 - **Session Management**: Secure session tokens with timeout
 - **Reverse Proxy**: Nginx acts as security buffer between internet and application
 
+## Important: HTTP vs HTTPS
+
+**Session cookies are configured to automatically adapt to your connection type:**
+- **HTTPS connections**: Session cookies use the `secure` flag for maximum security
+- **HTTP connections**: Session cookies work without the `secure` flag for local testing
+
+**Recommendations:**
+- ✅ **Production use**: Always use HTTPS with a valid SSL certificate (see setup steps below)
+- ⚠️ **Local testing**: HTTP will work but is not secure and should only be used on trusted networks
+- 🚫 **Never expose HTTP endpoints to the public internet** - always use HTTPS for public access
+
 ## Prerequisites
 
 Before starting, ensure you have:
