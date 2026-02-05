@@ -12,6 +12,17 @@ This setup provides:
 - **Session Management**: Secure session tokens with timeout
 - **Reverse Proxy**: Nginx acts as security buffer between internet and application
 
+## Important: HTTP vs HTTPS
+
+**Session cookies are configured to automatically adapt to your connection type:**
+- **HTTPS connections**: Session cookies use the `secure` flag for maximum security
+- **HTTP connections**: Session cookies work without the `secure` flag for local testing
+
+**Recommendations:**
+- ✅ **Production use**: Always use HTTPS with a valid SSL certificate (see setup steps below)
+- ⚠️ **Local testing**: HTTP will work but is not secure and should only be used on trusted networks
+- 🚫 **Never expose HTTP endpoints to the public internet** - always use HTTPS for public access
+
 ## Prerequisites
 
 Before starting, ensure you have:
@@ -144,9 +155,9 @@ If your TerrariumPI is behind a home router:
 
 2. **Find Port Forwarding settings** (may be under NAT, Port Mapping, or Virtual Server)
 
-3. **Forward these ports:**
-   - External Port: 80 → Internal IP: your-router-ip, Internal Port: 80
-   - External Port: 443 → Internal IP: your-router-ip, Internal Port: 443
+3. **Forward these ports to the TerrariumPI host's LAN IP** (the device running Nginx):
+   - External Port: 80 → Internal IP: <terrariumpi-lan-ip>, Internal Port: 80
+   - External Port: 443 → Internal IP: <terrariumpi-lan-ip>, Internal Port: 443
 
 4. **Find your public IP address:**
    ```bash
@@ -160,10 +171,6 @@ If your TerrariumPI is behind a home router:
 
 ### Update Python Dependencies
 ```bash
-# Add to requirements.txt:
-# pyotp==2.9.0
-# qrcode==8.0
-
 pip install -r requirements.txt
 ```
 

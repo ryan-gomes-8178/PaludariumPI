@@ -47,6 +47,7 @@ from hardware.webcam import terrariumWebcam
 from weather import terrariumWeather
 
 from terrariumUtils import terrariumUtils
+from terrariumAuthAPI import terrariumAuthAPI
 
 # Set to false in production, else every API call that uses DB will produce a logline
 DEBUG = False
@@ -75,6 +76,7 @@ def json_serial(obj):
 class terrariumAPI(object):
     def __init__(self, webserver):
         self.webserver = webserver
+        self.auth_api = terrariumAuthAPI(webserver)
 
     # Always (force = True) enable authentication on the API
     def authentication(self, force=True):

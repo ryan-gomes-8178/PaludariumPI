@@ -21,38 +21,27 @@ services:
     # Volume mounts for persistence
     volumes:
       # Database and data
-      - ./migrations:/app/migrations
-      - ./data:/app/data
-      - ./log:/app/log
+      - ./migrations:/TerrariumPI/migrations
+      - ./data:/TerrariumPI/data
+      - ./log:/TerrariumPI/log
       # Configuration
-      - ./terrariumpi.log:/app/terrariumpi.log
+      - ./terrariumpi.log:/TerrariumPI/terrariumpi.log
     
     # Port binding - only expose internally
     # (Nginx handles public access)
     ports:
       - "127.0.0.1:8080:8080"
     
-    # Health check
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+    # Health check is defined in the Dockerfile
+    # Uses: python contrib/docker_health.py
     
     # Security options
     security_opt:
       - no-new-privileges:true
     
-    # Resource limits
-    deploy:
-      resources:
-        limits:
-          cpus: '1'
-          memory: 512M
-        reservations:
-          cpus: '0.5'
-          memory: 256M
+    # Note: Resource limits are not configured here because the `deploy.resources`
+    # section is ignored by `docker compose` in non-Swarm mode. Configure resource
+    # limits via Docker/Swarm deployment settings if needed.
     
     networks:
       - terrariumpi-network
