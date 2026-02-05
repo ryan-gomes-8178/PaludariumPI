@@ -376,10 +376,15 @@ class terrariumWebserver(object):
             with open(stream_file, 'r') as f:
                 content = f.read()
             
-            # Convert relative paths to absolute URLs with proper host:port for HLS protocol compliance
-            # Use configured host and port instead of untrusted Host header to prevent injection attacks
-            configured_host = f"{self.engine.settings['host']}:{self.engine.settings['port']}"
-            content = re.sub(r'^(chunk_\d+\.ts)$', f'http://{configured_host}/nocturnal-eye/chunks/\\1', content, flags=re.MULTILINE)
+            # Convert relative paths to app-local URLs so clients can always resolve chunks
+            # Using relative paths avoids invalid hosts like 0.0.0.0 in generated manifests
+            content = re.sub(
+                r'^https?://[^/]+/nocturnal-eye/chunks/(chunk_\d+\.ts)$',
+                r'/nocturnal-eye/chunks/\1',
+                content,
+                flags=re.MULTILINE,
+            )
+            content = re.sub(r'^(chunk_\d+\.ts)$', r'/nocturnal-eye/chunks/\1', content, flags=re.MULTILINE)
             
             return content
         except Exception as e:
