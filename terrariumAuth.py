@@ -99,7 +99,7 @@ class terrariumAuth:
         Verify TOTP token.
         
         Note: TerrariumPI currently supports single-user authentication,
-        so the 2FA secret is stored globally in settings.
+        so the 2FA secret is stored globally in self.engine.settings['two_fa_secret'].
 
         Args:
             token (str): 6-digit TOTP token
