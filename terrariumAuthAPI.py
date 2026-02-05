@@ -19,6 +19,7 @@ class terrariumAuthAPI:
     - POST /api/login/2fa - Verify 2FA code
     - POST /api/logout - Invalidate session
     - GET /api/auth/2fa/setup - Get 2FA setup QR code
+    - GET /api/auth/verify - Verify current session is valid
     """
 
     def __init__(self, webserver):
