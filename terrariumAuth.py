@@ -88,15 +88,43 @@ class terrariumAuth:
         img.save(buffered, format="PNG")
         qr_code_base64 = base64.b64encode(buffered.getvalue()).decode()
 
-        # Persist the 2FA secret and enabled flag in engine settings
+        # Persist the 2FA secret and enabled flag in engine settings and, if possible, to the database
         try:
+            # Always keep the in-memory settings up to date for immediate use
             if hasattr(self.engine, "settings") and isinstance(self.engine.settings, dict):
                 self.engine.settings["two_fa_secret"] = secret
                 self.engine.settings["two_fa_enabled"] = True
+
+            # Attempt to persist settings using common engine helpers, if available
+            persist_ok = False
+            for method_name in ("save_setting", "update_setting", "setting_update"):
+                method = getattr(self.engine, method_name, None)
+                if not callable(method):
+                    continue
+                # Prefer simple (key, value) signatures; ignore incompatible ones
+                try:
+                    method("two_fa_secret", secret)
+                    method("two_fa_enabled", True)
+                    persist_ok = True
+                    break
+                except TypeError:
+                    # Signature mismatch; try the next candidate helper
+                    continue
+                except Exception as e:
+                    logger.warning(f"Error while persisting 2FA settings via '{method_name}': {e}")
+                    break
+
+            # Reload settings from the backing store so in-memory settings match the database
+            if persist_ok and hasattr(self.engine, "load_settings") and callable(self.engine.load_settings):
+                try:
+                    self.engine.load_settings()
+                except Exception as e:
+                    logger.warning(f"Failed to reload settings after persisting 2FA configuration: {e}")
+
         except Exception as e:
             logger.warning(f"Failed to persist 2FA settings: {e}")
 
-        return {
+        return:
             "secret": secret,
             "qr_code": f"data:image/png;base64,{qr_code_base64}",
             "provisioning_uri": provisioning_uri,
