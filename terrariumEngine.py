@@ -141,7 +141,7 @@ class terrariumEngine(object):
         # Load settings. This will also load the weather data if available
         self.load_settings()
 
-        # Initialize authentication module
+        # Initialize authentication system
         self.auth = terrariumAuth(self)
 
         # Notification system
@@ -1422,6 +1422,9 @@ class terrariumEngine(object):
             # Cleanup hanging bluetooth helper scripts....
             terrariumUtils.kill_bluetooth_helper_processes()
 
+            # Cleanup expired authentication sessions
+            self.auth.cleanup_expired_sessions()
+
             duration = time.time() - start
             time_left = terrariumEngine.__ENGINE_LOOP_TIMEOUT - duration
 
@@ -1981,6 +1984,14 @@ class terrariumEngine(object):
 
     # System functions part
     def authenticate(self, username, password):
+        """
+        Authenticate user with username and password.
+        This method maintains backward compatibility with existing cookie flows.
+        For advanced authentication features (2FA, sessions, rate limiting),
+        use engine.auth methods directly.
+        """
+        # Simple password check for backward compatibility
+        # The engine.auth instance provides advanced features like 2FA, sessions, rate limiting
         return username == self.settings.get("username", None) and terrariumUtils.check_password(
             password, self.settings.get("password", None)
         )

@@ -47,6 +47,7 @@ from hardware.webcam import terrariumWebcam
 from weather import terrariumWeather
 
 from terrariumUtils import terrariumUtils
+from terrariumAuthAPI import terrariumAuthAPI
 
 # Set to false in production, else every API call that uses DB will produce a logline
 DEBUG = False
@@ -75,6 +76,7 @@ def json_serial(obj):
 class terrariumAPI(object):
     def __init__(self, webserver):
         self.webserver = webserver
+        self.auth_api = terrariumAuthAPI(webserver)
 
     # Always (force = True) enable authentication on the API
     def authentication(self, force=True):
@@ -82,6 +84,15 @@ class terrariumAPI(object):
 
     def routes(self, bottle_app):
         bottle_app.install(JSONPlugin(json_dumps=partial(json.dumps, default=json_serial)))
+
+        # Authentication API routes
+        # Note: Login/2FA endpoints are public. Logout/setup/verify endpoints
+        # perform their own session token validation internally via terrariumAuthAPI
+        bottle_app.route("/api/login", "POST", self.auth_api.login, name="api:auth_login")
+        bottle_app.route("/api/login/2fa", "POST", self.auth_api.login_2fa, name="api:auth_login_2fa")
+        bottle_app.route("/api/logout", "POST", self.auth_api.logout, name="api:auth_logout")
+        bottle_app.route("/api/auth/2fa/setup", "GET", self.auth_api.setup_2fa, name="api:auth_2fa_setup")
+        bottle_app.route("/api/auth/verify", "GET", self.auth_api.verify_session, name="api:auth_verify")
 
         # Area API
         bottle_app.route(
