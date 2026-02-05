@@ -7,6 +7,11 @@ from terrariumUtils import terrariumUtils, terrariumAsync, terrariumCache
 
 # pip install python-kasa
 from kasa import Discover, Credentials
+import asyncio
+
+# Global device cache to prevent multiple simultaneous connections to the same device
+_device_connection_cache = {}
+_device_connection_lock = asyncio.Lock()
 
 
 class terrariumRelayTPLinkKasa(terrariumRelay):
@@ -17,9 +22,32 @@ class terrariumRelayTPLinkKasa(terrariumRelay):
 
     def _load_hardware(self):
         async def __load_hardware(ip, credentials=None):
-            device = await Discover.discover_single(ip, credentials=credentials)
-
-            return device
+            # Use global device cache to avoid multiple simultaneous connections
+            global _device_connection_cache, _device_connection_lock
+            
+            async with _device_connection_lock:
+                cache_key = ip
+                
+                # Check if we already have a connection to this device
+                if cache_key in _device_connection_cache:
+                    cached_device = _device_connection_cache[cache_key]
+                    # Verify the cached device is still valid
+                    try:
+                        await asyncio.wait_for(cached_device.update(), timeout=2.0)
+                        logger.debug(f"Reusing cached connection for Kasa device at {ip}")
+                        return cached_device
+                    except Exception as e:
+                        logger.debug(f"Cached connection invalid for {ip}, reconnecting: {e}")
+                        _device_connection_cache.pop(cache_key, None)
+                
+                # Create new connection with rate limiting
+                logger.debug(f"Creating new connection to Kasa device at {ip}")
+                device = await Discover.discover_single(ip, credentials=credentials, timeout=5)
+                
+                # Cache the device connection
+                _device_connection_cache[cache_key] = device
+                
+                return device
 
         self._device["device"] = None
         # Input format should be either:
