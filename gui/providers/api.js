@@ -23,23 +23,59 @@ const headers = (extra_headers) => {
 };
 
 export const apiLogin = async (username, password) => {
-  return await fetch(`${ApiUrl}/login/`, {
-    redirect: 'manual', // Only for dev??
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: 'Basic ' + window.btoa(username + ':' + password),
-    },
-  })
-    .then((response) => {
-      if ([200, 302, 303, 307].indexOf(response.status) !== -1 || response.type === 'opaqueredirect') {
-        // Redirect only for dev??
-        return true;
-      }
-      return false;
-    })
-    .catch(() => {
-      return false;
+  try {
+    const response = await fetch(`${apiHost}/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ username, password }),
     });
+
+    const result = await response.text();
+    let data = {};
+    try {
+      data = result ? JSON.parse(result) : {};
+    } catch {
+      data = {};
+    }
+
+    if (!response.ok) {
+      return { success: false, error: data.error || 'Login failed' };
+    }
+
+    return data;
+  } catch (error) {
+    return { success: false, error: error.message || 'Login failed' };
+  }
+};
+
+export const apiLogin2fa = async (username, totp_code, preauth_token) => {
+  try {
+    const response = await fetch(`${apiHost}/login/2fa`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ username, totp_code, preauth_token }),
+    });
+
+    const result = await response.text();
+    let data = {};
+    try {
+      data = result ? JSON.parse(result) : {};
+    } catch {
+      data = {};
+    }
+
+    if (!response.ok) {
+      return { success: false, error: data.error || '2FA verification failed' };
+    }
+
+    return data;
+  } catch (error) {
+    return { success: false, error: error.message || '2FA verification failed' };
+  }
 };
 
 const __processData = async (type, url, data, cb, extra_headers) => {
@@ -615,6 +651,10 @@ export const fetchSystemstats = async (cb) => {
 export const fetchSystemSettings = async (settingid, cb) => {
   let url = `${apiHost}/settings/${settingid ? settingid + '/' : ''}`;
   await _getData(url, cb);
+};
+
+export const fetchTwoFaSetup = async (cb) => {
+  await _getData(`${apiHost}/auth/2fa/setup`, cb);
 };
 
 export const updateSystemSettings = async (data, cb) => {

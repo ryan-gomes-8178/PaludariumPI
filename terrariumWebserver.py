@@ -72,6 +72,10 @@ class terrariumWebserver(object):
         self.__routes()
 
     # Custom HTTP authentication routine. This way there is an option to optional secure the hole web interface
+    def _get_client_ip(self):
+        real_ip = request.get_header("X-Real-Ip")
+        return request.remote_addr if real_ip is None else real_ip
+
     def __auth_basic(self, check, required, realm="private", text="Access denied"):
         """Callback decorator to require HTTP auth (basic).
         TODO: Add route(check_auth=...) parameter."""
@@ -84,30 +88,46 @@ class terrariumWebserver(object):
                     request.get_cookie("auth", secret=self.cookie_secret) or "[null, null]"
                 )
 
+                client_ip = self._get_client_ip()
+                two_fa_enabled = terrariumUtils.is_true(self.engine.settings.get("two_fa_enabled", False))
+                session = None
+                session_token = request.get_cookie("session_token")
+                if session_token:
+                    try:
+                        session = self.engine.auth.verify_session(session_token, client_ip)
+                    except Exception as ex:
+                        logger.debug(f"Failed to verify session token: {ex}")
+
+                session_authenticated = session is not None
+                if session_authenticated:
+                    user = session.get("username")
+                    password = None
+
                 if int(self.engine.settings["always_authenticate"]) != -1 and (
                     required or terrariumUtils.is_true(self.engine.settings["always_authenticate"])
                 ):
-                    ip = (
-                        request.remote_addr
-                        if request.get_header("X-Real-Ip") is None
-                        else request.get_header("X-Real-Ip")
-                    )
-                    if user is None or not check(user, password):
-                        err = HTTPError(401, text)
-                        err.add_header("WWW-Authenticate", f'Basic realm="{realm}"')
-                        if user is not None or password is not None:
-                            self.engine.notification.message(
-                                "authentication_error", {"ip": ip, "username": user, "password": password}, []
-                            )
-                            password = len(password) * "*"
-                            logger.warning(
-                                f"Incorrect login detected using username '{user}' and password '{password}' from ip {ip}"
-                            )
-                        return err
+                    if two_fa_enabled:
+                        if not session_authenticated:
+                            err = HTTPError(401, text)
+                            err.add_header("WWW-Authenticate", f'Basic realm="{realm}"')
+                            return err
+                    else:
+                        if user is None or not check(user, password):
+                            err = HTTPError(401, text)
+                            err.add_header("WWW-Authenticate", f'Basic realm="{realm}"')
+                            if user is not None or password is not None:
+                                self.engine.notification.message(
+                                    "authentication_error", {"ip": client_ip, "username": user, "password": password}, []
+                                )
+                                password = len(password) * "*"
+                                logger.warning(
+                                    f"Incorrect login detected using username '{user}' and password '{password}' from ip {client_ip}"
+                                )
+                            return err
 
                 if request.method.lower() in ["get", "head", "options"]:
                     self.__add_caching_headers(response, request.fullpath)
-                    if check(user, password):
+                    if not two_fa_enabled and check(user, password):
                         # Update the cookie timeout so that we are staying logged in as long as we are working on the interface
                         response.set_cookie(
                             "auth",
@@ -601,6 +621,9 @@ class terrariumWebsocket(object):
     def __authenticated(self, message):
         authenticated = False
 
+        if terrariumUtils.is_true(self.webserver.engine.settings.get("two_fa_enabled", False)):
+            return False
+
         socket_auth = message.get("auth", None)
         if socket_auth != None:
             # Either do a login, or a logout
@@ -650,13 +673,27 @@ class terrariumWebsocket(object):
         authenticated = False
         cookie_authenticated = False
 
-        # First try (existing) cookie login
-        try:
-            cookie_data = json.loads(request.get_cookie("auth", secret=self.webserver.cookie_secret) or "[null, null]")
-            if cookie_data is not None:
-                cookie_authenticated = self.webserver.engine.authenticate(cookie_data[0], cookie_data[1])
-        except Exception as ex:
-            logger.debug(f"Invalid cookie data. Either wrong secret or strange auth. We can ignore this. {ex}")
+        two_fa_enabled = terrariumUtils.is_true(self.webserver.engine.settings.get("two_fa_enabled", False))
+        client_ip = self.webserver._get_client_ip()
+
+        # First try session cookie (2FA-aware)
+        session_token = request.get_cookie("session_token")
+        if session_token:
+            try:
+                session = self.webserver.engine.auth.verify_session(session_token, client_ip)
+                if session is not None:
+                    cookie_authenticated = True
+            except Exception as ex:
+                logger.debug(f"Invalid session token during websocket auth: {ex}")
+
+        # Fallback to (existing) basic auth cookie when 2FA is not enabled
+        if not two_fa_enabled and not cookie_authenticated:
+            try:
+                cookie_data = json.loads(request.get_cookie("auth", secret=self.webserver.cookie_secret) or "[null, null]")
+                if cookie_data is not None:
+                    cookie_authenticated = self.webserver.engine.authenticate(cookie_data[0], cookie_data[1])
+            except Exception as ex:
+                logger.debug(f"Invalid cookie data. Either wrong secret or strange auth. We can ignore this. {ex}")
 
         while self.webserver.engine.running:
             try:

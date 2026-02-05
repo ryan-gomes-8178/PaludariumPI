@@ -78,6 +78,8 @@ def create_defaults(version):
         {"id": "graph_limit_min_max", "value": "false"},
         {"id": "unsplash_access_key", "value": ""},
         {"id": "unsplash_query", "value": ""},
+        {"id": "two_fa_enabled", "value": "false"},
+        {"id": "two_fa_secret", "value": ""},
         {"id": "gauge_values_alarm", "value": "false"},
         {"id": "gauge_values_limit", "value": "false"},
         {"id": "gauge_values_measurements", "value": "false"},

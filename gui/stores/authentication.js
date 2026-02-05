@@ -1,5 +1,5 @@
 import { writable, get } from 'svelte/store';
-import { apiLogin } from '../providers/api';
+import { apiLogin, apiLogin2fa } from '../providers/api';
 import { websocket } from '../providers/websocket';
 import { default as currentUserStore } from './current-user';
 
@@ -12,24 +12,42 @@ export const showLogin = () => {
   get(loginModal).show();
 };
 
-export const doLogin = async (username, password) => {
-  // Call to login API and check result
-  const login = await apiLogin(username, password);
-  if (login) {
-    // Reconnect with auth cookie for logfile data
-    currentUserStore.set(username);
-    credentials.set({ username: username, password: password });
-    try {
-      websocket.set({ type: 'client_init', auth: window.btoa(username + ':' + password) });
-      // TODO: Stupid timeout is needed in order to remove the login backdrop shadow div....
-    } catch (e) {
-      /* empty */
-    }
-    setTimeout(function () {
-      isAuthenticated.set(true);
-    }, 1000);
+const finalizeLogin = (username) => {
+  currentUserStore.set(username);
+  credentials.set(null);
+  try {
+    websocket.set({ type: 'client_init', auth: '' });
+  } catch (e) {
+    /* empty */
   }
+  setTimeout(function () {
+    isAuthenticated.set(true);
+  }, 1000);
+};
+
+export const doLogin = async (username, password) => {
+  const login = await apiLogin(username, password);
+
+  if (!login || !login.success) {
+    return login;
+  }
+
+  if (login.requires_2fa) {
+    return login;
+  }
+
+  finalizeLogin(username);
   return login;
+};
+
+export const doLogin2fa = async (username, totp_code, preauth_token) => {
+  const result = await apiLogin2fa(username, totp_code, preauth_token);
+
+  if (result && result.success) {
+    finalizeLogin(username);
+  }
+
+  return result;
 };
 
 export const doLogout = () => {

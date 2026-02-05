@@ -41,7 +41,8 @@ export default async function (data) {
   const metas = toMetaTags(meta);
 
 
-  const dev = data.title.toLowerCase().endsWith(' -dev-');
+  const title = (data.title || '').toLowerCase();
+  const dev = title.endsWith(' -dev-');
 
   const indexFileHtml = await readFile('./gui/assets/index.template' + (dev ? '.dev' : '') + '.html', 'utf8');
 
