@@ -416,7 +416,14 @@ class terrariumAuth:
         db_username = self.engine.settings.get("username")
         db_password_hash = self.engine.settings.get("password")
 
-        if username != db_username or not terrariumUtils.check_password(password, db_password_hash):
+        # Use constant-time comparison for username and always perform password check
+        username_matches = secrets.compare_digest(
+            username if username is not None else "",
+            db_username if db_username is not None else "",
+        )
+        password_valid = terrariumUtils.check_password(password, db_password_hash)
+
+        if not username_matches or not password_valid:
             self.record_failed_attempt(ip_address)
             logger.warning(f"Failed login attempt for user '{username}' from IP {ip_address}")
             return {
