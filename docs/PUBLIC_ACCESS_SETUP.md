@@ -144,9 +144,9 @@ If your TerrariumPI is behind a home router:
 
 2. **Find Port Forwarding settings** (may be under NAT, Port Mapping, or Virtual Server)
 
-3. **Forward these ports:**
-   - External Port: 80 → Internal IP: your-router-ip, Internal Port: 80
-   - External Port: 443 → Internal IP: your-router-ip, Internal Port: 443
+3. **Forward these ports to the TerrariumPI host's LAN IP** (the device running Nginx):
+   - External Port: 80 → Internal IP: <terrariumpi-lan-ip>, Internal Port: 80
+   - External Port: 443 → Internal IP: <terrariumpi-lan-ip>, Internal Port: 443
 
 4. **Find your public IP address:**
    ```bash
