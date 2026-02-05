@@ -94,12 +94,14 @@ class terrariumAuth:
             "provisioning_uri": provisioning_uri
         }
 
-    def verify_totp_token(self, username, token):
+    def verify_totp_token(self, token):
         """
-        Verify TOTP token for a user.
+        Verify TOTP token.
+        
+        Note: TerrariumPI currently supports single-user authentication,
+        so the 2FA secret is stored globally in settings.
 
         Args:
-            username (str): Username
             token (str): 6-digit TOTP token
 
         Returns:
@@ -327,7 +329,7 @@ class terrariumAuth:
                 'error': str (on failure)
             }
         """
-        if not self.verify_totp_token(username, token):
+        if not self.verify_totp_token(token):
             logger.warning(f"Invalid 2FA token for user '{username}' from IP {ip_address}")
             return {
                 "success": False,
