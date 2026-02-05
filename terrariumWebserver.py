@@ -38,6 +38,7 @@ from queue import Queue, Empty
 
 from terrariumUtils import terrariumUtils
 from terrariumAPI import terrariumAPI
+from terrariumAuthAPI import terrariumAuthAPI
 
 
 class terrariumWebserver(object):
@@ -59,6 +60,7 @@ class terrariumWebserver(object):
         self.engine = terrariumEngine
         self.websocket = terrariumWebsocket(self)
         self.api = terrariumAPI(self)
+        self.auth_api = terrariumAuthAPI(self)
 
         # Load language
         try:
@@ -415,6 +417,9 @@ class terrariumWebserver(object):
 
         # Add API including all the CRUD urls
         self.api.routes(self.bottle)
+
+        # Add Authentication API routes
+        self.auth_api.routes(self.bottle)
 
         # Websocket connection
         self.bottle.route("/live/", callback=self.websocket.connect, apply=websocket, name="websocket_connect")

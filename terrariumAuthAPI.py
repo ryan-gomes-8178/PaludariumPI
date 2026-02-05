@@ -382,3 +382,25 @@ class terrariumAuthAPI:
                 "authenticated": False,
                 "error": "Internal server error"
             }
+
+    def routes(self, bottle_app):
+        """
+        Register authentication API routes with the bottle application.
+
+        Args:
+            bottle_app (bottle.Bottle): Bottle application instance to register routes with
+        """
+        # POST /api/login - Authenticate with username/password
+        bottle_app.route("/api/login", "POST", self.login, name="api:login")
+
+        # POST /api/login/2fa - Verify 2FA code
+        bottle_app.route("/api/login/2fa", "POST", self.login_2fa, name="api:login_2fa")
+
+        # POST /api/logout - Invalidate session
+        bottle_app.route("/api/logout", "POST", self.logout, name="api:logout")
+
+        # GET /api/auth/2fa/setup - Get 2FA setup QR code
+        bottle_app.route("/api/auth/2fa/setup", "GET", self.setup_2fa, name="api:auth_2fa_setup")
+
+        # GET /api/auth/verify - Verify current session
+        bottle_app.route("/api/auth/verify", "GET", self.verify_session, name="api:auth_verify")
