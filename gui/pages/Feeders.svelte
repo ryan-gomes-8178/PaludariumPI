@@ -1,3 +1,22 @@
+<style>
+  .feeders-page {
+    padding: 20px;
+  }
+
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+  }
+
+  .feeders-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+  }
+</style>
+
 <script>
   import { onMount } from 'svelte';
   import { _ } from 'svelte-i18n';
@@ -58,7 +77,7 @@
 <div class="feeders-page">
   <div class="page-header">
     <h1>Aquarium Feeders</h1>
-    <button class="btn btn-primary" on:click={handleAddFeeder}>+ Add Feeder</button>
+    <button class="btn btn-primary" on:click="{handleAddFeeder}">+ Add Feeder</button>
   </div>
 
   {#if error}
@@ -74,32 +93,13 @@
       {#each feeders as feeder (feeder.id)}
         <FeedersCard
           {feeder}
-          on:edit={() => handleEditFeeder(feeder)}
-          on:delete={() => handleDeleteFeeder(feeder)}
-          on:reload={loadFeeders}
+          on:edit="{() => handleEditFeeder(feeder)}"
+          on:delete="{() => handleDeleteFeeder(feeder)}"
+          on:reload="{loadFeeders}"
         />
       {/each}
     </div>
   {/if}
 </div>
 
-<FeedersFormModal bind:this="{feedersModal}" on:save={handleFormSave} />
-
-<style>
-  .feeders-page {
-    padding: 20px;
-  }
-
-  .page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 30px;
-  }
-
-  .feeders-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 20px;
-  }
-</style>
+<FeedersFormModal bind:this="{feedersModal}" on:save="{handleFormSave}" />

@@ -200,7 +200,7 @@
     const interval = setInterval(async () => {
       if (!loading) {
         let new_data;
-        
+
         // Determine params to pass to API based on period
         let fetchPeriod = $graphs[id].period;
         let customDates = null;
@@ -213,13 +213,7 @@
         }
 
         // Assume fetchGraphData can accept an options param with start and end dates
-        await fetchGraphData(
-          mode,
-          id,
-          fetchPeriod,
-          (data) => (new_data = convertTimestamps(data)),
-          customDates
-        );
+        await fetchGraphData(mode, id, fetchPeriod, (data) => (new_data = convertTimestamps(data)), customDates);
 
         nodata = new_data.length === 0;
 
@@ -240,7 +234,7 @@
         $graphs[id].changed = false;
         loading = true;
         let new_data;
-        
+
         // Determine params to pass to API based on period
         let fetchPeriod = $graphs[id].period;
         let customDates = null;
@@ -252,13 +246,7 @@
           };
         }
 
-        await fetchGraphData(
-          mode,
-          id,
-          fetchPeriod,
-          (data) => (new_data = convertTimestamps(data)),
-          customDates
-        );
+        await fetchGraphData(mode, id, fetchPeriod, (data) => (new_data = convertTimestamps(data)), customDates);
 
         nodata = new_data.length === 0;
 

@@ -277,62 +277,105 @@ class terrariumWebserver(object):
     def _get_nocturnal_eye_stream(self):
         """Return the HLS stream manifest for nocturnal-eye gecko monitoring without authentication"""
         import glob
-        
+        # Determine allowed CORS origin based on configuration and request
+        request_origin = request.headers.get("Origin")
+        allowed_origins = self.engine.settings.get("nocturnal_eye_allowed_origins", [])
+        cors_origin = None
+        if request_origin and isinstance(allowed_origins, (list, tuple, set)):
+            if request_origin in allowed_origins:
+                cors_origin = request_origin
+        elif request_origin and allowed_origins == "*":
+            # If explicitly configured as "*", allow any origin (opt-in)
+            cors_origin = request_origin
+
+        # CORS headers for cross-origin access (only if origin is allowed)
+        cors_headers = {
+            "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
+            "Access-Control-Allow-Headers": "Origin, Accept, Content-Type, X-Requested-With",
+        }
+        if cors_origin:
+            cors_headers["Access-Control-Allow-Origin"] = cors_origin
+
+        # Handle OPTIONS preflight request for CORS
+        if request.method == "OPTIONS":
+            if not cors_origin:
+                # Origin not allowed or not configured for CORS access
+                return HTTPError(403, "CORS origin not allowed")
+            for header, value in cors_headers.items():
+                response.set_header(header, value)
+            return ""
         # Find the latest webcam stream directory
         webcam_dir = Path("/dev/shm/webcam")
         if not webcam_dir.exists():
+            for header, value in cors_headers.items():
+                response.set_header(header, value)
             return HTTPError(404, "Webcam stream not available")
-        
+
         # Get the first (usually only) subdirectory
         stream_dirs = list(webcam_dir.glob("*/stream.m3u8"))
         if not stream_dirs:
+            for header, value in cors_headers.items():
+                response.set_header(header, value)
             return HTTPError(404, "No active stream found")
-        
+
         stream_file = stream_dirs[0]
-        
+
         # Read and return the m3u8 file
         try:
             response.content_type = "application/vnd.apple.mpegurl"
             response.set_header("Cache-Control", "no-cache, no-store, must-revalidate")
             response.set_header("Pragma", "no-cache")
             response.set_header("Expires", "0")
-            
-            with open(stream_file, 'r') as f:
+            # Set CORS headers on response object for successful response
+            for header, value in cors_headers.items():
+                response.set_header(header, value)
+
+            with open(stream_file, "r") as f:
                 content = f.read()
-            
-            # Convert relative paths to absolute URLs with proper host:port for HLS protocol compliance
-            # Use configured host and port instead of untrusted Host header to prevent injection attacks
-            configured_host = f"{self.engine.settings['host']}:{self.engine.settings['port']}"
-            content = re.sub(r'^(chunk_\d+\.ts)$', f'http://{configured_host}/nocturnal-eye/chunks/\\1', content, flags=re.MULTILINE)
-            
+
+            # Convert relative paths to host-relative URLs so clients use the same origin as the manifest
+            # This avoids breaking playback when the configured host is not reachable by the client.
+            content = re.sub(
+                r"^(chunk_\d+\.ts)$", "/nocturnal-eye/chunks/\\1", content, flags=re.MULTILINE
+            )
+
             return content
         except Exception as e:
             logger.error(f"Error reading stream: {e}")
+            for header, value in cors_headers.items():
+                response.set_header(header, value)
             return HTTPError(500, "Error reading stream")
 
     def _get_nocturnal_eye_chunk(self, filename):
         """Serve HLS stream chunks for nocturnal-eye"""
         from pathlib import Path
         import re
-        
+
+        # Handle CORS preflight requests
+        if request.method == "OPTIONS":
+            response.set_header("Access-Control-Allow-Origin", "*")
+            response.set_header("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS")
+            response.set_header("Access-Control-Allow-Headers", "Origin, Accept, Content-Type, X-Requested-With")
+            response.status = 204
+            return ""
         # Validate filename to prevent path traversal attacks
         # Only allow alphanumeric characters, dots, underscores, and hyphens
         # This prevents path separators (/, \) and traversal sequences (..)
-        if not re.match(r'^[a-zA-Z0-9._-]+$', filename):
+        if not re.match(r"^[a-zA-Z0-9._-]+$", filename):
             return HTTPError(400, "Invalid filename")
-        
+
         # Find the webcam stream directory
         webcam_dir = Path("/dev/shm/webcam")
         if not webcam_dir.exists():
             return HTTPError(404, "Webcam stream not available")
-        
+
         # Get the first subdirectory
         stream_dirs = list(webcam_dir.glob("*/"))
         if not stream_dirs:
             return HTTPError(404, "No active stream found")
-        
+
         chunk_file = stream_dirs[0] / filename
-        
+
         # Resolve the path and verify it's still within the stream directory
         try:
             resolved_chunk = chunk_file.resolve()
@@ -341,19 +384,22 @@ class terrariumWebserver(object):
                 return HTTPError(403, "Access denied")
         except Exception:
             return HTTPError(400, "Invalid file path")
-        
+
         # Verify the file exists and is a valid chunk
-        if not resolved_chunk.exists() or not (filename.endswith('.ts') or filename.endswith('.jpg')):
+        if not resolved_chunk.exists() or not (filename.endswith(".ts") or filename.endswith(".jpg")):
             return HTTPError(404, "Chunk not found")
-        
+
         try:
             response.set_header("Cache-Control", "public, max-age=10")
-            if filename.endswith('.ts'):
+            response.set_header("Access-Control-Allow-Origin", "*")
+            response.set_header("Access-Control-Allow-Methods", "GET, HEAD")
+            response.set_header("Access-Control-Allow-Headers", "Origin, Accept, Content-Type, X-Requested-With")
+            if filename.endswith(".ts"):
                 response.content_type = "video/mp2t"
-            elif filename.endswith('.jpg'):
+            elif filename.endswith(".jpg"):
                 response.content_type = "image/jpeg"
-            
-            with open(resolved_chunk, 'rb') as f:
+
+            with open(resolved_chunk, "rb") as f:
                 return f.read()
         except Exception as e:
             logger.error(f"Error serving chunk: {e}")
@@ -460,14 +506,14 @@ class terrariumWebserver(object):
         # Nocturnal Eye stream bypass - unauthenticated access to live stream for gecko monitoring
         self.bottle.route(
             "/nocturnal-eye/stream.m3u8",
-            method="GET",
+            method=["GET", "OPTIONS"],
             callback=self._get_nocturnal_eye_stream,
         )
-        
+
         # Nocturnal Eye stream chunks
         self.bottle.route(
             "/nocturnal-eye/chunks/<filename:path>",
-            method="GET",
+            method=["GET", "OPTIONS"],
             callback=self._get_nocturnal_eye_chunk,
         )
 
