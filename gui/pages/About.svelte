@@ -27,20 +27,20 @@
     <div class="col">
       <Card loading="{false}" noPadding="{false}">
         <svelte:fragment slot="header">
-          <i class="fas fa-info mr-2"></i>TerrariumPI v {settings.version}
+          <i class="fas fa-info mr-2"></i>PaludariumPI v {settings.version}
         </svelte:fragment>
         <img
           src="/img/terrariumpi.jpg"
           class="img-thumbnail float-right"
-          alt="TerariumPI Logo version {settings.version}"
+          alt="PaludariumPI Logo version {settings.version}"
         />
         <p>
-          TerrariumPI is started back in 2014 in order to keep my <a
-            href="https://en.wikipedia.org/wiki/Madagascar_day_gecko"
-            target="_blank"
-            rel="noopener noreferrer">Madagaskar day gecko</a
-          > happy. This piece of software is started as a home automation for reptiles, but now it can be used for indoor
-          plants growing and paludariums.
+          PaludariumPI started in 2024 to keep my crested gecko Marty and his aquatic friends happy. It’s adapted from
+          <a href="https://github.com/theyosh/TerrariumPI" target="_blank" rel="noopener noreferrer">TerrariumPI</a>
+          by TheYOSH and built to automate a paludarium enclosure where aquatic and terrestrial life thrive together.
+          It currently runs my setup for Marty, vampire crabs, rummynose tetras, ram cichlids, harlequin rasboras,
+          bristlenose plecos, nerite snails, amano shrimp, assassin snails, apistogramma, and julii corydoras.
+          It’s a home-automation brain for all of them, and it works just as well for indoor plants, vivariums, and more.
         </p>
         <p>
           This software is written in Python3 and uses the <a
@@ -52,34 +52,28 @@
         </p>
         <p>
           For documentation about how to install and set it up, see <a
-            href="https://theyosh.github.io/TerrariumPI"
+            href="https://github.com/ryan-gomes-8178/PaludariumPI"
             target="_blank"
-            rel="noopener noreferrer">https://theyosh.github.io/TerrariumPI</a
+            rel="noopener noreferrer">https://github.com/ryan-gomes-8178/PaludariumPI</a
           >.
         </p>
         <p>
           For bugs and feature requests please open a <a
-            href="https://github.com/theyosh/TerrariumPI/issues"
+            href="https://github.com/ryan-gomes-8178/PaludariumPI/issues"
             target="_blank"
-            rel="noopener noreferrer">Github issue</a
-          >. <img alt="GitHub issues" src="https://img.shields.io/github/issues-raw/theyosh/terrariumpi" /> /
+            rel="noopener noreferrer">GitHub issue</a
+          >. <img alt="GitHub issues" src="https://img.shields.io/github/issues-raw/ryan-gomes-8178/PaludariumPI" /> /
           <img
             alt="GitHub closed issues"
-            src="https://img.shields.io/github/issues-closed-raw/theyosh/terrariumpi?color=00ff"
+            src="https://img.shields.io/github/issues-closed-raw/ryan-gomes-8178/PaludariumPI?color=00ff"
           />
         </p>
         <p>
-          And there is a Matrix channel where you can try to ask questions and see if somebody can help you there: <a
-            href="https://matrix.to/#/#terrariumpi:theyosh.nl"
-            target="_blank"
-            rel="noopener noreferrer">https://matrix.to/#/#terrariumpi:theyosh.nl</a
-          >.
+          PaludariumPI is proudly built on top of TerrariumPI’s foundation—huge thanks to TheYOSH and the community for
+          the original project.
         </p>
         <p>
-          Finally it would be nice when you use this software, to post some pictures of your setup at this Github issue:
-          '<a href="https://github.com/theyosh/TerrariumPI/issues/210" target="_blank" rel="noopener noreferrer"
-            >Pictures of running TerrariumPI system #210</a
-          >'
+          If you’re running a PaludariumPI setup, feel free to share photos or stories in the project repo.
         </p>
         <p>
           API Documentation:
@@ -87,13 +81,9 @@
           <a href="api/swagger/" target="_blank">Swagger</a>
         </p>
         <p>
-          <br />&copy; Copyright
-          <a
-            href="https://theyosh.github.io/TerrariumPI/posts/2014/08/28/early-terrariumpi-version/"
-            target="_blank"
-            rel="noopener noreferrer">2014</a
+          <a href="https://github.com/theyosh/TerrariumPI" target="_blank" rel="noopener noreferrer"
+            >Based on TerrariumPI by TheYOSH</a
           >
-          - 2025<br /><a href="https://theyosh.nl" target="_blank" rel="noopener noreferrer">TheYOSH</a>
         </p>
       </Card>
     </div>
