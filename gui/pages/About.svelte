@@ -81,13 +81,9 @@
           <a href="api/swagger/" target="_blank">Swagger</a>
         </p>
         <p>
-          <br />&copy; Copyright
-          <a
-            href="https://theyosh.github.io/TerrariumPI/posts/2014/08/28/early-terrariumpi-version/"
-            target="_blank"
-            rel="noopener noreferrer">2014</a
+          <a href="https://github.com/theyosh/TerrariumPI" target="_blank" rel="noopener noreferrer"
+            >Based on TerrariumPI by TheYOSH</a
           >
-          - 2026<br /><a href="https://github.com/ryan-gomes-8178" target="_blank" rel="noopener noreferrer">Ryan Gomes</a>
         </p>
       </Card>
     </div>
