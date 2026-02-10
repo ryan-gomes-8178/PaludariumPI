@@ -27,6 +27,8 @@ from terrariumDatabase import (
     FeedingHistory,
     MonitoringEvent,
     MonitoringZone,
+    NatureDocClip,
+    NatureDocEvent,
     Playlist,
     NotificationMessage,
     NotificationService,
@@ -79,6 +81,9 @@ class terrariumAPI(object):
     # Always (force = True) enable authentication on the API
     def authentication(self, force=True):
         return self.webserver.authenticate(force)
+
+    def _nature_doc_service(self):
+        return getattr(self.webserver.engine, "nature_doc_service", None)
 
     def routes(self, bottle_app):
         bottle_app.install(JSONPlugin(json_dumps=partial(json.dumps, default=json_serial)))
@@ -191,6 +196,50 @@ class terrariumAPI(object):
             self.calendar_detail,
             apply=self.authentication(False),
             name="api:calendar_detail",
+        )
+
+        # Nature Documentary API
+        bottle_app.route(
+            "/api/nature-doc/events",
+            "POST",
+            self.nature_doc_ingest,
+            apply=self.authentication(False),
+            name="api:nature_doc_ingest",
+        )
+        bottle_app.route(
+            "/api/nature-doc/clips/",
+            "GET",
+            self.nature_doc_clip_list,
+            apply=self.authentication(False),
+            name="api:nature_doc_clip_list",
+        )
+        bottle_app.route(
+            "/api/nature-doc/clips/<clip_id:path>/",
+            "GET",
+            self.nature_doc_clip_detail,
+            apply=self.authentication(False),
+            name="api:nature_doc_clip_detail",
+        )
+        bottle_app.route(
+            "/api/nature-doc/clips/<clip_id:path>/favorite/",
+            "POST",
+            self.nature_doc_clip_favorite,
+            apply=self.authentication(),
+            name="api:nature_doc_clip_favorite",
+        )
+        bottle_app.route(
+            "/api/nature-doc/clips/<clip_id:path>/media/",
+            "GET",
+            self.nature_doc_clip_media,
+            apply=self.authentication(False),
+            name="api:nature_doc_clip_media",
+        )
+        bottle_app.route(
+            "/api/nature-doc/clips/<clip_id:path>/preview/",
+            "GET",
+            self.nature_doc_clip_preview,
+            apply=self.authentication(False),
+            name="api:nature_doc_clip_preview",
         )
         bottle_app.route(
             "/api/calendar/<calendar:path>/",
