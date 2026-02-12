@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TerrariumPI Login API Routes
+PaludariumPI Login API Routes
 Provides REST endpoints for user authentication including password login and 2FA.
 """
 

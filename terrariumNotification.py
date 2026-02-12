@@ -264,7 +264,7 @@ class terrariumNotification(terrariumSingleton):
 
                     if self.engine:
                         setup["engine"] = self.engine
-                        setup["terrariumpi_name"] = self.engine.settings["title"]
+                        setup["paludariumpi_name"] = self.engine.settings["title"]
                         setup["version"] = self.engine.settings["version"]
                         setup["profile_image"] = self.engine.settings["profile_image"]
                     try:
@@ -280,7 +280,7 @@ class terrariumNotification(terrariumSingleton):
             return
 
         setup = copy.deepcopy(new_setup)
-        setup["terrariumpi_name"] = self.engine.settings["title"]
+        setup["paludariumpi_name"] = self.engine.settings["title"]
         setup["version"] = self.engine.settings["version"]
         setup["profile_image"] = self.engine.settings["profile_image"]
 
@@ -475,7 +475,7 @@ class terrariumNotificationService(object):
         return f'{terrariumNotificationService.__TYPES[self.type]["name"]} service {self.name}'
 
     def load_setup(self, setup_data):
-        self.setup["terrariumpi_name"] = setup_data.get("terrariumpi_name")
+        self.setup["paludariumpi_name"] = setup_data.get("paludariumpi_name")
         self.setup["version"] = setup_data.get("version")
         self.setup["profile_image"] = setup_data.get("profile_image")
 
@@ -507,7 +507,7 @@ class terrariumNotificationServiceDisplay(terrariumNotificationService):
             (
                 None
                 if not terrariumUtils.is_true(setup_data["show_title"])
-                else f'{setup_data["terrariumpi_name"]} {self.setup["version"]}'
+                else f'{setup_data["paludariumpi_name"]} {self.setup["version"]}'
             ),
             setup_data.get("h_scroll", False),
         )
@@ -544,7 +544,7 @@ class terrariumNotificationServiceEmail(terrariumNotificationService):
 
         if self.setup["sender"] is None:
             self.setup["sender"] = re.sub(
-                r"(.*)@(.*)", "\\1+terrariumpi@\\2", self.setup["receiver"][0], 0, re.MULTILINE
+                r"(.*)@(.*)", "\\1+paludariumpi@\\2", self.setup["receiver"][0], 0, re.MULTILINE
             )
 
         super().load_setup(setup_data)
@@ -557,13 +557,13 @@ class terrariumNotificationServiceEmail(terrariumNotificationService):
         html_body = '<html><head><title>{}</title></head><body><img src="cid:{}" alt="Profile image" title="Profile image" align="right" style="max-width:300px;border-radius:25%;">{}</body></html>'
 
         email_message = emails.Message(
-            headers={"X-Mailer": "TerrariumPI version {}".format(self.setup["version"])},
+            headers={"X-Mailer": "PaludariumPI version {}".format(self.setup["version"])},
             html=html_body.format(
                 subject, os.path.basename(self.setup["profile_image"]), message.replace("\n", "<br />")
             ),
             text=message,
             subject=subject,
-            mail_from=("TerrariumPI", self.setup["sender"]),
+            mail_from=("PaludariumPI", self.setup["sender"]),
         )
 
         profile_image_path = ("public/" if self.setup["profile_image"].startswith("img/") else "") + self.setup[
@@ -2349,11 +2349,11 @@ class terrariumNotificationServiceMQTT(terrariumNotificationService):
                 try:
                     # paho-mqtt >= 2.0.0
                     self.connection = mqtt.Client(
-                        mqtt.CallbackAPIVersion.VERSION1, client_id=f"TerrariumPI {self.setup['version']}"
+                        mqtt.CallbackAPIVersion.VERSION1, client_id=f"PaludariumPI {self.setup['version']}"
                     )
                 except Exception:
                     # Old version
-                    self.connection = mqtt.Client(client_id=f"TerrariumPI {self.setup['version']}")
+                    self.connection = mqtt.Client(client_id=f"PaludariumPI {self.setup['version']}")
 
                 self.connection.on_connect = self.on_connect
                 if self.setup["ssl"]:
@@ -2384,7 +2384,7 @@ class terrariumNotificationServiceMQTT(terrariumNotificationService):
 
     def send_message(self, type, subject, message, data=None, attachments=[]):
         topic = type.replace("_", "/")
-        topic = f"terrariumpi/{topic}"
+        topic = f"paludariumpi/{topic}"
 
         if data is None:
             data = {}
@@ -2789,7 +2789,7 @@ class terrariumNotificationServiceTelegram(terrariumNotificationService):
 
             if len(old_chat_ids) > 0:
                 try:
-                    self.send_message(None, "Reconnected", "TerrariumPI just restarted...")
+                    self.send_message(None, "Reconnected", "PaludariumPI just restarted...")
                 except Exception as ex:
                     logger.warning(f"Could not send Telegram reconnection message: {ex}")
 

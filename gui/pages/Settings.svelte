@@ -13,7 +13,7 @@
   import { languageFlag } from '../helpers/string-helpers';
   import { fetchSystemSettings, updateSystemSettings, uploadFile, fetchTwoFaSetup } from '../providers/api';
   import { changeLang, languages, currencies, currency } from '../locale/i18n';
-  import { isDay, isDarkDesktop } from '../stores/terrariumpi';
+  import { isDay, isDarkDesktop } from '../stores/paludariumpi';
 
   import Card from '../user-controls/Card.svelte';
   import CardSettingsTools from '../components/common/CardSettingsTools.svelte';

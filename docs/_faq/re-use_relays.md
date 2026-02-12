@@ -17,7 +17,7 @@ multiple areas. This can either be a
 ### Add original relay
 
 First add the original [relay]({% link _tabs/hardware.md %}#relays) to
-TerrariumPI and make sure it works. Enter the power usage and the water usage
+PaludariumPI and make sure it works. Enter the power usage and the water usage
 values. **But never use this original relay in any area**.
 
 ### Create script relay code
@@ -27,7 +27,7 @@ values. **But never use this original relay in any area**.
    `cp contrib/duplicate_switch.py scripts/`
 3. Edit the new script to set some settings: `nano scripts/duplicate_switch.py`
    - Edit the variables `RELAY_ID`, `USERNAME`, `PASSWORD`. The RELAY_ID can be
-     found on the page: http://[TerrariumPI_IP]:8090/api/relays/
+     found on the page: http://[PaludariumPI_IP]:8090/api/relays/
 
 When this is all done, you can test if it al works by running the command:
 `scripts/duplicate_switch.py 100` which should toggle on the original relay.
@@ -48,11 +48,11 @@ ln -s duplicate_switch.py duplicate_switch_2.py
 This can be done multiple times. Make sure you have a unique name for every new
 symlink.
 
-### Adding the new relays to TerrariumPI
+### Adding the new relays to PaludariumPI
 
 Now add the new scripts as new [script
-relay]({% link _hardware/script_relay.md %}) to TerrariumPI. Use as address
-`/home/pi/TerrariumPI/scripts/duplicate_switch.py`.
+relay]({% link _hardware/script_relay.md %}) to PaludariumPI. Use as address
+`/home/pi/PaludariumPI/scripts/duplicate_switch.py`.
 
 But here, do not enter the power and water flow values. Else the amount of used
 power and water will be counted **double**. Which is not correct.

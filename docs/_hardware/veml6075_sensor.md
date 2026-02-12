@@ -11,7 +11,7 @@ image:
 device_types: [uva, uvb, uvi]
 device_address:
   '&lt;I2C Address&gt;,[I2C Bus] where the [I2C
-  bus](/TerrariumPI/hardware#i2c-bus) is optional<br />Ex: `0x44`'
+  bus](/PaludariumPI/hardware#i2c-bus) is optional<br />Ex: `0x44`'
 device_url: https://pimylifeup.com/raspberry-pi-uv-sensor-veml6075/
 ---
 
@@ -37,7 +37,7 @@ electronic product, wearable device, weather station, flame detecting and so on.
 This sensor will **not** work well with UVB lights. This sensor needs IR light
 and UV light to work. UVB lights do not emit IR light. So this sensor can only
 be used to measure (direct) sunlight.
-[Source](https://github.com/theyosh/TerrariumPI/issues/875#issuecomment-1893449766)
+[Source](https://github.com/theyosh/PaludariumPI/issues/875#issuecomment-1893449766)
 
 ### Features
 

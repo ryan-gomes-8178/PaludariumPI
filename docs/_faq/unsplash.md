@@ -12,7 +12,7 @@ all the boxes and accept the terms.
 
 ![Unsplash create application](/assets/img/UnsplashApp.webp){: .center }
 
-You will get a popup asking for the application name. Enter TerrariumPI. The
+You will get a popup asking for the application name. Enter PaludariumPI. The
 description field is not needed.
 
 On the next page you will see your created application. Scroll down to the
@@ -23,7 +23,7 @@ section **Keys**.
 Copy the value of the **Access Key** field. This value is needed at the settings
 page.
 
-Now go to your TerrariumPI [settings]({% link _tabs/setup.md %}#unsplash) page,
+Now go to your PaludariumPI [settings]({% link _tabs/setup.md %}#unsplash) page,
 and enter the Access Key value here at the Cloud part of the settings screen.
 The access will be stored encrypted in the database.
 

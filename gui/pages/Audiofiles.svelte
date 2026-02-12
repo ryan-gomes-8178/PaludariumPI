@@ -13,7 +13,7 @@
   import { fetchAudiofiles, deleteAudioFile } from '../providers/api';
   import { formatBytes } from '../helpers/file-size-helpers';
   import { errorNotification, successNotification } from '../providers/notification-provider';
-  import { isDay } from '../stores/terrariumpi';
+  import { isDay } from '../stores/paludariumpi';
 
   import Card from '../user-controls/Card.svelte';
   import Player from '../components/common/Player.svelte';

@@ -94,15 +94,15 @@ def convert_data(relay_data, old_db, new_db):
 
         print(f"Done in {time()-start:.2f} seconds. Copied {new_cur.rowcount} records.")
 
-    print("All relay history data is copied. You can now start TerrariumPI again.")
+    print("All relay history data is copied. You can now start PaludariumPI again.")
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="TerrariumPI Relay history converter.")
+    parser = argparse.ArgumentParser(description="PaludariumPI Relay history converter.")
 
-    parser.add_argument("old_config", type=Path, help="The path to the TerrariumPI v3 settings.cfg file")
-    parser.add_argument("old_database", type=Path, help="The path to the TerrariumPI v3 history.db file")
-    parser.add_argument("new_database", type=Path, help="The path to the TerrariumPI v4 terrariumpi.db file")
+    parser.add_argument("old_config", type=Path, help="The path to the PaludariumPI v3 settings.cfg file")
+    parser.add_argument("old_database", type=Path, help="The path to the PaludariumPI v3 history.db file")
+    parser.add_argument("new_database", type=Path, help="The path to the PaludariumPI v4 paludariumpi.db file")
 
     args = parser.parse_args()
 

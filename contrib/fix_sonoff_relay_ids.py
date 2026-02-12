@@ -7,7 +7,7 @@ import shutil
 from hashlib import md5
 import json
 
-DATABASE = Path("../data/terrariumpi.db")
+DATABASE = Path("../data/paludariumpi.db")
 
 
 def sizeof_fmt(num, suffix="B"):
@@ -26,7 +26,7 @@ if available_disk_space < 2.5 * DATABASE.stat().st_size:
     )
 
 # Backup existing database first
-backup_files = ["terrariumpi.db", "terrariumpi.db-shm", "terrariumpi.db-wal"]
+backup_files = ["paludariumpi.db", "paludariumpi.db-shm", "paludariumpi.db-wal"]
 backup_folder = Path("../data/db_backup")
 backup_folder.mkdir(exist_ok=True)
 

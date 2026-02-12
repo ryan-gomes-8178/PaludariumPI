@@ -17,7 +17,7 @@
 
   import FormGroup from './FormGroup.svelte';
   import { getRandomString } from '../../helpers/string-helpers';
-  import { isDay } from '../../stores/terrariumpi';
+  import { isDay } from '../../stores/paludariumpi';
 
   export let name;
   export let id = name + getRandomString(6); // Create a unique ID

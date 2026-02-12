@@ -1,6 +1,6 @@
 <script>
   import { _ } from 'svelte-i18n';
-  import { graphs } from '../../stores/terrariumpi';
+  import { graphs } from '../../stores/paludariumpi';
   import { toggleGraphPeriod } from '../../helpers/graph-helpers';
   import { tick } from 'svelte';
 

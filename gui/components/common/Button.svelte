@@ -7,7 +7,7 @@
 <script>
   import { onMount } from 'svelte';
 
-  import { buttons } from '../../stores/terrariumpi';
+  import { buttons } from '../../stores/paludariumpi';
 
   export let button;
 

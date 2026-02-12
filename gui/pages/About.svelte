@@ -27,15 +27,15 @@
     <div class="col">
       <Card loading="{false}" noPadding="{false}">
         <svelte:fragment slot="header">
-          <i class="fas fa-info mr-2"></i>TerrariumPI v {settings.version}
+          <i class="fas fa-info mr-2"></i>PaludariumPI v {settings.version}
         </svelte:fragment>
         <img
-          src="/img/terrariumpi.jpg"
+          src="/img/paludariumpi.jpg"
           class="img-thumbnail float-right"
           alt="TerariumPI Logo version {settings.version}"
         />
         <p>
-          TerrariumPI is started back in 2014 in order to keep my <a
+          PaludariumPI is started back in 2014 in order to keep my <a
             href="https://en.wikipedia.org/wiki/Madagascar_day_gecko"
             target="_blank"
             rel="noopener noreferrer">Madagaskar day gecko</a
@@ -52,33 +52,33 @@
         </p>
         <p>
           For documentation about how to install and set it up, see <a
-            href="https://theyosh.github.io/TerrariumPI"
+            href="https://theyosh.github.io/PaludariumPI"
             target="_blank"
-            rel="noopener noreferrer">https://theyosh.github.io/TerrariumPI</a
+            rel="noopener noreferrer">https://theyosh.github.io/PaludariumPI</a
           >.
         </p>
         <p>
           For bugs and feature requests please open a <a
-            href="https://github.com/theyosh/TerrariumPI/issues"
+            href="https://github.com/theyosh/PaludariumPI/issues"
             target="_blank"
             rel="noopener noreferrer">Github issue</a
-          >. <img alt="GitHub issues" src="https://img.shields.io/github/issues-raw/theyosh/terrariumpi" /> /
+          >. <img alt="GitHub issues" src="https://img.shields.io/github/issues-raw/theyosh/paludariumpi" /> /
           <img
             alt="GitHub closed issues"
-            src="https://img.shields.io/github/issues-closed-raw/theyosh/terrariumpi?color=00ff"
+            src="https://img.shields.io/github/issues-closed-raw/theyosh/paludariumpi?color=00ff"
           />
         </p>
         <p>
           And there is a Matrix channel where you can try to ask questions and see if somebody can help you there: <a
-            href="https://matrix.to/#/#terrariumpi:theyosh.nl"
+            href="https://matrix.to/#/#paludariumpi:theyosh.nl"
             target="_blank"
-            rel="noopener noreferrer">https://matrix.to/#/#terrariumpi:theyosh.nl</a
+            rel="noopener noreferrer">https://matrix.to/#/#paludariumpi:theyosh.nl</a
           >.
         </p>
         <p>
           Finally it would be nice when you use this software, to post some pictures of your setup at this Github issue:
-          '<a href="https://github.com/theyosh/TerrariumPI/issues/210" target="_blank" rel="noopener noreferrer"
-            >Pictures of running TerrariumPI system #210</a
+          '<a href="https://github.com/theyosh/PaludariumPI/issues/210" target="_blank" rel="noopener noreferrer"
+            >Pictures of running PaludariumPI system #210</a
           >'
         </p>
         <p>
@@ -89,7 +89,7 @@
         <p>
           <br />&copy; Copyright
           <a
-            href="https://theyosh.github.io/TerrariumPI/posts/2014/08/28/early-terrariumpi-version/"
+            href="https://theyosh.github.io/PaludariumPI/posts/2014/08/28/early-paludariumpi-version/"
             target="_blank"
             rel="noopener noreferrer">2014</a
           >

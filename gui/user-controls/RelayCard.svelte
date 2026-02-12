@@ -3,7 +3,7 @@
   import { _, date, time } from 'svelte-i18n';
 
   import { template_sensor_type_icon } from '../helpers/icon-helpers';
-  import { relays, updateRelay } from '../stores/terrariumpi';
+  import { relays, updateRelay } from '../stores/paludariumpi';
   import { exportGraphPeriod } from '../helpers/graph-helpers';
 
   import Card from '../user-controls/Card.svelte';

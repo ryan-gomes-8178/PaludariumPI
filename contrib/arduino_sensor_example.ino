@@ -3,7 +3,7 @@
 #include <SoftwareSerial.h>
 /****************************
 code for arduino pro mini.
-It is an example code to be able to integrate any sensor to TerrariumPi using arduino and i2c protocol together with the type of sensor "Arduino Sensor".
+It is an example code to be able to integrate any sensor to PaludariumPi using arduino and i2c protocol together with the type of sensor "Arduino Sensor".
 The example code transforms 3 HC-SR04 sensors and one MHZ19C sensor to a block of bytes and sends them through i2c.
 ****************************/
 /***************************

@@ -135,7 +135,7 @@ class terrariumEngine(object):
         # Make the first round of logging visible to the console, as this is the startup
         old_log_level = terrariumLogging.logging.getLogger().handlers[0].level
         terrariumLogging.logging.getLogger().handlers[0].setLevel(terrariumLogging.logging.INFO)
-        startup_message = f"Starting up TerrariumPI {self.version} on a {self.device} running OS {self.os_version}..."
+        startup_message = f"Starting up PaludariumPI {self.version} on a {self.device} running OS {self.os_version}..."
         logger.info(startup_message)
 
         # Load settings. This will also load the weather data if available
@@ -219,7 +219,7 @@ class terrariumEngine(object):
 
         self.motd()
 
-        startup_message = f'TerrariumPI {self.version} is up and running at address: http://{socket.getfqdn()}:{self.settings["port"]} in {time.time()-self.starttime:.2f} seconds.'
+        startup_message = f'PaludariumPI {self.version} is up and running at address: http://{socket.getfqdn()}:{self.settings["port"]} in {time.time()-self.starttime:.2f} seconds.'
         logger.info(startup_message)
         self.notification.broadcast(startup_message, startup_message, self.settings["profile_image"])
 
@@ -244,7 +244,7 @@ class terrariumEngine(object):
             terrariumUtils.get_script_data(f"sleep 1; kill -INT {os.getpid()} &")
 
         threading.Timer(2, sigint_process).start()
-        logger.warning(f'Restarting TerrariumPI {self.settings["version"]} now!')
+        logger.warning(f'Restarting PaludariumPI {self.settings["version"]} now!')
         return True
 
     def reboot(self):
@@ -252,7 +252,7 @@ class terrariumEngine(object):
             terrariumUtils.get_script_data("sleep 1; sudo reboot &")
 
         threading.Timer(2, sigint_process).start()
-        logger.warning(f'Rebooting TerrariumPI {self.settings["version"]} now!')
+        logger.warning(f'Rebooting PaludariumPI {self.settings["version"]} now!')
         return True
 
     def shutdown(self):
@@ -260,7 +260,7 @@ class terrariumEngine(object):
             terrariumUtils.get_script_data("sleep 1; sudo shutdown &")
 
         threading.Timer(2, sigint_process).start()
-        logger.warning(f'Shutting down TerrariumPI {self.settings["version"]} now!')
+        logger.warning(f'Shutting down PaludariumPI {self.settings["version"]} now!')
         return True
 
     @property
@@ -348,7 +348,7 @@ class terrariumEngine(object):
         settings["favicon"] = "/media/favicon.ico" if favicon.exists() else "/favicon.ico"
 
         if settings["profile_image"] == "":
-            settings["profile_image"] = "public/img/terrariumpi.jpg"
+            settings["profile_image"] = "public/img/paludariumpi.jpg"
 
         # Set unit values
         self.units["temperature"] = (
@@ -393,11 +393,11 @@ class terrariumEngine(object):
 
         # Loading active language
         try:
-            gettext.translation("terrariumpi", "locales/", languages=[self.active_language]).install()
+            gettext.translation("paludariumpi", "locales/", languages=[self.active_language]).install()
             logger.info(f"Loaded language '{self.active_language}'.")
         except:
             logger.warning(f"Translation '{self.active_language}' does not exists! Falling back on English (US).")
-            gettext.translation("terrariumpi", "locales/", languages=["en_US"]).install()
+            gettext.translation("paludariumpi", "locales/", languages=["en_US"]).install()
 
         # Loading git data
         gitversion = None
@@ -454,7 +454,7 @@ class terrariumEngine(object):
             days=terrariumEngine.__VERSION_UPDATE_CHECK_TIMEOUT
         ):
             version_data = terrariumUtils.get_remote_data(
-                "https://api.github.com/repos/theyosh/TerrariumPI/releases/latest", json=True
+                "https://api.github.com/repos/theyosh/PaludariumPI/releases/latest", json=True
             )
             if version_data is None:
                 logger.warning("Unable to get the latest version information from Github. Will check next round.")
@@ -1673,7 +1673,7 @@ class terrariumEngine(object):
                 + pyfancy()
                 .yellow(
                     _("A new version ({version}) is available!").format(version=self.latest_version)
-                    + " https://github.com/theyosh/TerrariumPI/releases"
+                    + " https://github.com/theyosh/PaludariumPI/releases"
                 )
                 .get()
                 + "\n"
@@ -1838,7 +1838,7 @@ class terrariumEngine(object):
             return
 
         terrariumLogging.logging.getLogger().handlers[0].setLevel(terrariumLogging.logging.INFO)
-        logger.info(f"Stopping TerrariumPI {self.version} ...")
+        logger.info(f"Stopping PaludariumPI {self.version} ...")
 
         self.running = False
         self.__engine["exit"].set()
@@ -1879,7 +1879,7 @@ class terrariumEngine(object):
         if self.meross_cloud is not None:
             self.meross_cloud.stop()
 
-        shutdown_message = f"Stopped TerrariumPI {self.version} after running for {terrariumUtils.format_uptime(time.time()-self.starttime)}. Bye bye."
+        shutdown_message = f"Stopped PaludariumPI {self.version} after running for {terrariumUtils.format_uptime(time.time()-self.starttime)}. Bye bye."
         self.notification.broadcast(shutdown_message, shutdown_message, self.settings["profile_image"])
         self.notification.stop()
 

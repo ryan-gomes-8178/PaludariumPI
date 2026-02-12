@@ -5,7 +5,7 @@
   import { createForm } from 'felte';
   import L from 'leaflet';
 
-  import { sensors } from '../stores/terrariumpi';
+  import { sensors } from '../stores/paludariumpi';
   import { fetchRelays, fetchWebcams, fetchWebcamsHardware, updateWebcam } from '../providers/api';
   import { successNotification, errorNotification } from '../providers/notification-provider';
   import { getCustomConfig } from '../config';
@@ -316,7 +316,7 @@
   <svelte:fragment slot="header">
     <i class="fas fa-tint mr-2"></i>
     {$_('webcams.settings.title', { default: 'Webcam settings' })}
-    <Helper moreInfo="https://theyosh.github.io/TerrariumPI/setup/#webcams" />
+    <Helper moreInfo="https://theyosh.github.io/PaludariumPI/setup/#webcams" />
   </svelte:fragment>
 
   <form class="needs-validation" class:was-validated="{validated}" use:form bind:this="{editForm}">

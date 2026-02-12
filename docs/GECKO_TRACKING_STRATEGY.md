@@ -13,7 +13,7 @@ behavior, eventually incorporating AI for activity summaries.
 ### Existing Infrastructure
 
 - **Camera**: Raspberry Pi camera with IR illuminator
-- **Current Streaming**: Live HLS streaming via TerrariumPI
+- **Current Streaming**: Live HLS streaming via PaludariumPI
   (`rpilive_webcam.sh`)
 - **Technology Stack**:
   - FFmpeg for video processing
@@ -24,16 +24,16 @@ behavior, eventually incorporating AI for activity summaries.
 ### Data Flow
 
 ```
-RPI Camera → raspivid/rpicam-vid → FFmpeg → HLS Stream → TerrariumPI Web Interface
+RPI Camera → raspivid/rpicam-vid → FFmpeg → HLS Stream → PaludariumPI Web Interface
 ```
 
 ---
 
 ## Approach Evaluation
 
-### Option 1: Integrated TerrariumPI Module ❌
+### Option 1: Integrated PaludariumPI Module ❌
 
-**Description**: Extend TerrariumPI directly with motion detection capabilities
+**Description**: Extend PaludariumPI directly with motion detection capabilities
 
 **Pros**:
 
@@ -44,7 +44,7 @@ RPI Camera → raspivid/rpicam-vid → FFmpeg → HLS Stream → TerrariumPI Web
 **Cons**:
 
 - Tight coupling could impact main system stability
-- CPU-intensive processing could affect TerrariumPI responsiveness
+- CPU-intensive processing could affect PaludariumPI responsiveness
 - Harder to iterate and debug
 - Risk of breaking existing webcam functionality
 - Difficult to scale processing independently
@@ -56,7 +56,7 @@ RPI Camera → raspivid/rpicam-vid → FFmpeg → HLS Stream → TerrariumPI Web
 ### Option 2: Parallel Video Stream Tap 🔶
 
 **Description**: Create a separate service that taps into the raw camera feed
-before TerrariumPI
+before PaludariumPI
 
 **Pros**:
 
@@ -67,9 +67,9 @@ before TerrariumPI
 **Cons**:
 
 - Camera can't typically support multiple simultaneous captures
-- Complex coordination with TerrariumPI
+- Complex coordination with PaludariumPI
 - Resource contention issues
-- May require stopping/starting TerrariumPI webcam
+- May require stopping/starting PaludariumPI webcam
 
 **Verdict**: TECHNICALLY CHALLENGING - Camera resource conflicts
 
@@ -78,24 +78,24 @@ before TerrariumPI
 ### Option 3: HLS Stream Consumer with Separate Service ✅ RECOMMENDED
 
 **Description**: Build an independent microservice that consumes the existing
-HLS stream from TerrariumPI and performs motion detection/tracking
+HLS stream from PaludariumPI and performs motion detection/tracking
 
 **Pros**:
 
-- ✅ Zero impact on TerrariumPI stability
+- ✅ Zero impact on PaludariumPI stability
 - ✅ Iterative development - start simple, add complexity
 - ✅ Independent scaling and resource management
 - ✅ Easy to enable/disable without affecting main system
 - ✅ Can process at lower FPS to save resources
 - ✅ Clear separation of concerns
 - ✅ Easy to add multiple analysis pipelines
-- ✅ Existing stream already optimized by TerrariumPI
-- ✅ RESTful API can integrate back into TerrariumPI UI later
+- ✅ Existing stream already optimized by PaludariumPI
+- ✅ RESTful API can integrate back into PaludariumPI UI later
 
 **Cons**:
 
 - Slight latency from HLS segmentation (2-second chunks)
-- Dependent on TerrariumPI stream being active
+- Dependent on PaludariumPI stream being active
 - Need to handle stream availability
 
 **Verdict**: **BEST APPROACH** - Safest, most flexible, and iterative
@@ -128,7 +128,7 @@ HLS stream from TerrariumPI and performs motion detection/tracking
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                         TerrariumPI System                      │
+│                         PaludariumPI System                      │
 │  ┌──────────────┐                                              │
 │  │ RPI Camera + │──→ FFmpeg ──→ HLS Stream (/webcam/*.m3u8)   │
 │  │ IR Illum.    │                     │                         │
@@ -159,7 +159,7 @@ HLS stream from TerrariumPI and performs motion detection/tracking
 └──────────────────────────┬───────────────────────────────────────┘
                            │
                            ↓ (API Integration - Phase 4)
-                    TerrariumPI Dashboard
+                    PaludariumPI Dashboard
                     (New UI Panel for Gecko Activity)
 ```
 
@@ -175,7 +175,7 @@ HLS stream from TerrariumPI and performs motion detection/tracking
 #### Deliverables:
 
 1. **Standalone Python Service**
-   - Reads HLS stream from TerrariumPI
+   - Reads HLS stream from PaludariumPI
    - Processes frames at 1-5 FPS
    - Implements background subtraction (MOG2)
    - Detects motion events (binary: motion/no-motion)
@@ -190,7 +190,7 @@ HLS stream from TerrariumPI and performs motion detection/tracking
 3. **Success Criteria**:
    - Service can read HLS stream reliably
    - Detects when gecko moves
-   - Runs independently from TerrariumPI
+   - Runs independently from PaludariumPI
    - Resource usage < 25% CPU on RPI
 
 #### Files Created:
@@ -305,19 +305,19 @@ gecko-tracking/
 
 ---
 
-### **Phase 4: TerrariumPI Integration**
+### **Phase 4: PaludariumPI Integration**
 
 **Duration**: 2-3 days  
-**Goal**: Surface insights in TerrariumPI dashboard
+**Goal**: Surface insights in PaludariumPI dashboard
 
 #### Deliverables:
 
 1. **API Bridge**
-   - TerrariumPI proxy endpoints to gecko-tracking service
+   - PaludariumPI proxy endpoints to gecko-tracking service
    - Authentication/authorization
 
 2. **UI Dashboard Panel**
-   - New tab/section in TerrariumPI web interface
+   - New tab/section in PaludariumPI web interface
    - Display real-time activity status
    - Show heatmaps and statistics
    - Activity timeline widget
@@ -331,7 +331,7 @@ gecko-tracking/
 #### Modified Files:
 
 ```
-TerrariumPI/
+PaludariumPI/
 ├── terrariumAPI.py           # Add proxy endpoints
 ├── terrariumWebserver.py     # Add routes
 └── gui/
@@ -436,7 +436,7 @@ for cnt in contours:
 ### Directory Structure:
 
 ```
-TerrariumPI/                    # Your existing project
+PaludariumPI/                    # Your existing project
 └── ...
 
 gecko-tracking/                 # New sibling directory
@@ -544,13 +544,13 @@ logging:
 
 ---
 
-## Integration Points with TerrariumPI
+## Integration Points with PaludariumPI
 
 ### 1. Stream Access
 
 - **Method**: HTTP request to existing HLS endpoint
 - **URL Pattern**: `http://localhost:8090/webcam/{camera_id}/stream.m3u8`
-- **No modifications needed** to TerrariumPI
+- **No modifications needed** to PaludariumPI
 
 ### 2. API Integration (Phase 4)
 
@@ -581,7 +581,7 @@ Create new Svelte component in
 
 ### 4. Data Correlation
 
-Query TerrariumPI's database to correlate gecko activity with environmental
+Query PaludariumPI's database to correlate gecko activity with environmental
 conditions:
 
 ```python
@@ -593,8 +593,8 @@ SELECT
     t.value as temperature,
     h.value as humidity
 FROM gecko_tracking.motion_events g
-LEFT JOIN terrariumpi.sensor_data t ON t.timestamp BETWEEN g.timestamp - 300 AND g.timestamp
-LEFT JOIN terrariumpi.sensor_data h ON h.timestamp BETWEEN g.timestamp - 300 AND g.timestamp
+LEFT JOIN paludariumpi.sensor_data t ON t.timestamp BETWEEN g.timestamp - 300 AND g.timestamp
+LEFT JOIN paludariumpi.sensor_data h ON h.timestamp BETWEEN g.timestamp - 300 AND g.timestamp
 WHERE t.sensor_type = 'temperature'
   AND h.sensor_type = 'humidity'
 ```
@@ -607,7 +607,7 @@ WHERE t.sensor_type = 'temperature'
 
 | Risk                                   | Impact | Mitigation                                                                                                                         |
 | -------------------------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------- |
-| High CPU usage affects TerrariumPI     | High   | 1. Frame rate limiting<br>2. Scheduled processing (nighttime only)<br>3. Process priority (nice value)<br>4. Hardware acceleration |
+| High CPU usage affects PaludariumPI     | High   | 1. Frame rate limiting<br>2. Scheduled processing (nighttime only)<br>3. Process priority (nice value)<br>4. Hardware acceleration |
 | HLS stream unavailable                 | Medium | 1. Retry logic with exponential backoff<br>2. Graceful degradation<br>3. Email alerts on prolonged failure                         |
 | False positives (IR reflections, etc.) | Low    | 1. Size filtering<br>2. Shadow detection<br>3. Temporal consistency checks<br>4. Zone-based filtering                              |
 | Database growth                        | Low    | 1. Automatic archival of old data<br>2. Aggregated statistics<br>3. Configurable retention policy                                  |
@@ -640,7 +640,7 @@ WHERE t.sensor_type = 'temperature'
 
 ### Phase 4 Testing:
 
-- [ ] TerrariumPI integration (no regressions)
+- [ ] PaludariumPI integration (no regressions)
 - [ ] UI responsiveness
 - [ ] Cross-database queries
 - [ ] End-to-end workflow
@@ -655,8 +655,8 @@ WHERE t.sensor_type = 'temperature'
 # /etc/systemd/system/gecko-tracking.service
 [Unit]
 Description=Gecko Activity Tracking Service
-After=network.target terrariumpi.service
-Requires=terrariumpi.service
+After=network.target paludariumpi.service
+Requires=paludariumpi.service
 
 [Service]
 Type=simple
@@ -665,7 +665,7 @@ WorkingDirectory=/home/pi/gecko-tracking
 ExecStart=/home/pi/gecko-tracking/venv/bin/python main.py
 Restart=always
 RestartSec=10
-Nice=10  # Lower priority than TerrariumPI
+Nice=10  # Lower priority than PaludariumPI
 
 [Install]
 WantedBy=multi-user.target
@@ -686,7 +686,7 @@ sudo systemctl status gecko-tracking
 ### Short-term (3-6 months):
 
 - Mobile app notifications for unusual activity
-- Integration with feeding logs from TerrariumPI
+- Integration with feeding logs from PaludariumPI
 - Weight correlation (if using smart scale)
 - Multi-camera support for larger enclosures
 
@@ -722,8 +722,8 @@ sudo systemctl status gecko-tracking
 
 ### Phase 4:
 
-- ✅ TerrariumPI dashboard shows gecko data
-- ✅ No performance degradation to TerrariumPI
+- ✅ PaludariumPI dashboard shows gecko data
+- ✅ No performance degradation to PaludariumPI
 - ✅ User can navigate insights intuitively
 
 ---
@@ -757,7 +757,7 @@ sudo systemctl status gecko-tracking
    - `requirements.txt` - Dependencies
 
 5. **Test Stream Access**:
-   - Verify you can read the HLS stream URL from TerrariumPI
+   - Verify you can read the HLS stream URL from PaludariumPI
    - Display frames to confirm video pipeline works
 
 6. **Implement Basic Motion Detection**:
@@ -771,10 +771,10 @@ sudo systemctl status gecko-tracking
 
 The **HLS Stream Consumer approach (Option 3)** provides the best balance of:
 
-- **Safety**: No risk to TerrariumPI stability
+- **Safety**: No risk to PaludariumPI stability
 - **Flexibility**: Easy to iterate and enhance
 - **Scalability**: Can grow from basic motion detection to advanced AI
-- **Integration**: Clean API-based integration with TerrariumPI
+- **Integration**: Clean API-based integration with PaludariumPI
 
 By following the phased approach, you'll have a working motion detection system
 within a week, with full analytics within 2-3 weeks, and AI-powered insights as

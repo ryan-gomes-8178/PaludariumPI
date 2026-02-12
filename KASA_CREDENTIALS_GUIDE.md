@@ -2,7 +2,7 @@
 
 ## Overview
 
-Newer TP-Link Kasa devices (manufactured mid-2023 onwards) use the KLAP (Kasa Local Authentication Protocol) which requires authentication credentials for local control. This update adds support for storing and using these credentials in TerrariumPI.
+Newer TP-Link Kasa devices (manufactured mid-2023 onwards) use the KLAP (Kasa Local Authentication Protocol) which requires authentication credentials for local control. This update adds support for storing and using these credentials in PaludariumPI.
 
 ## Why This Is Needed
 
@@ -17,7 +17,7 @@ This means your Kasa device requires credentials for local access.
 
 ### Method 1: Via Web Interface
 
-1. Log into your TerrariumPI web interface
+1. Log into your PaludariumPI web interface
 2. Navigate to **Settings** → **Relays**
 3. Find your Kasa relay device
 4. Click **Edit**
@@ -36,7 +36,7 @@ This means your Kasa device requires credentials for local access.
 If you need to update credentials directly in the database:
 
 ```bash
-sqlite3 /path/to/terrariumpi.db
+sqlite3 /path/to/paludariumpi.db
 ```
 
 Then update the calibration field:
@@ -68,7 +68,7 @@ Use your **TP-Link/Kasa account credentials**:
 - They are only used for local network communication with your devices
 - No credentials are sent to external servers
 - Consider using a strong password for your Kasa account
-- The database file should have appropriate file permissions (readable only by the TerrariumPI user)
+- The database file should have appropriate file permissions (readable only by the PaludariumPI user)
 
 ## Troubleshooting
 
@@ -76,9 +76,9 @@ Use your **TP-Link/Kasa account credentials**:
 
 1. **Verify credentials**: Make sure your username and password are correct by logging into the Kasa mobile app
 2. **Check JSON format**: Ensure the calibration field is valid JSON with proper quotes
-3. **Restart service**: After updating credentials, restart TerrariumPI:
+3. **Restart service**: After updating credentials, restart PaludariumPI:
    ```bash
-   sudo systemctl restart terrariumpi
+   sudo systemctl restart paludariumpi
    ```
 4. **Check logs**: Look for messages like "Using credentials for Kasa device at X.X.X.X" in the logs
 
@@ -111,5 +111,5 @@ Here's a complete example of what the calibration field should look like:
 If you continue to experience issues after configuring credentials:
 1. Check that your Kasa device firmware is up to date
 2. Verify network connectivity to the device
-3. Review TerrariumPI logs for detailed error messages
-4. Consider opening an issue on the TerrariumPI GitHub repository with relevant log excerpts
+3. Review PaludariumPI logs for detailed error messages
+4. Consider opening an issue on the PaludariumPI GitHub repository with relevant log excerpts

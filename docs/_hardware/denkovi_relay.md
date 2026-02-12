@@ -50,12 +50,12 @@ to it.
 
 The software expects the following file to exists:
 `3rdparty/DenkoviRelayCommandLineTool/DenkoviRelayCommandLineTool.jar` from the
-root TerrariumPI directory.
+root PaludariumPI directory.
 
 #### Docker
 
 For docker please put the jar file in the Docker volume
-`/TerrariumPI/3rdparty/DenkoviRelayCommandLineTool`. Depending on your setup
+`/PaludariumPI/3rdparty/DenkoviRelayCommandLineTool`. Depending on your setup
 look in your [docker-compose.yaml]({% link _tabs/install.md %}#docker) file.
 Here also make sure the file is called `DenkoviRelayCommandLineTool.jar` inside
 the volume.

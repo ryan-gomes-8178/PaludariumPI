@@ -17,7 +17,7 @@ device_url: https://www.shelly.cloud/en-de/products/switching-and-triggering
 ## Supported devices
 
 - Shelly 1
-- [Shelly Plug S](https://github.com/theyosh/TerrariumPI/discussions/929)
+- [Shelly Plug S](https://github.com/theyosh/PaludariumPI/discussions/929)
 - Shelly Plus Plug S
 
 ## Information

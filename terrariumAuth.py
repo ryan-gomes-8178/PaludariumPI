@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-TerrariumPI Authentication Module
+PaludariumPI Authentication Module
 Provides secure authentication with password hashing and 2FA support (TOTP).
 This module handles user authentication for secure public access.
 """
@@ -81,7 +81,7 @@ class terrariumAuth:
         totp = pyotp.TOTP(secret)
         provisioning_uri = totp.provisioning_uri(
             name=username,
-            issuer_name='TerrariumPI'
+            issuer_name='PaludariumPI'
         )
 
         # Generate QR code
@@ -152,7 +152,7 @@ class terrariumAuth:
         """
         Verify TOTP token.
         
-        Note: TerrariumPI currently supports single-user authentication,
+        Note: PaludariumPI currently supports single-user authentication,
         so the 2FA secret is stored globally in self.engine.settings['two_fa_secret'].
 
         Args:

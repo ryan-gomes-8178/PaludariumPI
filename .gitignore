@@ -5,7 +5,7 @@ docker-compose.yaml
 docker-compose.yml
 !contrib/docker-compose.yaml
 calendar.ics
-terrariumpi.db*
+paludariumpi.db*
 webcam
 !hardware/webcam
 log/*.log*

@@ -12,7 +12,7 @@ from googletrans import Translator
 translator = Translator()
 
 BASE_LANGUAGE = "en_US"
-PO_DOMAIN = "terrariumpi"
+PO_DOMAIN = "paludariumpi"
 JSON_FOLDER = "../gui/locale"
 PO_FOLDER = "."
 

@@ -2,7 +2,7 @@
 
 # With this script, you can control an existing relay/dimmer as a new relay/dimmer. This allows to duplicate existing relays in order to use a single relay in multiple areas
 # When using this script, do NOT use the original relay in areas! That will cause strange behavior
-# Based on external_switch.py, and can be used as an 'script relay' - https://theyosh.github.io/TerrariumPI/hardware/relay/script-relay/
+# Based on external_switch.py, and can be used as an 'script relay' - https://theyosh.github.io/PaludariumPI/hardware/relay/script-relay/
 
 import sys
 import requests

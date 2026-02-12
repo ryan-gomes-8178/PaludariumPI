@@ -10,7 +10,7 @@ msgstr ""
 "POT-Creation-Date: 2023-06-02 22:35+CEST\n"
 "PO-Revision-Date: 2025-08-07 06:54+0000\n"
 "Last-Translator: Pro Xy <ProXy.SOC@gmail.com>\n"
-"Language-Team: Italian <https://weblate.theyosh.nl/projects/terrariumpi/"
+"Language-Team: Italian <https://weblate.theyosh.nl/projects/paludariumpi/"
 "backend/it/>\n"
 "Language: it_IT\n"
 "MIME-Version: 1.0\n"
@@ -496,8 +496,8 @@ msgid "Authentication"
 msgstr "Autenticazione"
 
 #: terrariumWebserver.py:165 terrariumWebserver.py:253
-msgid "TerrariumPI"
-msgstr "TerrariumPi"
+msgid "PaludariumPI"
+msgstr "PaludariumPi"
 
 #: terrariumWebserver.py:393
 msgid "Software Update"

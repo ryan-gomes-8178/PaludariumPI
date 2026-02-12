@@ -11,8 +11,8 @@ image:
 ---
 
 With the IO expander pcf8574 you can add more GPIO
-[relays](/TerrariumPI/hardware/#relays) and
-[buttons](/TerrariumPI/hardware/#buttons) to TerrariumPI. This IO expander does
+[relays](/PaludariumPI/hardware/#relays) and
+[buttons](/PaludariumPI/hardware/#buttons) to PaludariumPI. This IO expander does
 only support on/off actions. So it is not possible to use this IO expander with
 a DHT sensor. You cannot read out the extra GPIO ports.
 
@@ -25,4 +25,4 @@ or button address field.\
 `<IO expander port>` is mandatory and is a number from 1 till max ports.
 
 `<I2C Address>` is mandatory and specified
-[here](/TerrariumPI/hardware/#i2c-bus).
+[here](/PaludariumPI/hardware/#i2c-bus).

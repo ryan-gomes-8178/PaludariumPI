@@ -140,7 +140,7 @@
   <svelte:fragment slot="header">
     <i class="fas fa-thumbtack mr-2"></i>
     {$_('buttons.settings.title', { default: 'Button settings' })}
-    <Helper moreInfo="https://theyosh.github.io/TerrariumPI/setup/#buttons" />
+    <Helper moreInfo="https://theyosh.github.io/PaludariumPI/setup/#buttons" />
   </svelte:fragment>
 
   <form class="needs-validation" class:was-validated="{validated}" use:form bind:this="{editForm}">

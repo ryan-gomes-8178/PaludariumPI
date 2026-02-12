@@ -1,5 +1,5 @@
-IMAGE ?= theyosh/terrariumpi
-VERSION ?= $(shell grep -E "__version__ = \"(.*)\"" terrariumPI.py | grep -Po [0-9\.]+)
+IMAGE ?= theyosh/paludariumpi
+VERSION ?= $(shell grep -E "__version__ = \"(.*)\"" paludariumPI.py | grep -Po [0-9\.]+)
 GITHUB_SHA ?= $(shell git rev-parse HEAD)
 OS = buster bullseye bookworm
 

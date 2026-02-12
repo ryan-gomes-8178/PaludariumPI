@@ -145,7 +145,7 @@
   <svelte:fragment slot="header">
     <i class="fas fa-play mr-2"></i>
     {$_('audio.playlists.settings.title', { default: 'Playlist settings' })}
-    <Helper moreInfo="https://theyosh.github.io/TerrariumPI/setup/#playlists" />
+    <Helper moreInfo="https://theyosh.github.io/PaludariumPI/setup/#playlists" />
   </svelte:fragment>
 
   <form class="needs-validation" class:was-validated="{validated}" use:form bind:this="{editForm}">

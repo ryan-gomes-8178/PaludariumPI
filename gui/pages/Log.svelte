@@ -11,7 +11,7 @@
   import { date, time } from 'svelte-i18n';
 
   import { setCustomPageTitle, customPageTitleUsed } from '../stores/page-title';
-  import { last_log_line } from '../stores/terrariumpi';
+  import { last_log_line } from '../stores/paludariumpi';
   import { fetchLoglines } from '../providers/api';
   import { isAuthenticated } from '../stores/authentication';
 
@@ -82,7 +82,7 @@
   const download_logfile = async () => {
     downloading = true;
 
-    const filename = 'terrariumpi_logfile.txt';
+    const filename = 'paludariumpi_logfile.txt';
     let loglines = '';
     await fetchLoglines((data) => (loglines = data));
 

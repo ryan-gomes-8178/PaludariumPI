@@ -32,7 +32,7 @@ In order to support newer devices you need to upgrade the software package
 `sispmctl`. The current version on the Raspberry PI is unfortunately outdated.
 Upgrading is a manual action, which will install a second `sispmctl` on your
 system on the location `/usr/local/bin/` which my software will automatically
-detect. So after upgrading `sispmctl` and restarting TerrariumPI, you should be
+detect. So after upgrading `sispmctl` and restarting PaludariumPI, you should be
 good to go.
 
 Go to
@@ -53,7 +53,7 @@ sudo make install
 sudo ldconfig
 ```
 
-3. Restart TerrariumPI service ([FAQ]({% link _faq/systemd.md %}#restart))
+3. Restart PaludariumPI service ([FAQ]({% link _faq/systemd.md %}#restart))
 
 The needed permissions to connect to the device through USB are already set.
 

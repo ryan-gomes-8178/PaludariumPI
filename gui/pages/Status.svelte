@@ -6,7 +6,7 @@
   import { setCustomPageTitle, customPageTitleUsed } from '../stores/page-title';
   import { fetchSystemstats } from '../providers/api';
   import { uptime_format } from '../helpers/number-helpers';
-  import { uptime } from '../stores/terrariumpi';
+  import { uptime } from '../stores/paludariumpi';
 
   import SensorCard from '../user-controls/SensorCard.svelte';
   import Card from '../user-controls/Card.svelte';

@@ -9,7 +9,7 @@ image:
   alt: Feature header image
 ---
 
-Here are some features that TerrariumPI has.
+Here are some features that PaludariumPI has.
 
 ## Local weather and climate mirroring
 
@@ -54,7 +54,7 @@ price fluctuations.
 ## Data encryption
 
 Some data is sensitive like the authentication password or the cloud
-credentials. This data is stored encrypted in the TerrariumPI database. That
+credentials. This data is stored encrypted in the PaludariumPI database. That
 means when you database is lost, your passwords will not be compromised
 directly.
 
@@ -73,7 +73,7 @@ For encryption we use [bcrypt](https://en.wikipedia.org/wiki/Bcrypt).
 
 Cloud credentials are stored with symmetric encryption. This means that the data
 can be reverted back to plain text. This is needed to able to login to the cloud
-providers. TerrariumPI is logging as 'you'.
+providers. PaludariumPI is logging as 'you'.
 
 For encryption we use
 [Fernet](https://cryptography.io/en/latest/fernet/#using-passwords-with-fernet)

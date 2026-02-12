@@ -8,12 +8,12 @@
   import { onMount } from 'svelte';
   import Gauge from 'gaugeJS';
 
-  import { sensors, updateSensor } from '../../stores/terrariumpi';
+  import { sensors, updateSensor } from '../../stores/paludariumpi';
   import { get_template_color } from '../../helpers/color-helpers';
   import { roundToPrecision } from '../../helpers/number-helpers';
   import { formatBytes } from '../../helpers/file-size-helpers';
   import { getCustomConfig } from '../../config';
-  import { isDarkInterface } from '../../stores/terrariumpi';
+  import { isDarkInterface } from '../../stores/paludariumpi';
 
   let settings = getCustomConfig();
 

@@ -10,7 +10,7 @@ image:
 
 calibration: true
 device_address:
-  'Enter the [physical pin](/TerrariumPI/hardware/#gpio) number on which the
+  'Enter the [physical pin](/PaludariumPI/hardware/#gpio) number on which the
   device is connected<br />Ex: `27`'
 device_url: https://www.ryansouthgate.com/2015/08/10/raspberry-pi-door-sensor/
 ---

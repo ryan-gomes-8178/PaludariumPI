@@ -1049,7 +1049,7 @@
       "system": {
         "logout": "Czy na pewno chcesz się wylogować?",
         "reboot": "To ponownie uruchomi Raspberry Pi. Może to potrwać do 60 sekund.",
-        "restart": "To ponownie uruchomi Terrariumpi. Może to potrwać do 30 sekund.",
+        "restart": "To ponownie uruchomi Paludariumpi. Może to potrwać do 30 sekund.",
         "shutdown": "To zamknie Raspberry Pi. Używaj z ostrożnością!"
       },
       "title": "Jesteś pewny?"
@@ -1675,7 +1675,7 @@
           "placeholder": "Podaj nazwę tego obszaru"
         },
         "pushover": {
-          "label": "Utwórz swoje tokeny, rejestrując TerrarIumpi jako aplikację {link}."
+          "label": "Utwórz swoje tokeny, rejestrując PaludariumPi jako aplikację {link}."
         },
         "receiver": {
           "help": "Podaj nazwę tego obszaru.",

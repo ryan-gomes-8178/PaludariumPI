@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #!/usr/bin/env python3
 # kahuwi14
-# TerrariumPiNotification
+# PaludariumPiNotification
 # Version: 0.1
 # Dependencies: ntfy, pygtail, parse
 # https://pypi.python.org/pypi/ntfy
@@ -17,7 +17,7 @@ from pygtail import Pygtail
 from parse import *
 import sys
 
-conffile_str = "/home/pi/TerrariumPI/contrib/notifications/tepinot.conf"
+conffile_str = "/home/pi/PaludariumPI/contrib/notifications/tepinot.conf"
 
 lvlsearch_list = []
 modulesearch_list = []
@@ -38,7 +38,7 @@ except:
 
 else:
     for line in conffile_obj:  # read config-file
-        if "terrariumpi-log" in line.lower():
+        if "paludariumpi-log" in line.lower():
             switch = 1
         elif "modules" in line.lower():
             switch = 2
@@ -76,7 +76,7 @@ else:
 
     else:
         if debug_bool:
-            logfile_obj.write("%s - reading TerrariumPI-Log: %s\n" % (datetime.datetime.now(), tplog_str))
+            logfile_obj.write("%s - reading PaludariumPI-Log: %s\n" % (datetime.datetime.now(), tplog_str))
         for line_str in Pygtail(tplog_str):
             if debug_bool:
                 logfile_obj.write("%s - parsing Line-String: %s\n" % (datetime.datetime.now(), line_str.strip()))

@@ -10,14 +10,14 @@ the SD card. A downside is that when the Pi reboots, all log info of that day is
 gone. During the night, the log file will be archived and that is stored on the
 SD card. So archived log files will survive reboots.
 
-In order to change the default logging of TerrariumPI you only need to create
+In order to change the default logging of PaludariumPI you only need to create
 your own custom logging configuration file with the name `logging.custom.cfg`
 and place that in the `log` folder. So start with:
 
 `cp logging.cfg log/logging.custom.cfg`
 
 And start editing the `log/logging.custom.cfg` file with an editor. After
-editing restart TerrariumPI and the new logging will be loaded.
+editing restart PaludariumPI and the new logging will be loaded.
 
 ### Enable debug
 
@@ -40,10 +40,10 @@ Next you need to tell Syslog which facility it is using. The default is
 `LOCAL6`. To enable this, create a file in the folder `/etc/rsyslog.d` for
 example:
 
-`/etc/rsyslog.d/terrariumpi.conf`
+`/etc/rsyslog.d/paludariumpi.conf`
 
 And add then:
 
-`local6.* /var/log/terrariumpi.log`
+`local6.* /var/log/paludariumpi.log`
 
-Finally restart rsyslog and you should receive log messages from TerrariumPI
+Finally restart rsyslog and you should receive log messages from PaludariumPI

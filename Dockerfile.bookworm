@@ -1,5 +1,5 @@
 # Build for raspberry pi
-# docker buildx build --platform linux/arm/v7 --progress=plain -t theyosh/terrariumpi:4.0.0 -f Dockerfile --push .
+# docker buildx build --platform linux/arm/v7 --progress=plain -t theyosh/paludariumpi:4.0.0 -f Dockerfile --push .
 
 # build sispmctl 4.12
 FROM gcc:12-bookworm AS sispmctl_builder
@@ -52,7 +52,7 @@ RUN  sed -i 's/paho-mqtt==.*//g' requirements.txt \
   && find /opt/venv -type d -name ".git" | xargs rm -rf \
   && find /opt/venv -type f -name "*.pyc" -delete
 
-WORKDIR /TerrariumPI
+WORKDIR /PaludariumPI
 # Just clone the libraries, ignore docker cache...
 RUN  git clone https://github.com/ageir/chirp-rpi.git --depth 1 "3rdparty/chirp-rpi" \
   && git clone https://github.com/perryflynn/energenie-connect0r.git --depth 1 "3rdparty/energenie-connect0r" \
@@ -67,7 +67,7 @@ RUN  git clone https://github.com/ageir/chirp-rpi.git --depth 1 "3rdparty/chirp-
 
 # Sourcecode cleanup and pre-prep
 FROM python:3.11-bookworm AS sourcecode
-WORKDIR /TerrariumPI
+WORKDIR /PaludariumPI
 COPY . .
 # remove git and 3rdparty dir from code copy to help keep image smaller
 # 3rdparty is coming from the builder image
@@ -94,8 +94,8 @@ COPY --from=sispmctl_builder /usr/local/bin/sispmctl /usr/local/bin/sispmctl
 
 COPY --from=python_builder /etc/apt /etc/apt
 COPY --from=python_builder /opt/venv /opt/venv
-COPY --from=python_builder /TerrariumPI/3rdparty /TerrariumPI/3rdparty
-COPY --from=sourcecode /TerrariumPI /TerrariumPI
+COPY --from=python_builder /PaludariumPI/3rdparty /PaludariumPI/3rdparty
+COPY --from=sourcecode /PaludariumPI /PaludariumPI
 
 RUN  rm /usr/local/lib/libsispmctl.so /usr/local/lib/libsispmctl.so.0 \
   && ln -s /usr/local/lib/libsispmctl.so.0.2.2 /usr/local/lib/libsispmctl.so \
@@ -112,11 +112,11 @@ RUN  apt-get -o Acquire::ForceIPv4=true update \
   && find /var/cache/ -type f -delete \
   && ln -s /usr/lib/python3/dist-packages/cv2.cpython-311-arm-linux-gnueabihf.so /opt/venv/lib/python3.11/site-packages/cv2.cpython-311-arm-linux-gnueabihf.so
 
-WORKDIR /TerrariumPI
+WORKDIR /PaludariumPI
 # Set git version in a temp file
-RUN echo "${GITHUB_SHA}" > .gitversion && echo '[ ! -z "$TERM" -a -r /TerrariumPI/motd.sh ] && /TerrariumPI/motd.sh' >> /etc/bash.bashrc
+RUN echo "${GITHUB_SHA}" > .gitversion && echo '[ ! -z "$TERM" -a -r /PaludariumPI/motd.sh ] && /PaludariumPI/motd.sh' >> /etc/bash.bashrc
 
 HEALTHCHECK --interval=180s --timeout=5s --start-period=120s CMD python contrib/docker_health.py
 
-ENTRYPOINT ["/bin/bash", "/TerrariumPI/run.sh"]
-CMD ["/opt/venv/bin/python", "/TerrariumPI/terrariumPI.py"]
+ENTRYPOINT ["/bin/bash", "/PaludariumPI/run.sh"]
+CMD ["/opt/venv/bin/python", "/PaludariumPI/paludariumPI.py"]

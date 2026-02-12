@@ -1,5 +1,5 @@
 ---
-title: How to upgrade TerrariumPI
+title: How to upgrade PaludariumPI
 categories: [Website, FAQ]
 tags: [upgrade]
 ---

@@ -1,4 +1,4 @@
-import { graphs } from '../stores/terrariumpi';
+import { graphs } from '../stores/paludariumpi';
 import { get } from 'svelte/store';
 import { fetchExportData } from '../providers/api';
 
@@ -80,7 +80,7 @@ export const extendGraphData = (data, period) => {
 
 export const exportGraphPeriod = async (type, graph) => {
   const store = get(graphs);
-  const filename = `terrariumpi_export_${type}_${graph}_${store[graph].period}.csv`;
+  const filename = `paludariumpi_export_${type}_${graph}_${store[graph].period}.csv`;
 
   let export_data = '';
   await fetchExportData(type, graph, store[graph].period, (data) => (export_data = data));

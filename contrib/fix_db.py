@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Run this script in the contrib folder with the same python version as TerrariumPI
+Run this script in the contrib folder with the same python version as PaludariumPI
 
 1. First enable python environment: source ../venv/bin/activate
 2. Run this script with the -h for more information: ./fix_db.py -h
@@ -12,7 +12,7 @@ import psutil
 import argparse
 import os
 
-DATABASE = "../data/terrariumpi.db"
+DATABASE = "../data/paludariumpi.db"
 
 # Shameless copy from: https://stackoverflow.com/a/63839503
 from typing import List, Union
@@ -72,10 +72,10 @@ def find_procs_by_name(name):
     return ls
 
 
-def check_terrariumpi_stopped():
-    running = len(find_procs_by_name("terrariumPI.py")) > 0
+def check_paludariumpi_stopped():
+    running = len(find_procs_by_name("paludariumPI.py")) > 0
     if running:
-        print("TerrariumPI is still running. Please shutdown first!")
+        print("PaludariumPI is still running. Please shutdown first!")
         return False
 
     return True
@@ -123,7 +123,7 @@ def fix_database(database):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="This script will try to fix a broken TerrariumPI SQLite database.")
+    parser = argparse.ArgumentParser(description="This script will try to fix a broken PaludariumPI SQLite database.")
     parser.add_argument("-d", "--database", help="path to the broken database.", type=Path, default=Path(DATABASE))
 
     args = parser.parse_args()
@@ -131,7 +131,7 @@ if __name__ == "__main__":
     if not check_sqlite3():
         exit()
 
-    if not check_terrariumpi_stopped():
+    if not check_paludariumpi_stopped():
         exit()
 
     if not check_disk_space(args.database):

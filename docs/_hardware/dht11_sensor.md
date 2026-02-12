@@ -10,7 +10,7 @@ image:
 
 device_types: [temperature, humidity]
 device_address:
-  'Enter the [physical pin](/TerrariumPI/hardware/#gpio) number on which the
+  'Enter the [physical pin](/PaludariumPI/hardware/#gpio) number on which the
   device is connected<br />Ex: `27`'
 device_url: https://www.adafruit.com/product/386
 device_power_management: true
@@ -37,6 +37,6 @@ the data pin to VCC.**
 As these sensors are cheap, they are
 [not stable for 24/7 duty](https://learn.adafruit.com/modern-replacements-for-dht11-dht22-sensors/).
 After a few days they tend to give problems. Use at your own risk!
-[Using DHT11 / DHT11 on Raspberry Pi 4b #470](https://github.com/theyosh/TerrariumPI/issues/470)
+[Using DHT11 / DHT11 on Raspberry Pi 4b #470](https://github.com/theyosh/PaludariumPI/issues/470)
 
 {% include_relative _sensor_detail.md %}

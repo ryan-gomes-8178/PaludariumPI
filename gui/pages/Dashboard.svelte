@@ -42,7 +42,7 @@
     updateButton,
     buttons,
     updateSensor,
-  } from '../stores/terrariumpi';
+  } from '../stores/paludariumpi';
   import { uptime_format, average } from '../helpers/number-helpers';
   import { animateHourglass } from '../helpers/animation-helpers';
   import { fetchEnclosures, fetchSensors } from '../providers/api';

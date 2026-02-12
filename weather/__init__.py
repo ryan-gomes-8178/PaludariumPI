@@ -1,5 +1,5 @@
 """
-Weather package to use in TerrariumPI
+Weather package to use in PaludariumPI
 
 Raises:
     terrariumWeatherException: There is a general problem with a weather source

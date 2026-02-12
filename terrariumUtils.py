@@ -498,9 +498,9 @@ class terrariumUtils:
     def get_translator(lang="en-US"):
         # Load language
         try:
-            trans = gettext.translation("terrariumpi", "locales/", languages=(lang.replace("-", "_"),))
+            trans = gettext.translation("paludariumpi", "locales/", languages=(lang.replace("-", "_"),))
         except:
-            trans = gettext.translation("terrariumpi", "locales/", languages=("en_US",))
+            trans = gettext.translation("paludariumpi", "locales/", languages=("en_US",))
 
         return trans.gettext
 

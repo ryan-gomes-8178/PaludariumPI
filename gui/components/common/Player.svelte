@@ -3,7 +3,7 @@
 </script>
 
 <script>
-  import { isDarkInterface } from '../../stores/terrariumpi';
+  import { isDarkInterface } from '../../stores/paludariumpi';
 
   export let src;
 

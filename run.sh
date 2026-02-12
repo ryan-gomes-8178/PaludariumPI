@@ -128,11 +128,11 @@ if [ -f "${CMDLINE}" ]; then
 fi
 
 # Setup logging symlinks
-if [ ! -h log/terrariumpi.log ]; then
-  ln -s /dev/shm/terrariumpi.log log/terrariumpi.log
+if [ ! -h log/paludariumpi.log ]; then
+  ln -s /dev/shm/paludariumpi.log log/paludariumpi.log
 fi
-if [ ! -h log/terrariumpi.access.log ]; then
-  ln -s /dev/shm/terrariumpi.access.log log/terrariumpi.access.log
+if [ ! -h log/paludariumpi.access.log ]; then
+  ln -s /dev/shm/paludariumpi.access.log log/paludariumpi.access.log
 fi
 
 # Add some pi camera symbolic links

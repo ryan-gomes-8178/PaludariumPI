@@ -6,11 +6,11 @@
 # Pro Xy <ProXy.SOC@gmail.com>, 2025.
 msgid ""
 msgstr ""
-"Project-Id-Version: TerrariumPI 3.4.0\n"
+"Project-Id-Version: PaludariumPI 3.4.0\n"
 "POT-Creation-Date: 2023-06-02 22:35+CEST\n"
 "PO-Revision-Date: 2025-08-09 20:53+0000\n"
 "Last-Translator: TheYOSH <github.com@theyosh.nl>\n"
-"Language-Team: Dutch <https://weblate.theyosh.nl/projects/terrariumpi/"
+"Language-Team: Dutch <https://weblate.theyosh.nl/projects/paludariumpi/"
 "backend/nl/>\n"
 "Language: nl_NL\n"
 "MIME-Version: 1.0\n"
@@ -496,8 +496,8 @@ msgid "Authentication"
 msgstr "Authenticatie"
 
 #: terrariumWebserver.py:165 terrariumWebserver.py:253
-msgid "TerrariumPI"
-msgstr "TerrariumPI"
+msgid "PaludariumPI"
+msgstr "PaludariumPI"
 
 #: terrariumWebserver.py:393
 msgid "Software Update"

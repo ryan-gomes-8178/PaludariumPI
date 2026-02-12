@@ -29,7 +29,7 @@
   } from '../providers/api';
   import { successNotification, errorNotification } from '../providers/notification-provider';
   import { template_sensor_type_icon } from '../helpers/icon-helpers';
-  import { isDarkInterface } from '../stores/terrariumpi';
+  import { isDarkInterface } from '../stores/paludariumpi';
   import { nl2br } from '../helpers/string-helpers';
 
   import Card from '../user-controls/Card.svelte';

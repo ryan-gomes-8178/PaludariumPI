@@ -41,7 +41,7 @@
   const download_calendar = async () => {
     downloading = true;
 
-    const filename = 'terrariumpi_calendar.ics';
+    const filename = 'paludariumpi_calendar.ics';
     let ical = '';
     await downloadCalendar((data) => (ical = data));
 

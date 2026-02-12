@@ -13,7 +13,7 @@ export const getCustomConfig = (extra) => {
   extra = extra || {};
   const settings = {
     ...custom,
-    ...window.terrariumPI,
+    ...window.paludariumPI,
     ...get(Config),
     ...extra,
   };

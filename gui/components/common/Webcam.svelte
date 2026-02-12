@@ -16,7 +16,7 @@
   import { Fancybox } from '@fancyapps/ui';
   import '@fancyapps/ui/dist/fancybox/fancybox.css';
 
-  import { sensors, updateSensor } from '../../stores/terrariumpi';
+  import { sensors, updateSensor } from '../../stores/paludariumpi';
   import { fetchSensors, fetchWebcamArchive } from '../../providers/api';
   import { getCustomConfig } from '../../config';
   import { roundToPrecision } from '../../helpers/number-helpers';

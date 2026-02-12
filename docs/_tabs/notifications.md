@@ -35,7 +35,7 @@ email.
 
 Rate limiting is explained [here](#rate-limits).
 
-![TerrariumPI notification service form](/assets/img/notification_service.webp){:
+![PaludariumPI notification service form](/assets/img/notification_service.webp){:
 height="200" }
 
 ### Buzzer
@@ -73,13 +73,13 @@ sending emails.
 MQTT service to send messages and act on based on the content or topic with
 other clients. It will auto detect TLS/SSL connection options to use. Enter the
 server address, port number, username and password in the form to connect to a
-MQTT server. It will connect with a client id: `TerrariumPI {version}`. It will
-start the full topic location with `terrariumpi`. From there you will get sub
+MQTT server. It will connect with a client id: `PaludariumPI {version}`. It will
+start the full topic location with `paludariumpi`. From there you will get sub
 topics based on the message type. If there is an ID in the data (from a sensor),
 than this ID will also used as a subtopic. This way you can subscribe to sensor
 warnings for a single sensor.
 
-Subscribe, for example, for a topic: `terrariumpi/sensor/warning/1234567/` to
+Subscribe, for example, for a topic: `paludariumpi/sensor/warning/1234567/` to
 get only sensor warnings for sensor id 1234567. You can use wildcards **\*** in
 the topic path.
 
@@ -198,7 +198,7 @@ single message for a single sensor or relay.
 
 Rate limiting is explained [here](#rate-limits).
 
-![TerrariumPI notification message form](/assets/img/notification_message.webp){:
+![PaludariumPI notification message form](/assets/img/notification_message.webp){:
 height="200" }
 
 ### Place holders
@@ -219,7 +219,7 @@ The button ${name}(${id}) is pressed on ${now}
 The current state is ${value}
 
 Kind regards
-TerrariumPI
+PaludariumPI
 ```
 
 You can also use `${now:%d-%m-%Y %H:%M}` for a custom date format.

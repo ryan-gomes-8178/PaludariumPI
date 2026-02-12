@@ -10,7 +10,7 @@ image:
 
 device_types: [distance]
 device_address:
-  'Enter the [physical pin](/TerrariumPI/hardware/#gpio) number where the
+  'Enter the [physical pin](/PaludariumPI/hardware/#gpio) number where the
   `trigger` and `echo` pins are connected in that order<br />Ex: `27,23`'
 device_url: https://raspberrypi.stackexchange.com/a/81793
 ---

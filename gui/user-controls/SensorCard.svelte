@@ -22,7 +22,7 @@
 
   import { template_sensor_type_icon } from '../helpers/icon-helpers';
   import { exportGraphPeriod } from '../helpers/graph-helpers';
-  import { sensors } from '../stores/terrariumpi';
+  import { sensors } from '../stores/paludariumpi';
 
   import Card from '../user-controls/Card.svelte';
   import Gauge from '../components/common/Gauge.svelte';

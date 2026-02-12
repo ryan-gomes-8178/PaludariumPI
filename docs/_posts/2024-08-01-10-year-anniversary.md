@@ -34,7 +34,7 @@ time or sensors. And would make sure that the humidity is always at the correct
 value.
 
 <!-- prettier-ignore-start -->
-> **TerrariumPI was born!**
+> **PaludariumPI was born!**
 {: .prompt-info }
 <!-- prettier-ignore-end -->
 
@@ -67,8 +67,8 @@ After a while I added 'realtime' weather information through 3rd party APIs. And
 the webcam was already supported by making a JPEG image every X seconds. No live
 streaming, but almost 'live' image.
 
-![TerrariumPI Version 0.3 August 2014](/assets/img/TerrariumPI_v0.3_2014-08-28.webp)
-_TerrariumPI Version 0.3 August 2014_
+![PaludariumPI Version 0.3 August 2014](/assets/img/PaludariumPI_v0.3_2014-08-28.webp)
+_PaludariumPI Version 0.3 August 2014_
 
 ## Early version
 
@@ -91,7 +91,7 @@ not closed well. And you will stay dry when working in the terrarium. :grinning:
 ![GitHub Logo](/assets/img/GitHub-Logo.webp){: .right .invert width="150" }In
 order to keep the code save and backup-ed, I started to put the code on Github
 in
-[january 2016](https://github.com/theyosh/TerrariumPI/commit/2ca75beac3adb1a50107412442c9427fa1ea4ebf).
+[january 2016](https://github.com/theyosh/PaludariumPI/commit/2ca75beac3adb1a50107412442c9427fa1ea4ebf).
 Also I needed to learn a bit more about git and using branches, code fixes and
 creating new features. So again, original goal was to learn more about working
 with git.
@@ -107,7 +107,7 @@ In 2020 it was archived by Github for the
 ## First issues and requests
 
 It took more than 1 year, but there it was. The
-[first issue](https://github.com/theyosh/TerrariumPI/issues/1). I was bit
+[first issue](https://github.com/theyosh/PaludariumPI/issues/1). I was bit
 stunned, because somebody was using this software. Never thought this would
 happen. :smiley:
 
@@ -118,17 +118,17 @@ low level control. Logic should not depend on a single relay.
 
 And that was the first feature request in july 2017. It took more than a year,
 but never knowing that the issue counter will reach **900+**
-[issues](https://github.com/theyosh/TerrariumPI/issues) after 10 years.
+[issues](https://github.com/theyosh/PaludariumPI/issues) after 10 years.
 
 ## Publications
 
-![Hack a Day publication](/assets/img/publications/Pubication_Hackaday-TerrariumPI-21-11-2017.webp){:
+![Hack a Day publication](/assets/img/publications/Pubication_Hackaday-PaludariumPI-21-11-2017.webp){:
 .right width="150" }In the end of 2017
-[some magazines made a publication](/TerrariumPI/tags/publication/) about
-TerrariumPI. Again, I did not expect this, nor I was aware of it. Only [Hack a
+[some magazines made a publication](/PaludariumPI/tags/publication/) about
+PaludariumPI. Again, I did not expect this, nor I was aware of it. Only [Hack a
 Day]({% link _posts/2017-11-21-hack_a_day.md %}) send me a nice email warning
 that the GUI could be a bit busier as they where about the publish a story about
-TerrariumPI. It was very nice of them to give a heads up. :thumbsup:
+PaludariumPI. It was very nice of them to give a heads up. :thumbsup:
 
 But it had some impact, as the new requests and first bugs are getting in
 through new issues.
@@ -137,7 +137,7 @@ And the GUI just kept running. :wink:
 
 ## New hardware
 
-![Hardware overview](https://raw.githubusercontent.com/theyosh/TerrariumPI/3.4.2/static/images/documentation/hardware_overview.jpg)
+![Hardware overview](https://raw.githubusercontent.com/theyosh/PaludariumPI/3.4.2/static/images/documentation/hardware_overview.jpg)
 _Hardware overview when started back in 2014_
 
 So, it started with just a few sensors and relays, and now it has support for:
@@ -150,7 +150,7 @@ So, it started with just a few sensors and relays, and now it has support for:
 Which most of them I do not even own.
 
 From version
-[TerrariumPI 3.0](https://github.com/theyosh/TerrariumPI/releases/tag/3.0.0)
+[PaludariumPI 3.0](https://github.com/theyosh/PaludariumPI/releases/tag/3.0.0)
 there is power dimmer support, which made it possible to mimic sunrise and
 sunset actions. You could now turn a light of in 30 minutes. Which means every
 18 seconds the light went up by 1%. Which was really a very nice new feature.
@@ -161,7 +161,7 @@ more and more people can use it. But supporting more and more hardware, cost my
 time. So I thought, there should be a kind of 'payment' for supporting new
 hardware. So I asked pictures of running setups in return. And that made a
 rather big issue with a
-[lot of pictures](https://github.com/theyosh/TerrariumPI/issues/210). It is just
+[lot of pictures](https://github.com/theyosh/PaludariumPI/issues/210). It is just
 nice to look at to get some inspiration.
 
 ![Hardware overview](/assets/img/hardware_testing_2024.webp) _Hardware overview
@@ -190,7 +190,7 @@ Zero versions. Which we try to support all. And this is succeeded for about 80%.
 Again a figure to be proud off.
 
 The first Raspberry PI is probably not supported anymore. But as long as you can
-install Raspbian Lite OS, you should be able to run TerrariumPI. The new
+install Raspbian Lite OS, you should be able to run PaludariumPI. The new
 Raspberry PI 5 is not yet fully supported. There is a hardware change in chips
 and not all used libraries are updated to support that.
 
@@ -205,16 +205,16 @@ working. So that is also pretty cool.
 ## Code migrations
 
 ![Python Logo](/assets/img/python-logo.webp){: .right width="150" }And during
-those 10 years, code evolves. TerrariumPI got new features, and support more and
+those 10 years, code evolves. PaludariumPI got new features, and support more and
 more hardware, which lead to use more external libraries. And not all those
 libraries are maintained actively. Which give some headaches about upgrading
-TerrariumPI.
+PaludariumPI.
 
 The first big hurdle was the migration from
-[Python 2.7 to Python 3.5](https://github.com/theyosh/TerrariumPI/releases/tag/3.9.0).
+[Python 2.7 to Python 3.5](https://github.com/theyosh/PaludariumPI/releases/tag/3.9.0).
 Which means making code that works on both Python versions. But also needed to
 find libraries that work on both Python versions. This was a 2 year struggle.
-But we managed. And we dropped Python 2.7 support with TerrariumPI version 3.0.
+But we managed. And we dropped Python 2.7 support with PaludariumPI version 3.0.
 
 After that, it was keeping up with the Python versions. From 3.5 to 3.7 was not
 a big problem. But now you see that old libraries are getting behind. And this
@@ -258,10 +258,10 @@ Then I found
 [Gentelella admin template](https://colorlib.com/polygon/gentelella/) which gave
 it a bit more professional look. This has been the gui for more than 3 years. It
 did upgrade the look from time to time. But it was a nice admin gui which I
-could use for TerrariumPI. It saved a lot of CSS hassling.
+could use for PaludariumPI. It saved a lot of CSS hassling.
 
-![TerrariumPI Version 2.5 July 2017](/assets/img/TerrariumPI_2.5_2017.webp)
-_TerrariumPI Version 2.5 July 2017_
+![PaludariumPI Version 2.5 July 2017](/assets/img/PaludariumPI_2.5_2017.webp)
+_PaludariumPI Version 2.5 July 2017_
 
 A vew years later I found [AdminLTE](https://adminlte.io/themes/v3/). A more up
 to date GUI with the same functionality as Gentelella. But it looked a bit
@@ -276,8 +276,8 @@ in a single file you CSS, JavaScript and HTML code. And the javascript code will
 be compiled and optimized during building the GUI. This produced the fasted GUI
 at the moment.
 
-![TerrariumPI Version 4.10.1 July 2024](/assets/img/TerrariumPI_4.10.1_2024.webp)
-_TerrariumPI Version 4.10.1 July 2024_
+![PaludariumPI Version 4.10.1 July 2024](/assets/img/PaludariumPI_4.10.1_2024.webp)
+_PaludariumPI Version 4.10.1 July 2024_
 
 ## Stability
 
@@ -307,17 +307,17 @@ terrarium. And they do not show any problems. I am so crossing my fingers
 :smile:. They are all placed in hidden spots, so you cannot see the sensors
 unless you know where they are. But also hard to replace when needed. \
 Until now, only one sensor has been broken. Lucky we can [ignore
-sensors]({% link _tabs/setup.md %}#system), and TerrariumPI will just keep
+sensors]({% link _tabs/setup.md %}#system), and PaludariumPI will just keep
 running.
 
 But also the relays I use, are now 10+ years old. I still use the first relay
-board I bought when I started TerrariumPI. And it still working like a charm.
+board I bought when I started PaludariumPI. And it still working like a charm.
 Heavily covered under dust, but still going strong.
 
 ![CD Card](/assets/img/sd-card.webp){: .right width="150" }My SD card is now at
 least 4 years old. And maybe older, as the last time the SD card is formatted
 begin 2020. And this is something which I did not expected. I was afraid that
-the SD card will not last that long. Because TerrariumPI is writing a lot to the
+the SD card will not last that long. Because PaludariumPI is writing a lot to the
 SD card. Every 30 seconds there will be database updates with new sensor data.
 And it does log a lot of information while running. But this logging has been
 moved to memory based storage, and once a night a copy will be zipped and stored
@@ -332,7 +332,7 @@ is lying on top of my terrarium between the heating and UV lights. But still
 with version 4.9.0 the CPU usage is reduced by 35%. So my old Raspberry PI can
 still keep up!
 
-![TerrariumPI CPU year graph](/assets/img/munin-cpu-load.webp)
+![PaludariumPI CPU year graph](/assets/img/munin-cpu-load.webp)
 
 ### Uptime
 
@@ -343,18 +343,18 @@ that it can handle a lot of instable hardware. A single failure will not crash
 the software. It will send out warnings, but it should keep working.
 
 Now is the uptime a bit cheated here, because we ues the OS uptime. So if you
-restart TerrariumPI software itself, it will not reset the uptime. But than
-again, how often do you restart TerrariumPI. It should only be done with an
+restart PaludariumPI software itself, it will not reset the uptime. But than
+again, how often do you restart PaludariumPI. It should only be done with an
 upgrade, or when everything goes wrong. Other than that, no restart is needed,
 and the OS uptime is easier to use. The only restarts that could happen is when
 there are new kernel updates which always needs a restart of the OS.
 
 So in October 2022 [@jornobe](https://github.com/jornobe) mentioned
-[almost 4 months of uptime](https://github.com/theyosh/TerrariumPI/discussions/741).
+[almost 4 months of uptime](https://github.com/theyosh/PaludariumPI/discussions/741).
 Which was cool to see. And at November 2023 I reached an uptime of 6 months.
 Yeah! I call this pretty stable!
 
-**All with all, I would say, TerrariumPI is pretty stable. Maybe we can call it
+**All with all, I would say, PaludariumPI is pretty stable. Maybe we can call it
 "rock solid"!**
 
 ## Database struggles
@@ -392,7 +392,7 @@ records... \
 Maybe I had to do some calculation up front :rofl:
 
 So we created a
-[clean up script](https://github.com/theyosh/TerrariumPI/blob/main/contrib/db_cleanup.py),
+[clean up script](https://github.com/theyosh/PaludariumPI/blob/main/contrib/db_cleanup.py),
 which will delete all data older than 60 weeks. As the graphs can only show data
 for maximal 1 year. So sensor data older than 60 week can safely be removed. But
 this has to be done manually. It will takes at least an hour to do.
@@ -437,7 +437,7 @@ not work. Also, I wanted to be able to update the documentation without
 releasing a new version.
 
 So for version 3.X we made a
-[Github Wiki](https://github.com/theyosh/TerrariumPI/wiki). Where the image on
+[Github Wiki](https://github.com/theyosh/PaludariumPI/wiki). Where the image on
 the right is still a live image from my running terrarium. So after working out
 the most documentation, I was not happy with the look, and how to edit. So that
 meant, we have to look to something else.
@@ -456,16 +456,16 @@ a migration in the future is still possible.
 
 ## Different languages
 
-At the moment TerrariumPI is translated to 14 languages. Again, this is
-something I could not do without other people that are using TerrariumPI. And
+At the moment PaludariumPI is translated to 14 languages. Again, this is
+something I could not do without other people that are using PaludariumPI. And
 this is now nicely done with [Weblate](https://weblate.org/). An online
 translation tool, that you can use for free when you host it yourself.
 
-[![Translation status](https://weblate.theyosh.nl/widgets/terrariumpi/-/multi-auto.svg)](https://weblate.theyosh.nl/engage/terrariumpi/)
+[![Translation status](https://weblate.theyosh.nl/widgets/paludariumpi/-/multi-auto.svg)](https://weblate.theyosh.nl/engage/paludariumpi/)
 
 In the beginning translations where added by pull requests after changing .PO
 and .MO files. But this was a bit difficult for less technical people. And not
-all TerrariumPI users are tech people.
+all PaludariumPI users are tech people.
 
 So we needed something else. And we found [Weblate](https://weblate.org/). A
 nice web based tool, which does not need any technical knowledge. Only English
@@ -476,9 +476,9 @@ them, they are automatically approved. :innocent:
 ## Contributors
 
 And here is a list of persons that added some code or translations to
-TerrariumPI. Of which I am very thank full.
+PaludariumPI. Of which I am very thank full.
 
-![GitHub Contributors Image](https://contrib.rocks/image?repo=theyosh/TerrariumPI)
+![GitHub Contributors Image](https://contrib.rocks/image?repo=theyosh/PaludariumPI)
 
 ## 10 years later
 

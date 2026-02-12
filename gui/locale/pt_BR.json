@@ -1006,7 +1006,7 @@
       "system": {
         "logout": "Tem certeza que deseja sair?",
         "reboot": "Isso reiniciará o Raspberry Pi. Isso pode levar até 60 segundos.",
-        "restart": "Isso reiniciará o TerrariumPI. Isso pode levar até 30 segundos.",
+        "restart": "Isso reiniciará o PaludariumPI. Isso pode levar até 30 segundos.",
         "shutdown": "Isso encerrará o Raspberry PI. Use com cuidado!"
       },
       "title": "Tem certeza?"
@@ -1626,7 +1626,7 @@
           "placeholder": "Inserir o número da porta"
         },
         "pushover": {
-          "label": "Crie seus tokens registrando o terrariumpi como um aplicativo {link}."
+          "label": "Crie seus tokens registrando o paludariumpi como um aplicativo {link}."
         },
         "receiver": {
           "help": "Insira o email.",
@@ -1733,7 +1733,7 @@
         "title": "Reiniciar Raspberry"
       },
       "restart": {
-        "title": "Reiniciar TerrariumPI"
+        "title": "Reiniciar PaludariumPI"
       },
       "settings": {
         "title": "Configurações"

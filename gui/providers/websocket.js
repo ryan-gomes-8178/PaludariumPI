@@ -25,7 +25,7 @@ import {
   updateButton,
   updateRelay,
   last_log_line,
-} from '../stores/terrariumpi';
+} from '../stores/paludariumpi';
 import { isAuthenticated } from '../stores/authentication';
 import { WebsocketUrl } from '../constants/urls';
 import { animate_footer_badge, animateHourglass } from '../helpers/animation-helpers';

@@ -166,7 +166,7 @@
   <svelte:fragment slot="header">
     <i class="fas fa-tint mr-2"></i>
     {$_('sensors.settings.title', { default: 'Sensor settings' })}
-    <Helper moreInfo="https://theyosh.github.io/TerrariumPI/setup/#sensors" />
+    <Helper moreInfo="https://theyosh.github.io/PaludariumPI/setup/#sensors" />
   </svelte:fragment>
 
   <form class="needs-validation" class:was-validated="{validated}" use:form bind:this="{editForm}">

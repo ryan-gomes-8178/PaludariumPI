@@ -42,7 +42,7 @@ jobs:
         if: ${{ ! matrix.java }}
         uses: docker/metadata-action@v5
         with:
-          images: theyosh/terrariumpi
+          images: theyosh/paludariumpi
           flavor: |
             latest=false
             suffix=-${{ matrix.os }},onlatest=false
@@ -52,7 +52,7 @@ jobs:
         if: ${{ matrix.java }}
         uses: docker/metadata-action@v5
         with:
-          images: theyosh/terrariumpi
+          images: theyosh/paludariumpi
           flavor: |
             latest=false
             suffix=-${{ matrix.os }}-java,onlatest=false

@@ -1,13 +1,13 @@
 services:
-  terrariumpi:
-    image: theyosh/terrariumpi:latest # Or use a specific version
+  paludariumpi:
+    image: theyosh/paludariumpi:latest # Or use a specific version
     volumes:
-      - /opt/terrariumpi/logs:/TerrariumPI/log
-      - /opt/terrariumpi/data:/TerrariumPI/data
-      - /opt/terrariumpi/media:/TerrariumPI/media
-      - /opt/terrariumpi/scripts:/TerrariumPI/scripts
-      - /opt/terrariumpi/webcam-archive:/TerrariumPI/webcam/archive
-      - /opt/terrariumpi/DenkoviRelayCommandLineTool:/TerrariumPI/3rdparty/DenkoviRelayCommandLineTool
+      - /opt/paludariumpi/logs:/PaludariumPI/log
+      - /opt/paludariumpi/data:/PaludariumPI/data
+      - /opt/paludariumpi/media:/PaludariumPI/media
+      - /opt/paludariumpi/scripts:/PaludariumPI/scripts
+      - /opt/paludariumpi/webcam-archive:/PaludariumPI/webcam/archive
+      - /opt/paludariumpi/DenkoviRelayCommandLineTool:/PaludariumPI/3rdparty/DenkoviRelayCommandLineTool
 
       - /boot/config.txt:/boot/config.txt # For Buster and Bullseye
       - /boot/cmdline.txt:/boot/cmdline.txt # For Buster and Bullseye

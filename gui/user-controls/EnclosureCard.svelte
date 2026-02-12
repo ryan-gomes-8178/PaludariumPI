@@ -19,7 +19,7 @@
   import { getCustomConfig } from '../config';
   import { ApiUrl } from '../constants/urls';
   import { fancyAppsLanguage } from '../constants/ui';
-  import { updateButton, isDarkInterface } from '../stores/terrariumpi';
+  import { updateButton, isDarkInterface } from '../stores/paludariumpi';
   import { isAuthenticated } from '../stores/authentication';
   import { externalLinks, areaObjectSort } from '../helpers/string-helpers';
 

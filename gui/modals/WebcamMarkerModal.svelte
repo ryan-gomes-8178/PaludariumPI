@@ -5,7 +5,7 @@
   import { createForm } from 'felte';
 
   import { errorNotification } from '../providers/notification-provider';
-  import { updateSensor } from '../stores/terrariumpi';
+  import { updateSensor } from '../stores/paludariumpi';
   import { fetchSensors } from '../providers/api';
   import { formToJSON } from '../helpers/form-helpers';
 

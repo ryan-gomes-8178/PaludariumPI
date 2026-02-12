@@ -11,7 +11,7 @@
   import { isAuthenticated } from '../stores/authentication';
   import { fetchPlaylists, deletePlaylist } from '../providers/api';
   import { successNotification, errorNotification } from '../providers/notification-provider';
-  import { isDay } from '../stores/terrariumpi';
+  import { isDay } from '../stores/paludariumpi';
 
   import Card from '../user-controls/Card.svelte';
 

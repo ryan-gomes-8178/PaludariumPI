@@ -8,7 +8,7 @@
   import CardSettingsTools from '../components/common/CardSettingsTools.svelte';
   import CardGraphPeriodTools from '../components/common/CardGraphPeriodTools.svelte';
 
-  import { buttons } from '../stores/terrariumpi';
+  import { buttons } from '../stores/paludariumpi';
   import { exportGraphPeriod } from '../helpers/graph-helpers';
 
   export let enableGraph = true;

@@ -19,7 +19,7 @@
   import { smoothing, extendGraphData, convertTimestamps } from '../../helpers/graph-helpers';
   import { graphDefaultOpts, graphTypes } from '../../constants/graph';
   import { fetchGraphData } from '../../providers/api';
-  import { graphs, updateSensor } from '../../stores/terrariumpi';
+  import { graphs, updateSensor } from '../../stores/paludariumpi';
   import { getCustomConfig } from '../../config';
 
   export let id;

@@ -1,5 +1,5 @@
 <script>
-  import { doors } from '../../stores/terrariumpi';
+  import { doors } from '../../stores/paludariumpi';
   export let door_id;
 </script>
 

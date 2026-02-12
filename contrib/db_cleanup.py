@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Run this script in the contrib folder with the same python version as TerrariumPI
+Run this script in the contrib folder with the same python version as PaludariumPI
 
 ./db_cleanup.py
 """
@@ -25,18 +25,18 @@ def humansize(nbytes):
 
 
 class HistoryCleanup:
-    def __init__(self, database="../data/terrariumpi.db", period=timedelta(weeks=60), batch=10000):
+    def __init__(self, database="../data/paludariumpi.db", period=timedelta(weeks=60), batch=10000):
         """
         Construct the database history clean up object
 
         Args:
-            database (str, optional): The database location path. Defaults to '../data/terrariumpi.db'.
+            database (str, optional): The database location path. Defaults to '../data/paludariumpi.db'.
             period (_type_, optional): Period in weeks to keep. Defaults to 60 weeks.
             batch (int, optional): Amount of records to delete at once. Defaults to 10000.
         """
 
         print(
-            f"This script will cleanup your terrariumpi.db file. We will keep {period} of data from now. If you want to make a backup first, please enter no and make your backup."
+            f"This script will cleanup your paludariumpi.db file. We will keep {period} of data from now. If you want to make a backup first, please enter no and make your backup."
         )
 
         self.check_offline()
@@ -74,7 +74,7 @@ class HistoryCleanup:
         try:
             data = requests.get("http://localhost:8090/api/system_status/")
             if data.status_code == 200:
-                print("TerrariumPI is still running. Please shutdown first, else you will get data corruption.")
+                print("PaludariumPI is still running. Please shutdown first, else you will get data corruption.")
                 exit(1)
         except requests.ConnectionError:
             pass
@@ -310,7 +310,7 @@ cleanup.move_db()
 print("Database is now cleaned and should be reduced in size:")
 cleanup.check_free_storage()
 print(
-    "Restart TerrariumPI and check if the sensor graphs still working. If it is al working, remove the file {}".format(
+    "Restart PaludariumPI and check if the sensor graphs still working. If it is al working, remove the file {}".format(
         cleanup.database.replace(".db", ".db.old")
     )
 )

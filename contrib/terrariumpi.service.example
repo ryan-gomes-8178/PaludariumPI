@@ -1,5 +1,5 @@
 [Unit]
-Description=TerrariumPI
+Description=PaludariumPI
 After=network.target local-fs.target
 # StartLimitInterval=370
 # StartLimitBurst=2
@@ -8,7 +8,7 @@ After=network.target local-fs.target
 User=pi
 Group=pi
 WorkingDirectory=/home/pi
-ExecStart=/usr/bin/python3 /home/pi/TerrariumPI/terrariumPI.py
+ExecStart=/usr/bin/python3 /home/pi/PaludariumPI/paludariumPI.py
 Restart=always
 RestartSec=5
 KillSignal=SIGINT

@@ -20,7 +20,7 @@
   import { onMount, getContext } from 'svelte';
 
   import { isAuthenticated } from '../../stores/authentication';
-  import { relays } from '../../stores/terrariumpi';
+  import { relays } from '../../stores/paludariumpi';
   import { get_template_color } from '../../helpers/color-helpers';
   import { roundToPrecision } from '../../helpers/number-helpers';
 

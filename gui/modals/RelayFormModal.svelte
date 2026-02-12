@@ -153,7 +153,7 @@
   <svelte:fragment slot="header">
     <i class="fas fa-thumbtack mr-2"></i>
     {$_('relays.settings.title', { default: 'Relay settings' })}
-    <Helper moreInfo="https://theyosh.github.io/TerrariumPI/setup/#relays" />
+    <Helper moreInfo="https://theyosh.github.io/PaludariumPI/setup/#relays" />
   </svelte:fragment>
 
   <form class="needs-validation" class:was-validated="{validated}" use:form bind:this="{editForm}">

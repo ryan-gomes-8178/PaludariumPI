@@ -280,8 +280,8 @@ export default {
 
         'public/api/redoc.html',
         'public/api/swagger.html',
-        'public/api/terrariumpi.json',
-        'public/api/terrariumpi.yaml'
+        'public/api/paludariumpi.json',
+        'public/api/paludariumpi.yaml'
       ]
     }),
 

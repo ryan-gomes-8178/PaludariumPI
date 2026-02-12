@@ -154,7 +154,7 @@ function showTimerGraph() {
           },
           title: {
             display: true,
-            text: 'TerrariumPI Timer display',
+            text: 'PaludariumPI Timer display',
           },
         },
         scales: {

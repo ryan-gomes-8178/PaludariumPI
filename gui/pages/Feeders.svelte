@@ -30,7 +30,7 @@
   let feedersModal;
 
   onMount(() => {
-    document.title = $_('feeders.menu.title', { default: 'Feeders' }) + ' - TerrariumPI';
+    document.title = $_('feeders.menu.title', { default: 'Feeders' }) + ' - PaludariumPI';
     loadFeeders();
   });
 

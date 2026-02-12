@@ -1,6 +1,6 @@
-# TerrariumPI Public Access & Security Setup Guide
+# PaludariumPI Public Access & Security Setup Guide
 
-This guide provides step-by-step instructions to securely expose TerrariumPI to the internet with authentication, 2FA, and SSL/TLS encryption.
+This guide provides step-by-step instructions to securely expose PaludariumPI to the internet with authentication, 2FA, and SSL/TLS encryption.
 
 ## Overview
 
@@ -26,7 +26,7 @@ This setup provides:
 ## Prerequisites
 
 Before starting, ensure you have:
-- A domain name (e.g., terrariumpi.example.com)
+- A domain name (e.g., paludariumpi.example.com)
 - A server/Raspberry Pi with public IP or port forwarding capabilities
 - SSH access to your server
 - Basic familiarity with Linux commands
@@ -41,20 +41,20 @@ Before starting, ensure you have:
    - Google Domains
    - Cloudflare.com (also provides free DNS)
 
-2. Choose a domain name (e.g., `terrariumpi.example.com`)
+2. Choose a domain name (e.g., `paludariumpi.example.com`)
 
 3. Update DNS records to point to your server's public IP address:
    - **DNS Record Type**: A (for IPv4) or AAAA (for IPv6)
-   - **Name**: terrariumpi (or subdomain of choice)
+   - **Name**: paludariumpi (or subdomain of choice)
    - **Value**: Your server's public IP address
    - **TTL**: 3600 seconds (1 hour)
 
 ### Verify DNS Resolution
 ```bash
 # Should resolve to your public IP
-nslookup terrariumpi.example.com
+nslookup paludariumpi.example.com
 # or
-dig terrariumpi.example.com
+dig paludariumpi.example.com
 ```
 
 ## Step 2: Install and Configure Nginx
@@ -73,23 +73,23 @@ sudo systemctl enable nginx
 ### Configure Nginx as Reverse Proxy
 1. Copy the provided nginx configuration:
 ```bash
-sudo cp contrib/nginx_terrariumpi.conf /etc/nginx/sites-available/terrariumpi
+sudo cp contrib/nginx_paludariumpi.conf /etc/nginx/sites-available/paludariumpi
 ```
 
 2. Edit the configuration file:
 ```bash
-sudo nano /etc/nginx/sites-available/terrariumpi
+sudo nano /etc/nginx/sites-available/paludariumpi
 ```
 
 3. Replace these placeholders:
-   - `YOUR_DOMAIN.COM` → your actual domain (e.g., terrariumpi.example.com)
-   - `192.168.1.X:8080` → your TerrariumPI server's local IP and port
+   - `YOUR_DOMAIN.COM` → your actual domain (e.g., paludariumpi.example.com)
+   - `192.168.1.X:8080` → your PaludariumPI server's local IP and port
    - `/path/to/ssl/cert.pem` → path to SSL certificate (we'll create this next)
    - `/path/to/ssl/key.pem` → path to SSL private key
 
 4. Enable the site:
 ```bash
-sudo ln -s /etc/nginx/sites-available/terrariumpi /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/paludariumpi /etc/nginx/sites-enabled/
 sudo rm /etc/nginx/sites-enabled/default  # Remove default site if needed
 ```
 
@@ -114,17 +114,17 @@ sudo apt-get install -y certbot python3-certbot-nginx
 
 **Obtain Certificate:**
 ```bash
-sudo certbot certonly --nginx -d terrariumpi.example.com -d www.terrariumpi.example.com
+sudo certbot certonly --nginx -d paludariumpi.example.com -d www.paludariumpi.example.com
 ```
 
 **Certificate locations will be:**
-- Certificate: `/etc/letsencrypt/live/terrariumpi.example.com/fullchain.pem`
-- Private Key: `/etc/letsencrypt/live/terrariumpi.example.com/privkey.pem`
+- Certificate: `/etc/letsencrypt/live/paludariumpi.example.com/fullchain.pem`
+- Private Key: `/etc/letsencrypt/live/paludariumpi.example.com/privkey.pem`
 
 **Update Nginx configuration with certificate paths:**
 ```bash
-ssl_certificate /etc/letsencrypt/live/terrariumpi.example.com/fullchain.pem;
-ssl_certificate_key /etc/letsencrypt/live/terrariumpi.example.com/privkey.pem;
+ssl_certificate /etc/letsencrypt/live/paludariumpi.example.com/fullchain.pem;
+ssl_certificate_key /etc/letsencrypt/live/paludariumpi.example.com/privkey.pem;
 ```
 
 **Setup Auto-Renewal:**
@@ -141,23 +141,23 @@ sudo systemctl status certbot.timer
 **Generate self-signed certificate:**
 ```bash
 sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-  -keyout /etc/ssl/private/terrariumpi-key.pem \
-  -out /etc/ssl/certs/terrariumpi-cert.pem
+  -keyout /etc/ssl/private/paludariumpi-key.pem \
+  -out /etc/ssl/certs/paludariumpi-cert.pem
 ```
 
 ⚠️ **Warning**: Self-signed certificates will show warnings in browsers and should only be used for testing.
 
 ## Step 4: Set Up Port Forwarding
 
-If your TerrariumPI is behind a home router:
+If your PaludariumPI is behind a home router:
 
 1. **Log into your router's admin interface** (usually 192.168.1.1 or 192.168.0.1)
 
 2. **Find Port Forwarding settings** (may be under NAT, Port Mapping, or Virtual Server)
 
-3. **Forward these ports to the TerrariumPI host's LAN IP** (the device running Nginx):
-   - External Port: 80 → Internal IP: <terrariumpi-lan-ip>, Internal Port: 80
-   - External Port: 443 → Internal IP: <terrariumpi-lan-ip>, Internal Port: 443
+3. **Forward these ports to the PaludariumPI host's LAN IP** (the device running Nginx):
+   - External Port: 80 → Internal IP: <paludariumpi-lan-ip>, Internal Port: 80
+   - External Port: 443 → Internal IP: <paludariumpi-lan-ip>, Internal Port: 443
 
 4. **Find your public IP address:**
    ```bash
@@ -174,9 +174,9 @@ If your TerrariumPI is behind a home router:
 pip install -r requirements.txt
 ```
 
-### Enable 2FA in TerrariumPI Settings
+### Enable 2FA in PaludariumPI Settings
 
-After the update, access your TerrariumPI web interface and:
+After the update, access your PaludariumPI web interface and:
 
 1. Go to Settings → Security
 2. Enable "Require 2FA Authentication"
@@ -201,7 +201,7 @@ sudo ufw allow 22/tcp
 sudo ufw allow 80/tcp
 sudo ufw allow 443/tcp
 
-# Allow TerrariumPI local port (only if needed for debugging)
+# Allow PaludariumPI local port (only if needed for debugging)
 # sudo ufw allow 8080/tcp
 
 # Check status
@@ -227,10 +227,10 @@ sudo netfilter-persistent save
 sudo systemctl status nginx
 
 # View error logs
-sudo tail -f /var/log/nginx/terrariumpi.error.log
+sudo tail -f /var/log/nginx/paludariumpi.error.log
 
 # View access logs
-sudo tail -f /var/log/nginx/terrariumpi.access.log
+sudo tail -f /var/log/nginx/paludariumpi.access.log
 ```
 
 ### Monitor Certificate Expiration
@@ -244,8 +244,8 @@ sudo certbot renew --dry-run
 
 ### Monitor Failed Login Attempts
 ```bash
-# View TerrariumPI logs for authentication errors
-tail -f log/terrariumpi.log | grep -i "authentication"
+# View PaludariumPI logs for authentication errors
+tail -f log/paludariumpi.log | grep -i "authentication"
 ```
 
 ### Regularly Update System
@@ -259,13 +259,13 @@ sudo apt-get autoremove -y
 
 ### Test HTTPS Connection
 ```bash
-curl -v https://terrariumpi.example.com
+curl -v https://paludariumpi.example.com
 # Should show certificate details and 200 response
 ```
 
 ### Test in Browser
-1. Navigate to `https://terrariumpi.example.com`
-2. You should see the TerrariumPI login page
+1. Navigate to `https://paludariumpi.example.com`
+2. You should see the PaludariumPI login page
 3. Login with username and password
 4. If 2FA is enabled, enter the 6-digit code from your authenticator
 
@@ -277,7 +277,7 @@ The system will now rate-limit login attempts:
 
 ### Verify Security Headers
 ```bash
-curl -I https://terrariumpi.example.com
+curl -I https://paludariumpi.example.com
 
 # Should include these headers:
 # Strict-Transport-Security: max-age=31536000...
@@ -289,7 +289,7 @@ curl -I https://terrariumpi.example.com
 ## Security Best Practices
 
 ### 1. Change Default Password Regularly
-- Log in to TerrariumPI web interface
+- Log in to PaludariumPI web interface
 - Go to Settings → Security
 - Change password every 90 days
 
@@ -302,7 +302,7 @@ sudo apt-get update && sudo apt-get upgrade -y
 ### 3. Monitor Access Logs
 ```bash
 # Check for suspicious patterns
-sudo tail -n 1000 /var/log/nginx/terrariumpi.access.log | grep "401\|403"
+sudo tail -n 1000 /var/log/nginx/paludariumpi.access.log | grep "401\|403"
 ```
 
 ### 4. Use Strong Passwords
@@ -317,7 +317,7 @@ sudo tail -n 1000 /var/log/nginx/terrariumpi.access.log | grep "401\|403"
 ### 6. Regular Backups
 ```bash
 # Backup database and settings
-tar -czf terrariumpi-backup-$(date +%Y%m%d).tar.gz \
+tar -czf paludariumpi-backup-$(date +%Y%m%d).tar.gz \
   migrations/ \
   data/ \
   *.db
@@ -340,7 +340,7 @@ If public access is not feasible, use a VPN:
 ### Certificate Not Found
 ```bash
 # Verify certificate paths
-ls -la /etc/letsencrypt/live/terrariumpi.example.com/
+ls -la /etc/letsencrypt/live/paludariumpi.example.com/
 
 # Renew certificate
 sudo certbot renew --force-renewal
@@ -348,25 +348,25 @@ sudo certbot renew --force-renewal
 
 ### Nginx Connection Refused
 ```bash
-# Check if TerrariumPI is running on the internal port
+# Check if PaludariumPI is running on the internal port
 curl -v http://localhost:8080
 # or your configured port
 
 # Check Nginx upstream server configuration
-sudo cat /etc/nginx/sites-enabled/terrariumpi | grep upstream -A 2
+sudo cat /etc/nginx/sites-enabled/paludariumpi | grep upstream -A 2
 ```
 
 ### SSL Handshake Error
 ```bash
 # Test SSL/TLS configuration
-sudo openssl s_client -connect terrariumpi.example.com:443
+sudo openssl s_client -connect paludariumpi.example.com:443
 
 # Check certificate validity
 sudo certbot certificates
 ```
 
 ### Rate Limiting Too Strict
-Edit `/etc/nginx/sites-enabled/terrariumpi` and adjust:
+Edit `/etc/nginx/sites-enabled/paludariumpi` and adjust:
 ```nginx
 limit_req_zone $binary_remote_addr zone=login_limit:10m rate=5r/m;
 # Increase rate from 5r/m to 10r/m if needed
@@ -383,12 +383,12 @@ limit_req_zone $binary_remote_addr zone=login_limit:10m rate=5r/m;
 Use this checklist weekly:
 
 - [ ] Check Nginx is running: `sudo systemctl status nginx`
-- [ ] Review error logs: `sudo tail /var/log/nginx/terrariumpi.error.log`
+- [ ] Review error logs: `sudo tail /var/log/nginx/paludariumpi.error.log`
 - [ ] Verify SSL certificate: `sudo certbot certificates`
 - [ ] Check firewall rules: `sudo ufw status`
 - [ ] Review system updates available: `sudo apt list --upgradable`
 - [ ] Monitor disk space: `df -h`
-- [ ] Check TerrariumPI logs for errors: `tail log/terrariumpi.log`
+- [ ] Check PaludariumPI logs for errors: `tail log/paludariumpi.log`
 - [ ] Test login from external network
 
 ## Next Steps (Advanced Security)
@@ -412,13 +412,13 @@ sudo nano /etc/fail2ban/jail.local
 
 ### Option 3: VPN for Internal Network
 - Only expose VPN port (WireGuard: UDP 51820)
-- TerrariumPI accessible only via VPN
+- PaludariumPI accessible only via VPN
 - Maximum security for home networks
 
 ## Support and Questions
 
 If you encounter issues:
-1. Check logs: `/var/log/nginx/` and `log/terrariumpi.log`
+1. Check logs: `/var/log/nginx/` and `log/paludariumpi.log`
 2. Verify DNS: `nslookup yourdomain.com`
 3. Test locally: `curl http://localhost:8080`
 4. Check certificate: `sudo certbot certificates`

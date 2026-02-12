@@ -1,8 +1,8 @@
 # Remote access (temporary public access)
 
-This folder contains minimal, **secure-by-default** examples to reach TerrariumPI remotely while keeping your device safe.
+This folder contains minimal, **secure-by-default** examples to reach PaludariumPI remotely while keeping your device safe.
 
-> TerrariumPI runs on port 8090 by default. These examples forward traffic to that local service.
+> PaludariumPI runs on port 8090 by default. These examples forward traffic to that local service.
 
 ## Option A — Cloudflare Tunnel (no open ports)
 
@@ -61,7 +61,7 @@ docker compose -f docker-compose.caddy.yml up -d
 Caddy will automatically fetch and renew TLS certificates.
 
 ## Security checklist
-- Change the default TerrariumPI credentials.
+- Change the default PaludariumPI credentials.
 - Use HTTPS only.
 - Prefer a tunnel or VPN if you can.
-- Keep your Pi and TerrariumPI updated.
+- Keep your Pi and PaludariumPI updated.

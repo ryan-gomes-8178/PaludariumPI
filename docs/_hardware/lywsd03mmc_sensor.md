@@ -35,8 +35,8 @@ greenhouse indoor environment (temperature and humidity).
 - User Manual in Japanese
 
 **Warning:** Sometimes firmwares can be updated by the manufacturer via the app,
-which may cause this device to not communicate with TerrariumPI anymore.
-TerrariumPI doesn't need any app setup for this device, it will work out of the
+which may cause this device to not communicate with PaludariumPI anymore.
+PaludariumPI doesn't need any app setup for this device, it will work out of the
 box.
 
 Some command line tools support more detailed features for this sensor like

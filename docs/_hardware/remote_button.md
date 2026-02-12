@@ -11,8 +11,8 @@ image:
 device_types: [button, door]
 device_address:
   'Enter the full url and json path traversal. More information at [remote
-  hardware](/TerrariumPI/faq/how-to-use-remote-data/).'
-device_url: /TerrariumPI/faq/how-to-use-remote-data/
+  hardware](/PaludariumPI/faq/how-to-use-remote-data/).'
+device_url: /PaludariumPI/faq/how-to-use-remote-data/
 ---
 
 ## Information

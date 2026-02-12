@@ -49,8 +49,8 @@ Ex: `[GPIO Readout pin],[GPIO power saving pin]`
 ### Analog sensors
 
 ![RaspIO Analog Zero](/assets/img/RasPiO-Analog-Zero.webp){: style="max-width:
-200px" .right} It is possible to add analog sensors to TerrariumPI. But as
-TerrariumPI only has digital GPIO ports, an extra add-on is needed to add analog
+200px" .right} It is possible to add analog sensors to PaludariumPI. But as
+PaludariumPI only has digital GPIO ports, an extra add-on is needed to add analog
 ports. For now the [RaspIO Analog Zero](https://rasp.io/analogzero/) is known to
 work. But any MCP3008 based board should work. The downside is that you will
 miss some GPIO pins for other use.
@@ -85,8 +85,8 @@ bus. A correct working I2C bus should produce the following outcome:
 
 ### I2C Multiplexer
 
-With an [I2C multiplexer](/TerrariumPI/hardware/i2c-multiplexer/) you can add
-more I2C busses to TerrariumPI. Support for I2C multiplexers depends on the
+With an [I2C multiplexer](/PaludariumPI/hardware/i2c-multiplexer/) you can add
+more I2C busses to PaludariumPI. Support for I2C multiplexers depends on the
 support in the OS. For now there is support for pca9542 (2 channel), pca9545 (4
 channel), and pca9548 (8 channel) muxes.
 
@@ -96,8 +96,8 @@ There is support for two I2C IO Expanders so you can have extra GPIO relays or
 GPIO buttons if needed. This will update the GPIO address to:\
 `pcf857<4/5>-<IO expander port>,<I2C Address>,[I2C Bus number]`
 
-Either use [pcf857**4**](/TerrariumPI/hardware/io-expander/) or
-[pcf857**5**](/TerrariumPI/hardware/io-expander/) to select the used IO
+Either use [pcf857**4**](/PaludariumPI/hardware/io-expander/) or
+[pcf857**5**](/PaludariumPI/hardware/io-expander/) to select the used IO
 expander.
 
 `<IO expander port>` is mandatory and is a number from 0 till max ports - 1.

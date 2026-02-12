@@ -1,13 +1,13 @@
-# TerrariumPI 4.14.0
+# PaludariumPI 4.14.0
 
-![Latest release](https://img.shields.io/github/v/release/theyosh/terrariumpi?label=Latest%20release)
-![GitHub Release Date](https://img.shields.io/github/release-date/theyosh/TerrariumPI)
-[![Translation status](https://weblate.theyosh.nl/widgets/terrariumpi/-/svg-badge.svg)](https://weblate.theyosh.nl/engage/terrariumpi/)
-[![Docker Pulls](https://img.shields.io/docker/pulls/theyosh/terrariumpi)](https://hub.docker.com/r/theyosh/terrariumpi)
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/dba4e25f9efe4197926dd03aa6925d0f)](https://app.codacy.com/gh/theyosh/TerrariumPI?utm_source=github.com&utm_medium=referral&utm_content=theyosh/TerrariumPI&utm_campaign=Badge_Grade_Settings)
+![Latest release](https://img.shields.io/github/v/release/theyosh/paludariumpi?label=Latest%20release)
+![GitHub Release Date](https://img.shields.io/github/release-date/theyosh/PaludariumPI)
+[![Translation status](https://weblate.theyosh.nl/widgets/paludariumpi/-/svg-badge.svg)](https://weblate.theyosh.nl/engage/paludariumpi/)
+[![Docker Pulls](https://img.shields.io/docker/pulls/theyosh/paludariumpi)](https://hub.docker.com/r/theyosh/paludariumpi)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/dba4e25f9efe4197926dd03aa6925d0f)](https://app.codacy.com/gh/theyosh/PaludariumPI?utm_source=github.com&utm_medium=referral&utm_content=theyosh/PaludariumPI&utm_campaign=Badge_Grade_Settings)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square)](https://github.com/prettier/prettier)
-[![Matrix](https://img.shields.io/badge/matrix.org-%23terrariumpi-blue)](https://matrix.to/#/#terrariumpi:theyosh.nl)
+[![Matrix](https://img.shields.io/badge/matrix.org-%23paludariumpi-blue)](https://matrix.to/#/#paludariumpi:theyosh.nl)
 
 Software for cheap home automation of your reptile terrarium or any other
 enclosed environment. With this software you are able to control for example a
@@ -26,15 +26,15 @@ boards or door sensors. The usage can be endless. All power switches have
 support for timers to trigger based on a time pattern.
 
 Running now stable for more than
-[**10 years**](https://theyosh.github.io/TerrariumPI/posts/2024/08/01/10-year-anniversary/)!!!
+[**10 years**](https://theyosh.github.io/PaludariumPI/posts/2024/08/01/10-year-anniversary/)!!!
 
 If you are using this software for your animals or plants,
-**[please post some pictures](https://github.com/theyosh/TerrariumPI/issues/210)**
+**[please post some pictures](https://github.com/theyosh/PaludariumPI/issues/210)**
 
 **Full documentation** can be found at
-[https://theyosh.github.io/TerrariumPI/](https://theyosh.github.io/TerrariumPI/)
+[https://theyosh.github.io/PaludariumPI/](https://theyosh.github.io/PaludariumPI/)
 
-**Contact** <https://matrix.to/#/#terrariumpi:theyosh.nl>
+**Contact** <https://matrix.to/#/#paludariumpi:theyosh.nl>
 
 Think off:
 
@@ -72,7 +72,7 @@ And all this is controlled with a nice web interface with
   - Predefined on and off dimming percentages
   - Predefined dimming steps for environment system (heater and cooler)
 - Support for timers in power switches and environment
-  [#72](https://github.com/theyosh/TerrariumPI/issues/72)
+  [#72](https://github.com/theyosh/PaludariumPI/issues/72)
   - Predefined start and stop times based on timer or weather
   - Predefined on and off durations in minutes
 - Support for Energenie USB, LAN and RF power switches
@@ -84,7 +84,7 @@ And all this is controlled with a nice web interface with
 - Support for Sonoff remote power devices
   - [Tasmota](https://github.com/arendst/Sonoff-Tasmota)
 - Support for
-  [multiple type of sensors](https://theyosh.github.io/TerrariumPI/hardware/#sensors)
+  [multiple type of sensors](https://theyosh.github.io/PaludariumPI/hardware/#sensors)
   - Temperature
   - Humidity
   - Moisture
@@ -115,14 +115,14 @@ And all this is controlled with a nice web interface with
 - Distances in centimeters or inches
 - Alarm detections
 - Audio support through internal audio jack or USB sound cards
-  [#42](https://github.com/theyosh/TerrariumPI/issues/42)
+  [#42](https://github.com/theyosh/PaludariumPI/issues/42)
   - Create playlists (loop and repeat)
   - Volume control in the web interface
   - Uploading audio files through web interface
   - Audio meta data support (mediainfo)
 - Remote temperature and humidity sensors through HTTP(S) JSON API's. JSON Data
   format can be found on
-  [Remote data wiki](https://theyosh.github.io/TerrariumPI/faq/how-to-use-remote-data/).
+  [Remote data wiki](https://theyosh.github.io/PaludariumPI/faq/how-to-use-remote-data/).
 - Display support
   - LCD 16x2 or 20x4 screens either through I2C or
     [Serial](https://www.instructables.com/id/Raspberry-Pi-Arduino-LCD-Screen/)
@@ -149,10 +149,10 @@ Madagascar Day Gecko is very happy with it!
 
 The software has support for the following languages:
 
-[![Translation status](https://weblate.theyosh.nl/widgets/terrariumpi/-/multi-auto.svg)](https://weblate.theyosh.nl/engage/terrariumpi/)
+[![Translation status](https://weblate.theyosh.nl/widgets/paludariumpi/-/multi-auto.svg)](https://weblate.theyosh.nl/engage/paludariumpi/)
 
 Your language not in the list or not up to date?
-[Create your own language translation](https://theyosh.github.io/TerrariumPI/translations/)
+[Create your own language translation](https://theyosh.github.io/PaludariumPI/translations/)
 
 ## Installation
 
@@ -170,7 +170,7 @@ It is possible to use USB or SSD drives to speed things up:
 There is a Docker image which can be used instead of the source code. This
 should make the installation a bit more easier. More information can be found
 at:
-[https://theyosh.github.io/TerrariumPI/install/#docker](https://theyosh.github.io/TerrariumPI/install/#docker)
+[https://theyosh.github.io/PaludariumPI/install/#docker](https://theyosh.github.io/PaludariumPI/install/#docker)
 
 You can skip the manual installation part.
 
@@ -181,9 +181,9 @@ You can skip the manual installation part.
 2. Install git \
    `sudo apt -y install git`
 3. Clone this repository and submodules! \
-   `git clone --depth 1 https://github.com/theyosh/TerrariumPI.git`
-4. Enter the new TerrariumPI folder \
-   `cd TerrariumPI`
+   `git clone --depth 1 https://github.com/theyosh/PaludariumPI.git`
+4. Enter the new PaludariumPI folder \
+   `cd PaludariumPI`
 5. Run the installer script and wait \
    `sudo ./install.sh`
 6. Reboot Raspberry PI to get all the needed modules loaded \
@@ -198,7 +198,7 @@ All needed options and modules are setup by the installer script. This means
 that I2C and 1Wire overlay are enabled by default.
 
 Make sure that your Pi is secured when you put it to the Internet. Would be a
-shame if TerrariumPI gets next victim of
+shame if PaludariumPI gets next victim of
 '[A smart fish tank left a casino vulnerable to hackers](http://money.cnn.com/2017/07/19/technology/fish-tank-hack-darktrace/index.html)'
 :P
 
@@ -220,13 +220,13 @@ container again.
 
 1. Get a working Raspberry Pi and login as user 'pi' \
    `ssh pi@[raspberry_ip]`
-2. Enter the TerrariumPI folder \
-   `cd TerrariumPI`
+2. Enter the PaludariumPI folder \
+   `cd PaludariumPI`
 3. Update the new code with git \
    `git pull`
 4. Re-run the installation script in order to update software dependencies \
    `sudo ./install.sh`
-5. Restart TerrariumPI: `sudo service terrariumpi restart`
+5. Restart PaludariumPI: `sudo service paludariumpi restart`
 
 Now **clear your browser cache** and reload the web interface. A brand new
 version should be running.
@@ -239,7 +239,7 @@ and work. The bare minimum and tested hardware is
 - Raspberry PI with at least **4GB SD card** running
   [Raspberry Pi OS **Lite** 32bit](https://www.raspberrypi.com/software/operating-systems/#raspberry-pi-os-32-bit).
   - Zero (Should work/At own risk/limited support)
-  - [Zero 2W](https://github.com/theyosh/TerrariumPI/issues/823#issuecomment-1693236850)
+  - [Zero 2W](https://github.com/theyosh/PaludariumPI/issues/823#issuecomment-1693236850)
     (Should work/At own risk/limited support)
   - Pi 2 (Should work/At own risk/limited support)
   - Pi 3 (Works/full support)
@@ -258,7 +258,7 @@ and work. The bare minimum and tested hardware is
   - 1 Wire interface
   - MCP3008 ([RasPiO Analog Zero](https://github.com/raspitv/analogzero))
 
-[Full list of supported hardware](https://theyosh.github.io/TerrariumPI/hardware/)
+[Full list of supported hardware](https://theyosh.github.io/PaludariumPI/hardware/)
 
 ### GPIO numbering
 
@@ -273,14 +273,14 @@ ports 19,21,23,24 physical (default).
 
 ### New hardware
 
-If there is some other hardware which is not working with TerrariumPI, open an
-issue on [Github](https://github.com/theyosh/TerrariumPI/issues) and we will try
+If there is some other hardware which is not working with PaludariumPI, open an
+issue on [Github](https://github.com/theyosh/PaludariumPI/issues) and we will try
 to support it. We can only test it on a Raspberry PI 4.
 
 ## Remote data
 
 It is possible to use external sensor data that is available through HTTP(S) in
-JSON format. This way you can combine multiple Raspberry Pi's with TerrariumPI
+JSON format. This way you can combine multiple Raspberry Pi's with PaludariumPI
 running to one single system. By using multiple Raspberry PI's you can cover a
 bigger area. But there are limitations.
 
@@ -289,15 +289,15 @@ you cannot control the remote switches. But this way you can combine the power
 switches total costs and power usage.
 
 more information is here:
-[Remote data wiki](https://theyosh.github.io/TerrariumPI/faq/how-to-use-remote-data/)
+[Remote data wiki](https://theyosh.github.io/PaludariumPI/faq/how-to-use-remote-data/)
 
 ## Contributors
 
-![GitHub Contributors Image](https://contrib.rocks/image?repo=theyosh/TerrariumPI)
+![GitHub Contributors Image](https://contrib.rocks/image?repo=theyosh/PaludariumPI)
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=theyosh/TerrariumPI&type=Date)](https://star-history.com/#theyosh/TerrariumPI&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=theyosh/PaludariumPI&type=Date)](https://star-history.com/#theyosh/PaludariumPI&Date)
 
 ## Screenshots
 
@@ -305,39 +305,39 @@ more information is here:
 
 ### Dashboard
 
-![TerrariumPI 4.0 Dashboard screenshot](screenshots/Dashboard.webp)
+![PaludariumPI 4.0 Dashboard screenshot](screenshots/Dashboard.webp)
 
 ### Sensors
 
-![TerrariumPI 4.0 Sensors temperature list screenshot](screenshots/Temperature_sensors_list.webp)
-![TerrariumPI 4.0 Sensors humidity list screenshot](screenshots/Humidity_sensors_list.webp)
-![TerrariumPI 4.0 Sensors settings screenshot](screenshots/Sensor_setup.webp)
+![PaludariumPI 4.0 Sensors temperature list screenshot](screenshots/Temperature_sensors_list.webp)
+![PaludariumPI 4.0 Sensors humidity list screenshot](screenshots/Humidity_sensors_list.webp)
+![PaludariumPI 4.0 Sensors settings screenshot](screenshots/Sensor_setup.webp)
 
 ### Relays
 
-![TerrariumPI 4.0 Relays list screenshot](screenshots/Relay_list.webp)
-![TerrariumPI 4.0 Relays settings screenshot](screenshots/Relay_setup.webp)
+![PaludariumPI 4.0 Relays list screenshot](screenshots/Relay_list.webp)
+![PaludariumPI 4.0 Relays settings screenshot](screenshots/Relay_setup.webp)
 
 ### Enclosure setup
 
-![TerrariumPI 4.0 Enclosure list screenshot](screenshots/Enclosure_list.webp)
-![TerrariumPI 4.0 Enclosure setup screenshot](screenshots/Enclosure_setup.webp)
+![PaludariumPI 4.0 Enclosure list screenshot](screenshots/Enclosure_list.webp)
+![PaludariumPI 4.0 Enclosure setup screenshot](screenshots/Enclosure_setup.webp)
 
 ### Area setup
 
-![TerrariumPI 4.0 Area Lighting setup screenshot](screenshots/Area_Light_setup.webp)
-![TerrariumPI 4.0 Area Humidity setup screenshot](screenshots/Area_Humidity_setup.webp)
+![PaludariumPI 4.0 Area Lighting setup screenshot](screenshots/Area_Light_setup.webp)
+![PaludariumPI 4.0 Area Humidity setup screenshot](screenshots/Area_Humidity_setup.webp)
 
 ### System settings
 
-![TerrariumPI 4.0 System setup screenshot](screenshots/System_setup.webp)
+![PaludariumPI 4.0 System setup screenshot](screenshots/System_setup.webp)
 
 ### MOTD (Message Of The Day)
 
-![TerrariumPI 4.0 MOTD screenshot](screenshots/terrariumpi-motd.webp)
+![PaludariumPI 4.0 MOTD screenshot](screenshots/paludariumpi-motd.webp)
 
 More screenshots can be found
-[here](https://github.com/theyosh/TerrariumPI/tree/main/screenshots)
+[here](https://github.com/theyosh/PaludariumPI/tree/main/screenshots)
 
 ## About
 

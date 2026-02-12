@@ -1049,7 +1049,7 @@
       "system": {
         "logout": "Bist du sicher, dass du dich abmelden möchtest?",
         "reboot": "Dadurch wird der Raspberry Pi neu gestartet. Dies kann bis zu 60 Sekunden dauern.",
-        "restart": "Dies wird TerrariumPi neu starten. Dies kann bis zu 30 Sekunden dauern.",
+        "restart": "Dies wird PaludariumPi neu starten. Dies kann bis zu 30 Sekunden dauern.",
         "shutdown": "Dadurch wird der Raspberry Pi heruntergefahren. Mit Sorgfalt verwenden!"
       },
       "title": "Bist du dir sicher?"
@@ -1675,7 +1675,7 @@
           "placeholder": "Portnummer eingeben"
         },
         "pushover": {
-          "label": "Erstelle einen Token, indem du Terrariumpi als App {link} registrierst."
+          "label": "Erstelle einen Token, indem du Paludariumpi als App {link} registrierst."
         },
         "receiver": {
           "help": "Bitte gib eine E-Mail-Adresse ein.",

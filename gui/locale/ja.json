@@ -1049,7 +1049,7 @@
       "system": {
         "logout": "ログアウトしたいですか？",
         "reboot": "これにより、Raspberry Piが再起動されます。これには最大60秒かかる場合があります。",
-        "restart": "これはTerrariumpiを再開します。これには最大30秒かかる場合があります。",
+        "restart": "これはPaludariumpiを再開します。これには最大30秒かかる場合があります。",
         "shutdown": "これにより、Raspberry Piがシャットダウンします。慎重に使用してください！"
       },
       "title": "本気ですか？"
@@ -1675,7 +1675,7 @@
           "placeholder": "名前を入力してください。"
         },
         "pushover": {
-          "label": "Terrariumpiをアプリ{link}として登録して、トークンを作成します。"
+          "label": "Paludariumpiをアプリ{link}として登録して、トークンを作成します。"
         },
         "receiver": {
           "help": "アドレスを入力してください。.",

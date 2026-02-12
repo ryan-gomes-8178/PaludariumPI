@@ -1049,7 +1049,7 @@
       "system": {
         "logout": "Êtes-vous sûr de vouloir vous déconnecter ?",
         "reboot": "Cela redémarrera le Raspberry Pi. Cela peut prendre jusqu'à 60 secondes.",
-        "restart": "Cela redémarrera Terrariumpi. Cela peut prendre jusqu'à 30 secondes.",
+        "restart": "Cela redémarrera Paludariumpi. Cela peut prendre jusqu'à 30 secondes.",
         "shutdown": "Cela fera arrêter le Raspberry Pi. Utilisez avec soin !"
       },
       "title": "Êtes-vous sûr ?"
@@ -1675,7 +1675,7 @@
           "placeholder": "Nom de fichier"
         },
         "pushover": {
-          "label": "Créez vos jetons en enregistrant Terrariumpi en tant qu'application {link}."
+          "label": "Créez vos jetons en enregistrant Paludariumpi en tant qu'application {link}."
         },
         "receiver": {
           "help": "Adresse.",

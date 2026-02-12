@@ -1522,13 +1522,13 @@ class terrariumAPI(object):
     def server_action(self, action):
         if "restart" == action:
             self.webserver.engine.restart()
-            return {"message": f'TerrariumPI {self.webserver.engine.settings["version"]} is being restarted!'}
+            return {"message": f'PaludariumPI {self.webserver.engine.settings["version"]} is being restarted!'}
         elif "reboot" == action:
             self.webserver.engine.reboot()
-            return {"message": f'TerrariumPI {self.webserver.engine.settings["version"]} is being rebooted!'}
+            return {"message": f'PaludariumPI {self.webserver.engine.settings["version"]} is being rebooted!'}
         elif "shutdown" == action:
             self.webserver.engine.shutdown()
-            return {"message": f'TerrariumPI {self.webserver.engine.settings["version"]} is being shutdown!'}
+            return {"message": f'PaludariumPI {self.webserver.engine.settings["version"]} is being shutdown!'}
 
     # Relays
     @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)

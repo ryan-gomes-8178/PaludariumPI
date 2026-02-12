@@ -1,10 +1,10 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) 2016-2023 TheYOSH
-# Joshua (TheYOSH) Rubingh, <terrariumpi@theyosh.nl>, 2016-2023.
+# Joshua (TheYOSH) Rubingh, <paludariumpi@theyosh.nl>, 2016-2023.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: TerrariumPI 4.6.3\n"
+"Project-Id-Version: PaludariumPI 4.6.3\n"
 "POT-Creation-Date: 2023-06-02 22:35+CEST\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
@@ -490,7 +490,7 @@ msgid "Authentication"
 msgstr ""
 
 #: terrariumWebserver.py:165 terrariumWebserver.py:253
-msgid "TerrariumPI"
+msgid "PaludariumPI"
 msgstr ""
 
 #: terrariumWebserver.py:393

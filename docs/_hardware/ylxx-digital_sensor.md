@@ -10,7 +10,7 @@ image:
 
 device_types: [moisture]
 device_address:
-  'Enter the [physical pin](/TerrariumPI/hardware/#gpio) number on which the
+  'Enter the [physical pin](/PaludariumPI/hardware/#gpio) number on which the
   device is connected<br />Ex: `27`'
 device_url: https://www.techcoil.com/blog/how-to-read-soil-moisture-level-with-raspberry-pi-and-a-yl-69-fc-28-moisture-sensor/
 device_power_management: true

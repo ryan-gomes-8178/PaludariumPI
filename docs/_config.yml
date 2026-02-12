@@ -14,13 +14,13 @@ timezone: Europe/Amsterdam
 # jekyll-seo-tag settings › https://github.com/jekyll/jekyll-seo-tag/blob/master/docs/usage.md
 # ↓ --------------------------
 
-title: TerrariumPI # the main title
+title: PaludariumPI # the main title
 
 tagline: Reptile enclosure automation # it will display as the sub-title
 
 description: >- # used by seo meta and the atom feed
   Here you can find the documentation
-  for installation and operating TerrariumPI
+  for installation and operating PaludariumPI
 
 # Fill in the protocol & hostname for your site.
 # e.g. 'https://username.github.io', note that it does not end with a '/'.
@@ -42,7 +42,7 @@ social:
   # Change to your full name.
   # It will be displayed as the default author of the posts and the copyright owner in the Footer
   name: TheYOSH
-  email: terrariumpi@theyosh.nl # change to your email address
+  email: paludariumpi@theyosh.nl # change to your email address
   fediverse_handle: '@theyosh@mastodon.theyosh.nl' # change to your fediverse handle or leave empty
   links:
     # The first element serves as the copyright owner's link
@@ -125,7 +125,7 @@ comments:
     issue_term: # < url | pathname | title | ...>
   # Giscus options › https://giscus.app
   giscus:
-    repo: theyosh/TerrariumPI # <gh-username>/<repo>
+    repo: theyosh/PaludariumPI # <gh-username>/<repo>
     repo_id: MDEwOlJlcG9zaXRvcnk0OTY3MjQ1Mg==
     category: Comments
     category_id: DIC_kwDOAvXxBM4Ccopg
@@ -156,7 +156,7 @@ pwa:
 paginate: 6
 
 # The base URL of your site
-baseurl: '/TerrariumPI'
+baseurl: '/PaludariumPI'
 
 target-blank:
   add_css_classes: external

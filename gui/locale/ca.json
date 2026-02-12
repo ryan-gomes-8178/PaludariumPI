@@ -1049,7 +1049,7 @@
       "system": {
         "logout": "Esteu segur que voleu tancar la sessió?",
         "reboot": "Això reiniciarà el Raspberry Pi. Això pot trigar fins a 60 segons.",
-        "restart": "Això reiniciarà Terrariumpi. Això pot trigar fins a 30 segons.",
+        "restart": "Això reiniciarà Paludariumpi. Això pot trigar fins a 30 segons.",
         "shutdown": "Això tancarà el Raspberry Pi. Utilitzeu -ho amb cura!"
       },
       "title": "Estàs segur?"
@@ -1675,7 +1675,7 @@
           "placeholder": "Introduïu un número de port"
         },
         "pushover": {
-          "label": "Creeu les vostres fitxes registrant Terrariumpi com a aplicació {link}."
+          "label": "Creeu les vostres fitxes registrant Paludariumpi com a aplicació {link}."
         },
         "receiver": {
           "help": "Introduïu una adreça de correu electrònic.",

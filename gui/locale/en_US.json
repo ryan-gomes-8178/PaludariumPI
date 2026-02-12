@@ -1050,7 +1050,7 @@
       "system": {
         "logout": "Are you sure you want to logout?",
         "reboot": "This will reboot the Raspberry PI. This can take up to 60 seconds.",
-        "restart": "This will restart TerrariumPI. This can take up to 30 seconds.",
+        "restart": "This will restart PaludariumPI. This can take up to 30 seconds.",
         "shutdown": "This will shutdown the Raspberry PI. Use with care!"
       },
       "title": "Are you sure?"
@@ -1676,7 +1676,7 @@
           "placeholder": "Enter a port number"
         },
         "pushover": {
-          "label": "Create your tokens by registering TerrariumPI as an app {link}."
+          "label": "Create your tokens by registering PaludariumPI as an app {link}."
         },
         "receiver": {
           "help": "Enter an email address.",

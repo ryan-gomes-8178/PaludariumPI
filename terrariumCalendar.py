@@ -16,15 +16,15 @@ class terrariumCalendar(object):
     def __init__(self):
         if not self.__ICS_FILE.exists():
             self.__ical = Calendar()
-            self.__ical.add("prodid", "-//TerrariumPI calendar//terrarium.theyosh.nl//")
+            self.__ical.add("prodid", "-//PaludariumPI calendar//terrarium.theyosh.nl//")
             self.__ical.add("version", "2.0")
             self.__ICS_FILE.write_bytes(self.__ical.to_ical())
 
             self.create_event(
                 None,
-                "TerrariumPI initial github commit",
+                "PaludariumPI initial github commit",
                 "<p>First commit on Github</p>",
-                "https://github.com/theyosh/TerrariumPI/commit/526d39a9ceac57768c6fffe6ffe19afd71782952",
+                "https://github.com/theyosh/PaludariumPI/commit/526d39a9ceac57768c6fffe6ffe19afd71782952",
                 datetime(2016, 1, 14, 0, 0, 0, 0, timezone.utc),
             )
             # give OS some time to write the file
@@ -36,15 +36,15 @@ class terrariumCalendar(object):
         for event in self.get_events(
             datetime(2020, 1, 1, 0, 0, 0, 0, timezone.utc), datetime(2030, 1, 1, 0, 0, 0, 0, timezone.utc)
         ):
-            if event["summary"] == "TerrariumPI 10 year celebration":
+            if event["summary"] == "PaludariumPI 10 year celebration":
                 self.delete_event(event["uid"])
 
         if self.get_event("10-years-celebration") == False:
             self.create_event(
                 "10-years-celebration",
-                "TerrariumPI 10 year celebration",
-                "<p>TerrariumPI is 10 years old!</p>",
-                "https://theyosh.github.io/TerrariumPI/",
+                "PaludariumPI 10 year celebration",
+                "<p>PaludariumPI is 10 years old!</p>",
+                "https://theyosh.github.io/PaludariumPI/",
                 datetime(2024, 8, 1, 0, 0, 0, 0, timezone.utc),
                 datetime(2024, 8, 30, 0, 0, 0, 0, timezone.utc),
             )

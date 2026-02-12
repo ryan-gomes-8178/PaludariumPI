@@ -1049,7 +1049,7 @@
       "system": {
         "logout": "Naozaj sa chcete odhlásiť?",
         "reboot": "Týmto sa Raspberry PI reštartuje. Môže to trvať až 60 sekúnd.",
-        "restart": "Týmto sa reštartuje TerrariumPI. Môže to trvať až 30 sekúnd.",
+        "restart": "Týmto sa reštartuje PaludariumPI. Môže to trvať až 30 sekúnd.",
         "shutdown": "Týmto sa vypne Raspberry PI. Používajte opatrne!"
       },
       "title": "Si si istý/á?"
@@ -1675,7 +1675,7 @@
           "placeholder": "Zadajte číslo portu"
         },
         "pushover": {
-          "label": "Vytvorte si tokeny registráciou TerrariumPI ako aplikácie {link}."
+          "label": "Vytvorte si tokeny registráciou PaludariumPI ako aplikácie {link}."
         },
         "receiver": {
           "help": "Zadajte e-mailovú adresu.",

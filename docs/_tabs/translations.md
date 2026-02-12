@@ -13,11 +13,11 @@ image:
 
 The software is currently available in multiple languages.
 
-![Translation status](https://weblate.theyosh.nl/widgets/terrariumpi/-/multi-auto.svg){:
+![Translation status](https://weblate.theyosh.nl/widgets/paludariumpi/-/multi-auto.svg){:
 width="85%"} _available languages_
 
 If you want to add a new translation or update an existing translation, click
-[here](https://weblate.theyosh.nl/engage/terrariumpi/).
+[here](https://weblate.theyosh.nl/engage/paludariumpi/).
 
 ## Localization
 

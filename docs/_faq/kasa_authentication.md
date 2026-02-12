@@ -4,16 +4,16 @@ categories: [Website, FAQ]
 tags: [logging]
 ---
 
-When you see the following error in the TerrariumPI logging you need to enable
+When you see the following error in the PaludariumPI logging you need to enable
 `Third-Party Compatibility feature` in the app.
 
 ```
 2025-12-11 03:47:55,212 - ERROR   - hardware.relay.kasa_relay - Server response doesn't match our challenge on ip 192.168.1.XXX
 Traceback (most recent call last):
-  File "/TerrariumPI/hardware/relay/kasa_relay.py", line 75, in _get_hardware_value
+  File "/PaludariumPI/hardware/relay/kasa_relay.py", line 75, in _get_hardware_value
     data = self.__asyncio.run(__get_hardware_state())
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/TerrariumPI/terrariumUtils.py", line 65, in run
+  File "/PaludariumPI/terrariumUtils.py", line 65, in run
     return data.result()
            ^^^^^^^^^^^^^
   File "/usr/local/lib/python3.11/concurrent/futures/_base.py", line 456, in result
@@ -21,7 +21,7 @@ Traceback (most recent call last):
            ^^^^^^^^^^^^^^^^^^^
   File "/usr/local/lib/python3.11/concurrent/futures/_base.py", line 401, in __get_result
     raise self._exception
-  File "/TerrariumPI/hardware/relay/kasa_relay.py", line 63, in __get_hardware_state
+  File "/PaludariumPI/hardware/relay/kasa_relay.py", line 63, in __get_hardware_state
     await self.device.update()
   File "/opt/venv/lib/python3.11/site-packages/kasa/smartdevice.py", line 353, in update
     response = await self.protocol.query(req)

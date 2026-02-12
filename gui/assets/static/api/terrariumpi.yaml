@@ -2,12 +2,12 @@ swagger: '2.0'
 info:
   description: >-
     Here you can find all the API calls and models that are available in
-    TerrariumPI. More information can be found at
-    https://theyosh.github.io/TerrariumPI/
+    PaludariumPI. More information can be found at
+    https://theyosh.github.io/PaludariumPI/
   version: 1.0.0
-  title: TerrariumPI REST API
+  title: PaludariumPI REST API
   contact:
-    email: terrariumpi@theyosh.nl
+    email: paludariumpi@theyosh.nl
   license:
     name: Apache 2.0
     url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
@@ -822,8 +822,8 @@ paths:
     post:
       tags:
         - System
-      summary: Restart/reboot/shutdown TerrariumPI
-      description: Restart/reboot/shutdown TerrariumPI
+      summary: Restart/reboot/shutdown PaludariumPI
+      description: Restart/reboot/shutdown PaludariumPI
       operationId: actionPi
       consumes:
         - application/json
@@ -2913,5 +2913,5 @@ definitions:
                       - type: string
                         description: Sensor ID
 externalDocs:
-  description: Find out more about TerrariumPI
-  url: 'https://theyosh.github.io/TerrariumPI/'
+  description: Find out more about PaludariumPI
+  url: 'https://theyosh.github.io/PaludariumPI/'

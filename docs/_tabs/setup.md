@@ -20,7 +20,7 @@ A simple rule to remember:
 ## Login
 
 ![New relay form](/assets/img/Login.webp){: style="max-height: 100px" .right}
-After the installation, you need to setup TerrariumPI. In order to do that,
+After the installation, you need to setup PaludariumPI. In order to do that,
 login with a browser at http://[raspberry_pi]:8090 and click on the `Login` link
 on the left side menu. The default login should be **admin** / **password**
 ([FAQ]({% link _faq/login.md %}))
@@ -46,7 +46,7 @@ are related to each other.
 
 ### System
 
-In the system group you setup the minimal settings to get TerrariumPI running.
+In the system group you setup the minimal settings to get PaludariumPI running.
 
 Pi power usage {% include required_input.html %}
 : Enter the amount of total power in watts used by the Raspberry
@@ -179,14 +179,14 @@ location. And the historical weather data is used for [climate mirroring]({% lin
 ### Timezones
 
 The weather data is loaded in such a way that timezones are 'ignored'. So when
-it is day at 08:00 at the given location, TerrariumPI will thread
+it is day at 08:00 at the given location, PaludariumPI will thread
 that as 08:00 local time. Even when the location is at the other side of the world. \
 This way, you can have seasons with shorter and longer
 days, based on day of the year.
 
 ### Sources
 
-TerrariumPI can handle two weather sources at the moment. Those are:
+PaludariumPI can handle two weather sources at the moment. Those are:
 
 - [OpenWeatherMap.org](#openweathermaporg)
 - [Open-Meteo.com](#open-meteoorg)
@@ -205,7 +205,7 @@ or \
 Do **not** add the `&metric=` part in the url. And keep the value of **2.5** in
 the url!
 
-TerrariumPI will auto detect with API version you have an account for. TerrariumPI
+PaludariumPI will auto detect with API version you have an account for. PaludariumPI
 should stay within the free 1000 API calls per day.
 
 **important** This OpenWeatherMap url will be encrypted in the database. So the
@@ -225,9 +225,9 @@ For everybody that is registered with OpenWeatherMap after October, will have
 less data or you have to subscribe for the
 [One call API 3.0](https://openweathermap.org/price)
 
-**TerrariumPI will self test which API version you have. It will first test for
+**PaludariumPI will self test which API version you have. It will first test for
 version 3.0 and if that fails, it will fallback to the (old free) 2.5 version.
-So the API url for TerrariumPI is always as described below including the 2.5
+So the API url for PaludariumPI is always as described below including the 2.5
 in the url!**
 
 #### Open-Meteo.org

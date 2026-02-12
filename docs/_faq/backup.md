@@ -17,7 +17,7 @@ software. So here is a list of files that should be saved at a regular basis:
 
 ### Warning
 
-Due to the nature of TerrariumPI, the database can get corrupted during creating
+Due to the nature of PaludariumPI, the database can get corrupted during creating
 a backup. This is due the fact that at least every 30 seconds the database is
 updated. And that could case that the latest data is not backup-ed correctly.
 This can be fixed by using the [database fix

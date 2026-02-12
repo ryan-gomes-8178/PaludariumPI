@@ -1049,7 +1049,7 @@
       "system": {
         "logout": "Weet je zeker dat je wilt uitloggen?",
         "reboot": "Dit zal de Raspberry Pi opnieuw opstarten. Dit kan tot 60 seconden duren.",
-        "restart": "Dit zal Terrariumpi opnieuw opstarten. Dit kan tot 30 seconden duren.",
+        "restart": "Dit zal Paludariumpi opnieuw opstarten. Dit kan tot 30 seconden duren.",
         "shutdown": "Hierdoor wordt de Raspberry PI afgesloten. Gebruik met zorg!"
       },
       "title": "Weet je het zeker?"
@@ -1675,7 +1675,7 @@
           "placeholder": "Voer poortnummer in"
         },
         "pushover": {
-          "label": "Maak uw tokens door terrariumpi te registreren als een app {link}."
+          "label": "Maak uw tokens door paludariumpi te registreren als een app {link}."
         },
         "receiver": {
           "help": "Vul een e-mailadres in.",

@@ -404,7 +404,7 @@
   <svelte:fragment slot="header">
     <i class="fas fa-map mr-2"></i>
     {$_('areas.settings.title', { default: 'Area settings' })}
-    <Helper moreInfo="https://theyosh.github.io/TerrariumPI/setup/#areas" />
+    <Helper moreInfo="https://theyosh.github.io/PaludariumPI/setup/#areas" />
   </svelte:fragment>
 
   <form class="needs-validation" class:was-validated="{validated}" use:form bind:this="{editForm}">

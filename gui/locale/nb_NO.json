@@ -1049,7 +1049,7 @@
       "system": {
         "logout": "Er du sikker på at du vil logge ut?",
         "reboot": "Dette vil starte Raspberry PI på nytt. Dette kan ta opptil 60 sekunder.",
-        "restart": "Dette vil starte TerrariumPI på nytt. Dette kan ta opptil 30 sekunder.",
+        "restart": "Dette vil starte PaludariumPI på nytt. Dette kan ta opptil 30 sekunder.",
         "shutdown": "Dette vil slå av Raspberry PI. Bruk med forsiktighet!"
       },
       "title": "Er du sikker?"
@@ -1675,7 +1675,7 @@
           "placeholder": "Skriv et portnummer"
         },
         "pushover": {
-          "label": "Lag dine tokens ved å registrere TerrariumPI som en app {link}."
+          "label": "Lag dine tokens ved å registrere PaludariumPI som en app {link}."
         },
         "receiver": {
           "help": "I2C-adresse.",

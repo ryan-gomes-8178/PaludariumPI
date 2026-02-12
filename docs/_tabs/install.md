@@ -9,19 +9,19 @@ image:
   alt: Installation header image
 ---
 
-Here we will install Raspberry PI and TerrariumPI software step by step.
+Here we will install Raspberry PI and PaludariumPI software step by step.
 
 ## Raspberry PI
 
 ![Raspberry PI Logo](/assets/img/RaspberryPI_Logo.webp){: .right width="100" }
-In order to run TerrariumPI you first need a working Raspberry PI with the
+In order to run PaludariumPI you first need a working Raspberry PI with the
 **32bit**
 '[Raspberry Pi OS **Lite**](https://www.raspberrypi.com/software/operating-systems/)'
 image. Make sure you are using the **Lite** version! This is very important as
 the Desktop version will not work well with the GPIO pins and Raspberry PI
 cameras.
 
-TerrariumPI is tested on Raspbian OS Bookworm, Bullseye and Buster.
+PaludariumPI is tested on Raspbian OS Bookworm, Bullseye and Buster.
 
 <!-- prettier-ignore-start -->
 > **64bit is not supported** due to missing mmal code which is needed for the
@@ -44,7 +44,7 @@ settings icon in the lower right corner. Here you enter your Wifi settings, pi
 password etc. Use this to install the Raspberry PI headless. Add the SD card in
 the Raspberry PI and withing a minute you should have a running Raspberry PI.
 
-## TerrariumPI
+## PaludariumPI
 
 When the Raspberry PI is up and running, you should be able to SSH to it. On
 Linux and Mac you can use the terminal. For Windows, you can use Putty.
@@ -53,15 +53,15 @@ Linux and Mac you can use the terminal. For Windows, you can use Putty.
 ssh pi@[raspberrypi]
 ```
 
-**Disclaimer:** If you have TerrariumPI running on this Raspberry PI, then you
+**Disclaimer:** If you have PaludariumPI running on this Raspberry PI, then you
 can [read here](#backup) how to stop and make a backup.
 
 ### Docker
 
 ![Docker Logo](/assets/img/DockerLogo.webp){: .right width="200" } As from
 version 4.1 there is a
-[Docker image](https://hub.docker.com/r/theyosh/terrariumpi) that can be used to
-run TerrariumPI. When you run it in Docker, you can skip the rest of the page.
+[Docker image](https://hub.docker.com/r/theyosh/paludariumpi) that can be used to
+run PaludariumPI. When you run it in Docker, you can skip the rest of the page.
 Only the migration could be followed if you want to restore your current relay
 history.
 
@@ -98,15 +98,15 @@ starting point:
 
 ```yaml
 services:
-  terrariumpi:
-    image: theyosh/terrariumpi:[X]-[OS]-[?Java]
+  paludariumpi:
+    image: theyosh/paludariumpi:[X]-[OS]-[?Java]
     volumes:
-      - /opt/terrariumpi/logs:/TerrariumPI/log
-      - /opt/terrariumpi/data:/TerrariumPI/data
-      - /opt/terrariumpi/media:/TerrariumPI/media
-      - /opt/terrariumpi/scripts:/TerrariumPI/scripts
-      - /opt/terrariumpi/webcam-archive:/TerrariumPI/webcam/archive
-      - /opt/terrariumpi/DenkoviRelayCommandLineTool:/TerrariumPI/3rdparty/DenkoviRelayCommandLineTool # Only needed when using Java container
+      - /opt/paludariumpi/logs:/PaludariumPI/log
+      - /opt/paludariumpi/data:/PaludariumPI/data
+      - /opt/paludariumpi/media:/PaludariumPI/media
+      - /opt/paludariumpi/scripts:/PaludariumPI/scripts
+      - /opt/paludariumpi/webcam-archive:/PaludariumPI/webcam/archive
+      - /opt/paludariumpi/DenkoviRelayCommandLineTool:/PaludariumPI/3rdparty/DenkoviRelayCommandLineTool # Only needed when using Java container
 
       - /boot/config.txt:/boot/config.txt # For OS Buster and Bullseye
       - /boot/cmdline.txt:/boot/cmdline.txt # For OS Buster and Bullseye
@@ -150,11 +150,11 @@ The network mode needs to be at `host`. Else bluetooth with not work, and you
 can't use bluetooth sensors.
 
 Then you can run `docker compose up -d` to start the docker image. It could be
-that it needs a reboot. After that, you should be able to access TerrariumPI on
+that it needs a reboot. After that, you should be able to access PaludariumPI on
 the url `http://[raspberrypi]:8090`. [Continue with the
 setup]({% link _tabs/setup.md %})
 
-[All docker images](https://hub.docker.com/r/theyosh/terrariumpi/) can be found
+[All docker images](https://hub.docker.com/r/theyosh/paludariumpi/) can be found
 at Docker Hub.
 
 ### Manual
@@ -174,14 +174,14 @@ sudo apt update && sudo apt -y install git
 
 #### Download
 
-After Git is installed, we can download the TerrariumPI source code. We will
+After Git is installed, we can download the PaludariumPI source code. We will
 only download the latest version.
 
 If you want to do some development or testing, omit the part `--depth 1`. Then
 you will get the full repository with all the branches.
 
 ```console
-git clone --branch main --depth 1 https://github.com/theyosh/TerrariumPI.git
+git clone --branch main --depth 1 https://github.com/theyosh/PaludariumPI.git
 ```
 
 #### Installation
@@ -194,19 +194,19 @@ the latest version. This can take some more time.
 
 Make sure you select the **correct timezone**. This is your home timezone. If
 you do not select the correct timezone during installation, you could get
-strange time schedules when running TerrariumPI.
+strange time schedules when running PaludariumPI.
 
 ```console
-cd TerrariumPI
+cd PaludariumPI
 sudo ./install.sh
 ```
 
 <video muted controls style="max-width:100%">
-  <source src="/TerrariumPI/assets/video/TerrariumPI_Install.mp4" type="video/mp4">
+  <source src="/PaludariumPI/assets/video/PaludariumPI_Install.mp4" type="video/mp4">
 </video>
 
 After the installation is done, reboot once and you should be able to access
-TerrariumPI on the url `http://[raspberrypi]:8090`. [Continue with the
+PaludariumPI on the url `http://[raspberrypi]:8090`. [Continue with the
 setup]({% link _tabs/setup.md %})
 
 ## Upgrading
@@ -230,19 +230,19 @@ And a new version should be running. A reboot is not needed.
 
 ### Manual
 
-We assume you are at the folder where TerrariumPI is installed with git.
+We assume you are at the folder where PaludariumPI is installed with git.
 
-1. Stop TerrariumPI: `sudo service terrariumpi stop`
+1. Stop PaludariumPI: `sudo service paludariumpi stop`
 2. Update the code: `git pull`
 3. Rerun the installer: `sudo ./install`
-4. Start TerrariumPI: `sudo service terrariumpi start`
+4. Start PaludariumPI: `sudo service paludariumpi start`
 
 And a new version should be running. A reboot is not needed.
 
 ## Migration from V3 to V4
 
 There is **no real migration** from version 3 to version 4. The changes are to
-big. So that means you have to install TerrariumPI v4 as it was a new PI. These
+big. So that means you have to install PaludariumPI v4 as it was a new PI. These
 migrations steps will only copy the _existing relay history data_ from V3 to V4
 so that the total power and water usages is still there. And the total costs are
 still correct. This is all what will be migrated.
@@ -252,21 +252,21 @@ migration. This is the **only** data that will be migrated!
 
 ### Backup
 
-So make sure you have **stopped** the old TerrariumPI. And rename the folder
-`TerrariumPI` to `TerrariumPI.old`. This way you have a backup of your existing
+So make sure you have **stopped** the old PaludariumPI. And rename the folder
+`PaludariumPI` to `PaludariumPI.old`. This way you have a backup of your existing
 working setup.
 
-1. Stop TerrariumPI 3.
-   [Wiki](https://github.com/theyosh/TerrariumPI/wiki/FAQ#how-to-stop-terrariumpi)
+1. Stop PaludariumPI 3.
+   [Wiki](https://github.com/theyosh/PaludariumPI/wiki/FAQ#how-to-stop-paludariumpi)
 
 2. Make a backup of existing version.
-   `mv /home/pi/TerrariumPI /home/pi/TerrariumPI.old`
+   `mv /home/pi/PaludariumPI /home/pi/PaludariumPI.old`
 
 ### First setup
 
-Now, install TerrariumPI v4 as [described here](#terrariumpi). And then you need
+Now, install PaludariumPI v4 as [described here](#paludariumpi). And then you need
 to set it up as you want. So that means adding at least all the relays you want
-to use/migrate. When that is done, shutdown TerrariumPI 4 and continue with the
+to use/migrate. When that is done, shutdown PaludariumPI 4 and continue with the
 last migrations step.
 
 ### Migrate
@@ -276,10 +276,10 @@ last migrations step.
 - settings.cfg
 - history.db
 
-2. Stop the TerrariumPI service before start migrating.
-   `sudo service terrariumpi stop`
+2. Stop the PaludariumPI service before start migrating.
+   `sudo service paludariumpi stop`
 
-3. Enter the new TerrariumPI V4 directory. `cd /home/pi/TerrariumPI`
+3. Enter the new PaludariumPI V4 directory. `cd /home/pi/PaludariumPI`
 
 4. Enter the Python3 virtual environment. `source venv/bin/activate`
 
@@ -290,7 +290,7 @@ last migrations step.
 
 - full path to OLD config (`settings.cfg`)
 - full path to OLD database (`history.db`)
-- full path to NEW database (`terrariumpi.db`)
+- full path to NEW database (`paludariumpi.db`)
 
 7. Answer the questions asked by the script. This should match your old and new
    relays, in order to copy the historical data.
@@ -314,4 +314,4 @@ Enter 'yes' to continue. Anything else will abort.:
 ```
 
 Enter yes and wait. After the migration is done, you will see a message and you
-can then start the TerrariumPI service. `sudo service terrariumpi start`
+can then start the PaludariumPI service. `sudo service paludariumpi start`

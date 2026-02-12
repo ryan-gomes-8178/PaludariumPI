@@ -42,7 +42,7 @@ device_types:
     light,
   ]
 device_address: 'Enter the full path to the script.'
-device_url: https://github.com/theyosh/TerrariumPI/blob/4.x.y.z/contrib/script_sensor.py
+device_url: https://github.com/theyosh/PaludariumPI/blob/4.x.y.z/contrib/script_sensor.py
 ---
 
 ## Information
@@ -70,6 +70,6 @@ line:
 When using docker, you can place them in the `scripts` volume that you have
 defined in the [docker-compose.yaml]({% link _tabs/install.md %}#docker) file.
 And then you can use the following address:
-`/TerrariumPI/scripts/[name_of_script].[extension]`
+`/PaludariumPI/scripts/[name_of_script].[extension]`
 
 {% include_relative _sensor_detail.md %}

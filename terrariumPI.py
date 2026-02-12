@@ -15,7 +15,7 @@ monkey.patch_all()
 
 import gettext
 
-gettext.install("terrariumpi", "locales/")
+gettext.install("paludariumpi", "locales/")
 
 from terrariumEngine import terrariumEngine
 

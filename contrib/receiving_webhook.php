@@ -1,5 +1,5 @@
 <?php
-define("STORAGE", '/tmp/terrariumpi/');
+define("STORAGE", '/tmp/paludariumpi/');
 
 function save_file($fullPath, $contents, $flags = 0 ) {
   $parts = explode( '/', $fullPath );
@@ -16,7 +16,7 @@ function save_file($fullPath, $contents, $flags = 0 ) {
 // Used for testing/debug. Comment out in production
 ob_start();
 
-// Read the data from TerrariumPI
+// Read the data from PaludariumPI
 $raw_json_data = file_get_contents('php://input');
 // Try to load it to a PHP object from expected JSON data
 $php_object = null;
@@ -56,6 +56,6 @@ $data = ob_get_contents();
 ob_end_clean();
 
 // Mail debug output Comment out in production
-// mail('me@address.com','TerrariumPI WebHook Test',$data);
+// mail('me@address.com','PaludariumPI WebHook Test',$data);
 ?>
 

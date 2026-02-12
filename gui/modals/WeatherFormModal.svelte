@@ -4,7 +4,7 @@
   import { _ } from 'svelte-i18n';
   import { createForm } from 'felte';
 
-  import { isDay } from '../stores/terrariumpi';
+  import { isDay } from '../stores/paludariumpi';
   import { fetchSystemSettings, updateSystemSettings, getWeatherOptions } from '../providers/api';
   import { formToJSON, invalid_form_fields } from '../helpers/form-helpers';
   import { successNotification, errorNotification } from '../providers/notification-provider';
@@ -158,7 +158,7 @@
   <svelte:fragment slot="header">
     <i class="fas mr-2" class:fa-cloud-sun="{$isDay}" class:fa-cloud-moon="{!$isDay}"></i>
     {$_('weather.settings.title', { default: 'Weather settings' })}
-    <Helper moreInfo="https://theyosh.github.io/TerrariumPI/setup/#weather" />
+    <Helper moreInfo="https://theyosh.github.io/PaludariumPI/setup/#weather" />
   </svelte:fragment>
   <form class="needs-validation" class:was-validated="{validated}" use:form bind:this="{editForm}">
     <div class="row">

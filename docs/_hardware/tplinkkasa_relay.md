@@ -17,7 +17,7 @@ device_url: https://www.kasasmart.com/
 
 ## Authentication
 
-In order to make the Kasa hardware able to communicate with TerrariumPI, you
+In order to make the Kasa hardware able to communicate with PaludariumPI, you
 need to enable **Third-Party Compatibility** feature. Else you will get
 authentication errors when trying to use the relays.
 

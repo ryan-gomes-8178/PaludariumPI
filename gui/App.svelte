@@ -69,7 +69,7 @@
 
   import RoutePages, { onRouteLoaded, Pages, PageUrls } from './pages';
   import { listenPageTitleChanged, customPageTitleUsed } from './stores/page-title';
-  import { isDay, lastUpdate, isOnline, doors, isDarkDesktop, unsplash } from './stores/terrariumpi';
+  import { isDay, lastUpdate, isOnline, doors, isDarkDesktop, unsplash } from './stores/paludariumpi';
   import { animate_footer_badge } from './helpers/animation-helpers';
   import { websocket } from './providers/websocket';
   import {
@@ -450,7 +450,7 @@
       {#if showBirthdayCake($timer)}
         {#if showAnniversary}
           <div in:fade="{{ delay: 0, duration: 1000 }}" class="lead">
-            🎉 <a href="https://theyosh.github.io/TerrariumPI/" target="_blank"><strong>10 year anniversary</strong></a>
+            🎉 <a href="https://theyosh.github.io/PaludariumPI/" target="_blank"><strong>10 year anniversary</strong></a>
             🥳&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
           </div>
         {/if}
@@ -661,7 +661,7 @@
   </div>
   <footer class="main-footer p-2 text-sm">
     &copy; <a
-      href="https://theyosh.github.io/TerrariumPI/posts/2014/08/28/early-terrariumpi-version/"
+      href="https://theyosh.github.io/PaludariumPI/posts/2014/08/28/early-paludariumpi-version/"
       target="_blank"
       rel="noopener noreferrer">2014</a
     >
@@ -690,7 +690,7 @@
         {settings.version} - <small>{settings.device}</small> -
         {#if $isAuthenticated}
           <a
-            href="https://github.com/theyosh/TerrariumPI/commit/{settings.gitversion}"
+            href="https://github.com/theyosh/PaludariumPI/commit/{settings.gitversion}"
             target="_blank"
             rel="noopener noreferrer"
             title="Git commit">{settings.gitversion.substring(0, 8)}</a
@@ -699,10 +699,10 @@
       </span>
       <small>
         <a
-          href="https://github.com/theyosh/TerrariumPI"
+          href="https://github.com/theyosh/PaludariumPI"
           target="_blank"
           rel="noopener noreferrer"
-          title="Download TerrariumPI on Github">Terrarium home automation</a
+          title="Download PaludariumPI on Github">Terrarium home automation</a
         >
       </small>
     </div>

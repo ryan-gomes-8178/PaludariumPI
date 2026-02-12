@@ -1013,7 +1013,7 @@
       "system": {
         "logout": "¿Estás seguro de que quieres cerrar sesión?",
         "reboot": "Esto reiniciará la Raspberry Pi. Esto puede tomar hasta 60 segundos.",
-        "restart": "Esto reiniciará Terrariumpi. Esto puede tomar hasta 30 segundos.",
+        "restart": "Esto reiniciará Paludariumpi. Esto puede tomar hasta 30 segundos.",
         "shutdown": "Esto cerrará la Raspberry Pi. Úselo con cuidado!"
       },
       "title": "¿Está seguro?"
@@ -1633,7 +1633,7 @@
           "placeholder": "Ingrese un número de puerto"
         },
         "pushover": {
-          "label": "Cree sus tokens registrando Terrariumpi como una aplicación {link}."
+          "label": "Cree sus tokens registrando Paludariumpi como una aplicación {link}."
         },
         "receiver": {
           "help": "Introduzca una dirección de correo electrónico.",

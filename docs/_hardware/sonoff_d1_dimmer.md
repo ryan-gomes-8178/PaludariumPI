@@ -20,7 +20,7 @@ as led lights at 100-240 Volt.
 The device needs either to be flashed with [Tasmota](#tasmota), or you need it
 yo put in [DIY](#diy-mode) mode.
 
-When you add the Sonoff D1 Dimmer, TerrariumPI will automatically detect which
+When you add the Sonoff D1 Dimmer, PaludariumPI will automatically detect which
 mode it should run.
 
 ### Tasmota

@@ -1,5 +1,5 @@
 import { getCustomConfig } from '../config';
-import { isDarkInterface } from '../stores/terrariumpi';
+import { isDarkInterface } from '../stores/paludariumpi';
 
 export const get_template_color = (classname, transparency, hexformat) => {
   const hex = (d) => Number(d).toString(16).padStart(2, '0');

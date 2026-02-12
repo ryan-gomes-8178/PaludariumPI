@@ -5,7 +5,7 @@ shopt -s extglob
 #set -x
 
 BASEDIR=$(dirname $(readlink -nf "$0"))
-VERSION=$(grep ^__version__ "${BASEDIR}/terrariumPI.py" | cut -d' ' -f 3)
+VERSION=$(grep ^__version__ "${BASEDIR}/paludariumPI.py" | cut -d' ' -f 3)
 VERSION="${VERSION//\"/}"
 OS=$(grep -ioP '^VERSION_CODENAME=(\K.*)' /etc/os-release)
 PYTHON=$(python3 -V)
@@ -15,11 +15,11 @@ if [[ $PI_HARDWARE == *"Pi Zero"* ]]; then
   PI_ZERO=1
 fi
 
-INSTALLER_TITLE="TerrariumPI ${VERSION}, ${PYTHON}, OS ${OS}, ${PI_HARDWARE}"
+INSTALLER_TITLE="PaludariumPI ${VERSION}, ${PYTHON}, OS ${OS}, ${PI_HARDWARE}"
 
 WHOAMI=$(whoami)
 if [ "${WHOAMI}" != "root" ]; then
-  echo "Start TerrariumPI installation with sudo command"
+  echo "Start PaludariumPI installation with sudo command"
   echo "sudo ./install.sh"
   exit 0
 fi
@@ -106,7 +106,7 @@ elif [ "${OS}" == "bookworm" ]; then
 
 else
 
-  whiptail --backtitle "${INSTALLER_TITLE}" --title " TerrariumPI Installer " --msgbox "TerrariumPI is not Raspbian ${OS} OS compatible." 0 60
+  whiptail --backtitle "${INSTALLER_TITLE}" --title " PaludariumPI Installer " --msgbox "PaludariumPI is not Raspbian ${OS} OS compatible." 0 60
 
   exit 0
 
@@ -138,21 +138,21 @@ clear
 
 # OS version check
 # if [ "${OS}" == "bookworm" ]; then
-#   whiptail --backtitle "${INSTALLER_TITLE}" --title " TerrariumPI Installer " --yesno "TerrariumPI is not Raspbian Bookworm OS compatible. Use at own risk.\n\nDo you want to continue?" 0 60
+#   whiptail --backtitle "${INSTALLER_TITLE}" --title " PaludariumPI Installer " --yesno "PaludariumPI is not Raspbian Bookworm OS compatible. Use at own risk.\n\nDo you want to continue?" 0 60
 
 #   case $? in
-#     1|255) whiptail --backtitle "${INSTALLER_TITLE}"  --title " TerrariumPI Installer " --msgbox "TerrariumPI installation is aborted" 0 60
-#       echo "TerrariumPI ${VERSION} is supported on Buster/Bullseye OS (Legacy OS)"
+#     1|255) whiptail --backtitle "${INSTALLER_TITLE}"  --title " PaludariumPI Installer " --msgbox "PaludariumPI installation is aborted" 0 60
+#       echo "PaludariumPI ${VERSION} is supported on Buster/Bullseye OS (Legacy OS)"
 #       echo "Download from: https://www.raspberrypi.com/software/operating-systems/#raspberry-pi-os-legacy"
 #       exit 0
 #     ;;
 #   esac
 # fi
 
-whiptail --backtitle "${INSTALLER_TITLE}" --title " TerrariumPI Installer " --yesno "TerrariumPI is going to be installed to run with user '${SCRIPT_USER}'. If this is not the right user stop the installation now!\n\nDo you want to continue?" 0 60
+whiptail --backtitle "${INSTALLER_TITLE}" --title " PaludariumPI Installer " --yesno "PaludariumPI is going to be installed to run with user '${SCRIPT_USER}'. If this is not the right user stop the installation now!\n\nDo you want to continue?" 0 60
 
 case $? in
-  1|255) whiptail --backtitle "${INSTALLER_TITLE}"  --title " TerrariumPI Installer " --msgbox "TerrariumPI installation is aborted" 0 60
+  1|255) whiptail --backtitle "${INSTALLER_TITLE}"  --title " PaludariumPI Installer " --msgbox "PaludariumPI installation is aborted" 0 60
     exit 0
   ;;
 esac
@@ -161,7 +161,7 @@ esac
 dpkg-reconfigure tzdata
 
 # Clean up first
-whiptail --backtitle "${INSTALLER_TITLE}" --title " TerrariumPI Installer " --yesno "TerrariumPI is going to remove not needed programs in order to free up disk space and make future updates faster. All desktop software will be removed.\n\nDo you want to remove not needed programs?" 0 0
+whiptail --backtitle "${INSTALLER_TITLE}" --title " PaludariumPI Installer " --yesno "PaludariumPI is going to remove not needed programs in order to free up disk space and make future updates faster. All desktop software will be removed.\n\nDo you want to remove not needed programs?" 0 0
 
 CLEANUP=0
 case $? in
@@ -170,7 +170,7 @@ case $? in
   ;;
 esac
 
-whiptail --backtitle "${INSTALLER_TITLE}"  --title " TerrariumPI Installer " --msgbox "TerrariumPI will now start the installation... Have a coffee" 0 60
+whiptail --backtitle "${INSTALLER_TITLE}"  --title " PaludariumPI Installer " --msgbox "PaludariumPI will now start the installation... Have a coffee" 0 60
 
 if [ "${CLEANUP}" -eq 1 ]; then
   debconf-apt-progress -- apt-get -y remove *${CLEANUP_PACKAGES// /* *}*
@@ -273,12 +273,12 @@ if [ -f /etc/dphys-swapfile ]; then
 fi
 
 # Make sure pigpiod is started at boot, and that user PI can restart it with sudo command
-echo "${SCRIPT_USER} ALL=(ALL) NOPASSWD: /usr/sbin/service pigpiod restart" > /etc/sudoers.d/020_terrariumpi
+echo "${SCRIPT_USER} ALL=(ALL) NOPASSWD: /usr/sbin/service pigpiod restart" > /etc/sudoers.d/020_paludariumpi
 # Make rebooting from webinterface possible
-echo "${SCRIPT_USER} ALL=(ALL) NOPASSWD: /sbin/reboot" >> /etc/sudoers.d/020_terrariumpi
-echo "${SCRIPT_USER} ALL=(ALL) NOPASSWD: /sbin/shutdown" >> /etc/sudoers.d/020_terrariumpi
+echo "${SCRIPT_USER} ALL=(ALL) NOPASSWD: /sbin/reboot" >> /etc/sudoers.d/020_paludariumpi
+echo "${SCRIPT_USER} ALL=(ALL) NOPASSWD: /sbin/shutdown" >> /etc/sudoers.d/020_paludariumpi
 # http://denkovi.com/denkovi-relay-command-line-tool
-echo "${SCRIPT_USER} ALL=(ALL) NOPASSWD: /usr/bin/java -jar 3rdparty/DenkoviRelayCommandLineTool/DenkoviRelayCommandLineTool.jar *" >> /etc/sudoers.d/020_terrariumpi
+echo "${SCRIPT_USER} ALL=(ALL) NOPASSWD: /usr/bin/java -jar 3rdparty/DenkoviRelayCommandLineTool/DenkoviRelayCommandLineTool.jar *" >> /etc/sudoers.d/020_paludariumpi
 
 systemctl enable pigpiod 2>/dev/null
 
@@ -409,8 +409,8 @@ if [ -f calendar.ics ]; then
 fi
 
 # Database
-if [ -f terrariumpi.db ]; then
-  mv terrariumpi.db* data
+if [ -f paludariumpi.db ]; then
+  mv paludariumpi.db* data
 fi
 
 # Set file owner rights
@@ -430,10 +430,10 @@ Enable system startup services ...
 XXX
 EOF
 
-sed -e "s@^User=.*@User=${SCRIPT_USER}@" -e "s@^Group=.*@Group=${SCRIPT_GROUP}@" -e "s@^WorkingDirectory=.*@WorkingDirectory=${BASEDIR}@" -e "s@^ExecStart=.*@ExecStart=${BASEDIR}/venv/bin/python ${BASEDIR}/terrariumPI.py@" "${BASEDIR}/contrib/terrariumpi.service.example" > /etc/systemd/system/terrariumpi.service
+sed -e "s@^User=.*@User=${SCRIPT_USER}@" -e "s@^Group=.*@Group=${SCRIPT_GROUP}@" -e "s@^WorkingDirectory=.*@WorkingDirectory=${BASEDIR}@" -e "s@^ExecStart=.*@ExecStart=${BASEDIR}/venv/bin/python ${BASEDIR}/paludariumPI.py@" "${BASEDIR}/contrib/paludariumpi.service.example" > /etc/systemd/system/paludariumpi.service
 sed -ie "s@.*RemoveIPC=.*@RemoveIPC=false@" /etc/systemd/logind.conf
 systemctl daemon-reload
-systemctl enable terrariumpi 2> /dev/null
+systemctl enable paludariumpi 2> /dev/null
 
 
 PROGRESS=$((PROGRESS + 1))
@@ -463,7 +463,7 @@ XXX
 EOF
 
 # Enable MOTD
-ln -s "${BASEDIR}/motd.sh" /etc/update-motd.d/05-terrariumpi 2>/dev/null
+ln -s "${BASEDIR}/motd.sh" /etc/update-motd.d/05-paludariumpi 2>/dev/null
 
 PROGRESS=$((PROGRESS + 1))
 cat <<EOF
@@ -476,13 +476,13 @@ XXX
 EOF
 
 # Setup logging symlinks
-if [ ! -h log/terrariumpi.log ]; then
-  su -c 'ln -s /dev/shm/terrariumpi.log log/terrariumpi.log' -s /bin/bash "${SCRIPT_USER}" 2>/dev/null
-  chown ${SCRIPT_USER}: /dev/shm/terrariumpi.log
+if [ ! -h log/paludariumpi.log ]; then
+  su -c 'ln -s /dev/shm/paludariumpi.log log/paludariumpi.log' -s /bin/bash "${SCRIPT_USER}" 2>/dev/null
+  chown ${SCRIPT_USER}: /dev/shm/paludariumpi.log
 fi
-if [ ! -h log/terrariumpi.access.log ]; then
-  su -c 'ln -s /dev/shm/terrariumpi.access.log log/terrariumpi.access.log' -s /bin/bash "${SCRIPT_USER}" 2>/dev/null
-  chown ${SCRIPT_USER}: /dev/shm/terrariumpi.access.log
+if [ ! -h log/paludariumpi.access.log ]; then
+  su -c 'ln -s /dev/shm/paludariumpi.access.log log/paludariumpi.access.log' -s /bin/bash "${SCRIPT_USER}" 2>/dev/null
+  chown ${SCRIPT_USER}: /dev/shm/paludariumpi.access.log
 fi
 
 PROGRESS=100
@@ -496,20 +496,20 @@ EOF
 # We are done!
 sync
 sleep 1
-) | whiptail --backtitle "${INSTALLER_TITLE}" --title " TerrariumPI Installer " --gauge "Install required software\n\nInstalling python modules ..." 0 78 0
+) | whiptail --backtitle "${INSTALLER_TITLE}" --title " PaludariumPI Installer " --gauge "Install required software\n\nInstalling python modules ..." 0 78 0
 
 
-whiptail --backtitle "${INSTALLER_TITLE}" --title " TerrariumPI Installer " --yesno "TerrariumPI is installed/upgraded. To make sure that all is working please reboot.\n\nDo you want to reboot now?" 0 60
+whiptail --backtitle "${INSTALLER_TITLE}" --title " PaludariumPI Installer " --yesno "PaludariumPI is installed/upgraded. To make sure that all is working please reboot.\n\nDo you want to reboot now?" 0 60
 
 case $? in
   0)
   for SECONDS in {5..1}
   do
-    echo "TerrariumPI installation is rebooting the Raspberry PI in ${SECONDS} seconds..."
+    echo "PaludariumPI installation is rebooting the Raspberry PI in ${SECONDS} seconds..."
     sleep 1
   done
   sync
-  echo "TerrariumPI installation is rebooting the Raspberry PI now!"
+  echo "PaludariumPI installation is rebooting the Raspberry PI now!"
   reboot
   ;;
 esac

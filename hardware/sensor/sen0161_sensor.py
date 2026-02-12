@@ -10,7 +10,7 @@ class terrariumSEN0161Sensor(terrariumAnalogSensor):
     def _get_data(self):
         data = {}
         voltage = super()._get_data()
-        # https://github.com/theyosh/TerrariumPI/issues/108
+        # https://github.com/theyosh/PaludariumPI/issues/108
         # We measure the values in volts already, so no deviding by 1000 as original script does
         data["ph"] = (voltage * (5000.0 / 1024.0)) * 3.3 + 0.1614
         return data

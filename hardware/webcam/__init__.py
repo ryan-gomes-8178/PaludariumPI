@@ -353,13 +353,13 @@ class terrariumWebcam(object):
     def __exit_data(self):
         # Add some exif data to the image
         zeroth_ifd = {
-            piexif.ImageIFD.Artist: "TerrariumPI",
+            piexif.ImageIFD.Artist: "PaludariumPI",
             piexif.ImageIFD.XResolution: (self.width, 1),
             piexif.ImageIFD.YResolution: (self.height, 1),
-            piexif.ImageIFD.Software: "TerrariumPI",
+            piexif.ImageIFD.Software: "PaludariumPI",
             piexif.ImageIFD.ImageDescription: f"Webcam image from {self}",
             piexif.ImageIFD.DateTime: datetime.now().strftime("%Y-%m-%d %H:%m:%S"),
-            piexif.ImageIFD.Copyright: f"(c) {datetime.now().year} - TerrariumPI",
+            piexif.ImageIFD.Copyright: f"(c) {datetime.now().year} - PaludariumPI",
         }
         exif_ifd = {
             piexif.ExifIFD.DateTimeOriginal: datetime.now().strftime("%Y-%m-%d %H:%m:%S"),

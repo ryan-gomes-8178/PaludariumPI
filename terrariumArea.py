@@ -365,7 +365,7 @@ class terrariumArea(object):
         self.state["powered"] = self._powered
 
     def _setup_variation_data(self):
-        # Thanks to HTPProXy https://github.com/theyosh/TerrariumPI/issues/1009#issuecomment-2896732294
+        # Thanks to HTPProXy https://github.com/theyosh/PaludariumPI/issues/1009#issuecomment-2896732294
         def parse_period_to_time(period_str):
             """Parst verschiedene Zeit-Eingabeformate zu HH:MM"""
             if not period_str:

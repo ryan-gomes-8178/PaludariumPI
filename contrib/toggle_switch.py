@@ -13,7 +13,7 @@ import time
 POWER_SWITCH_ID = "8ff3901484877cabb1f409eaf6c3b6ed"
 ADMIN_NAME = "admin"
 ADMIN_PASSWORD = "password"
-TERRARIUMPI_SERVER = "http://localhost:8090"
+PALUDARIUMPI_SERVER = "http://localhost:8090"
 
 # !!! No changes below this line !!!
 action = "auto"
@@ -35,7 +35,7 @@ if len(sys.argv) == 3:
 
 if action in ["auto", "on", "off"]:
     power_switch_state = requests.get(
-        "{}/api/relays/{}/".format(TERRARIUMPI_SERVER, POWER_SWITCH_ID), auth=(ADMIN_NAME, ADMIN_PASSWORD)
+        "{}/api/relays/{}/".format(PALUDARIUMPI_SERVER, POWER_SWITCH_ID), auth=(ADMIN_NAME, ADMIN_PASSWORD)
     )
     if power_switch_state.status_code != 200:
         raise RuntimeError("Not able to read power switch data...")
@@ -46,7 +46,7 @@ if action in ["auto", "on", "off"]:
     # Also this will leave the system in manual mode as well... :(
     if not power_switch_state["manual_mode"]:
         manual_mode = requests.post(
-            "{}/api/relays/{}/manual/".format(TERRARIUMPI_SERVER, POWER_SWITCH_ID), auth=(ADMIN_NAME, ADMIN_PASSWORD)
+            "{}/api/relays/{}/manual/".format(PALUDARIUMPI_SERVER, POWER_SWITCH_ID), auth=(ADMIN_NAME, ADMIN_PASSWORD)
         )
         if manual_mode.status_code != 200:
             raise RuntimeError("Not able to put switch in manual mode...")
@@ -55,12 +55,12 @@ if action in ["auto", "on", "off"]:
     if "auto" == action:
         # Just toggle the state.....
         switch_action = requests.post(
-            "{}/api/relays/{}/toggle/".format(TERRARIUMPI_SERVER, POWER_SWITCH_ID), auth=(ADMIN_NAME, ADMIN_PASSWORD)
+            "{}/api/relays/{}/toggle/".format(PALUDARIUMPI_SERVER, POWER_SWITCH_ID), auth=(ADMIN_NAME, ADMIN_PASSWORD)
         )
     else:
         # Switch to specified sate
         switch_action = requests.post(
-            "{}/api/relays/{}/{}/".format(TERRARIUMPI_SERVER, POWER_SWITCH_ID, ("off" if "off" == action else "on")),
+            "{}/api/relays/{}/{}/".format(PALUDARIUMPI_SERVER, POWER_SWITCH_ID, ("off" if "off" == action else "on")),
             auth=(ADMIN_NAME, ADMIN_PASSWORD),
         )
 
@@ -74,13 +74,13 @@ if action in ["auto", "on", "off"]:
 
         if "auto" == action:
             switch_action = requests.post(
-                "{}/api/relays/{}/toggle/".format(TERRARIUMPI_SERVER, POWER_SWITCH_ID),
+                "{}/api/relays/{}/toggle/".format(PALUDARIUMPI_SERVER, POWER_SWITCH_ID),
                 auth=(ADMIN_NAME, ADMIN_PASSWORD),
             )
         else:
             switch_action = requests.post(
                 "{}/api/relays/{}/{}/".format(
-                    TERRARIUMPI_SERVER, POWER_SWITCH_ID, ("on" if "off" == action else "off")
+                    PALUDARIUMPI_SERVER, POWER_SWITCH_ID, ("on" if "off" == action else "off")
                 ),
                 auth=(ADMIN_NAME, ADMIN_PASSWORD),
             )
@@ -93,7 +93,7 @@ if action in ["auto", "on", "off"]:
         if power_switch_state["manual_mode"]:
             # put out off manual mode
             manual_mode = requests.post(
-                "{}/api/relays/{}/manual/".format(TERRARIUMPI_SERVER, POWER_SWITCH_ID),
+                "{}/api/relays/{}/manual/".format(PALUDARIUMPI_SERVER, POWER_SWITCH_ID),
                 auth=(ADMIN_NAME, ADMIN_PASSWORD),
             )
             if manual_mode.status_code != 200:

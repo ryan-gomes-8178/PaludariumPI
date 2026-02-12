@@ -12,4 +12,4 @@ Currently the following versions are supported
 ## Reporting a Vulnerability
 
 Fill in a new at
-[Security Advisory](https://github.com/theyosh/TerrariumPI/security/advisories)
+[Security Advisory](https://github.com/theyosh/PaludariumPI/security/advisories)

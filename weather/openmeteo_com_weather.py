@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Created by GamingLPyt: (https://github.com/theyosh/TerrariumPI/issues/1043) Thanks!!!
+# Created by GamingLPyt: (https://github.com/theyosh/PaludariumPI/issues/1043) Thanks!!!
 # Rewritten by TheYOSH
 import terrariumLogging
 
@@ -15,7 +15,7 @@ class terrariumOpenmeteo(terrariumWeather):
     HARDWARE = "Open-Meteo.com"
     NAME = "Open-Meteo weather data"
 
-    # Example URL format expected by the TerrariumPI GUI:
+    # Example URL format expected by the PaludariumPI GUI:
     #
     # https://api.open-meteo.com/v1/forecast?latitude=52.52&longitude=13.41
     #
@@ -58,8 +58,8 @@ class terrariumOpenmeteo(terrariumWeather):
     @staticmethod
     def _weathercode_to_icon(code):
         """
-        Map Open-Meteo weather codes to OWM-style icons used by TerrariumPI.
-        We always return the *day* variant (..d), TerrariumPI is fine with that.
+        Map Open-Meteo weather codes to OWM-style icons used by PaludariumPI.
+        We always return the *day* variant (..d), PaludariumPI is fine with that.
         """
         if code is None:
             return ""

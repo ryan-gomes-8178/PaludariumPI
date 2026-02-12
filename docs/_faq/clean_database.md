@@ -4,12 +4,12 @@ categories: [Website, FAQ]
 tags: [database, cleanup, space]
 ---
 
-If TerrariumPI is running for years it happens that the database get rather big
+If PaludariumPI is running for years it happens that the database get rather big
 and therefore slowing down the system. Also deleting the data will not give back
 the disk space. So there is a script which can cleanup the database and reclaim
 disk space by reducing the database.
 
-In order to cleanup the database, make sure that TerrariumPI is **stopped**!
+In order to cleanup the database, make sure that PaludariumPI is **stopped**!
 Else there is a possibility on database corruption.
 
 When you cleanup the database, we need at least the same amount of free space as
@@ -20,7 +20,7 @@ and run this on a desktop/laptop.
 The cleanup can take up to **4 hours**!. So make sure your environment is stable
 and can survive for that period.
 
-1. Enter the TerrariumPI folder: `cd /home/pi/TerrariumPI/`
+1. Enter the PaludariumPI folder: `cd /home/pi/PaludariumPI/`
 2. Enable Python3 virtual environment: `source venv/bin/activate`
 3. Go to the folder 'contrib': `cd contrib`
 4. Run the command: `python db_cleanup.py`
@@ -29,7 +29,7 @@ This will start the script. It will first show some information about required
 disk space and how much data will be kept.
 
 ```console
-This script will cleanup your terrariumpi.db file. We will keep 420 days, 0:00:00 of data from now. If you want to make a backup first, please enter no and make your backup.
+This script will cleanup your paludariumpi.db file. We will keep 420 days, 0:00:00 of data from now. If you want to make a backup first, please enter no and make your backup.
 Database size: 2.04 GB, free diskspace: 5.19 GB
 Would you like to continue? Enter yes to start. Anything else will abort.
 yes
@@ -46,9 +46,9 @@ Start reclaiming lost space. This will rebuild the database and give all the del
 Done in 10.43 seconds
 Database is now cleaned and should be reduced in size:
 Database size: 2.04 GB, free diskspace: 172.71 GB
-Restart TerrariumPI and check if the sensor graphs still working. If it is al working, remove the file ../data/terrariumpi.db.old
+Restart PaludariumPI and check if the sensor graphs still working. If it is al working, remove the file ../data/paludariumpi.db.old
 ```
 
-When this done, you can restart TerrariumPI again. Check if all graphs are
+When this done, you can restart PaludariumPI again. Check if all graphs are
 working. If that is the case, you can delete the backup database at the location
-'data/terrariumpi.db.old': `rm ../data/terrariumpi.db.old`
+'data/paludariumpi.db.old': `rm ../data/paludariumpi.db.old`

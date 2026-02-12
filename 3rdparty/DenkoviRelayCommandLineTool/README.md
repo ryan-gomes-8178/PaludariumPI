@@ -8,7 +8,7 @@ Make sure you have Java installed: sudo apt install openjdk-11-jre-headless
 Download the Denkovi Command line tool from: http://denkovi.com/denkovi-relay-command-line-tool. Download it and unpack it into this directory.
 Then either rename the jar file to DenkoviRelayCommandLineTool.jar or make a symlink to it.
 
-The software expects the following file to exists: 3rdparty/DenkoviRelayCommandLineTool/DenkoviRelayCommandLineTool.jar from the root TerrariumPI directory.
+The software expects the following file to exists: 3rdparty/DenkoviRelayCommandLineTool/DenkoviRelayCommandLineTool.jar from the root PaludariumPI directory.
 
 ## Setup
-In TerrariumPI use one of the hardware types that starts with DenkoviV2
+In PaludariumPI use one of the hardware types that starts with DenkoviV2

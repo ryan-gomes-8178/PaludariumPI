@@ -172,7 +172,7 @@
   <svelte:fragment slot="header">
     <i class="fas fa-globe mr-2"></i>
     {$_('enclosures.settings.title', { default: 'Enclosure settings' })}
-    <Helper moreInfo="https://theyosh.github.io/TerrariumPI/setup/#enclosures" />
+    <Helper moreInfo="https://theyosh.github.io/PaludariumPI/setup/#enclosures" />
   </svelte:fragment>
 
   <form class="needs-validation" class:was-validated="{validated}" use:form bind:this="{editForm}">

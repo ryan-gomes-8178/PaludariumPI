@@ -64,9 +64,9 @@ class terrariumWebserver(object):
 
         # Load language
         try:
-            gettext.translation("terrariumpi", "locales/", languages=[self.active_language]).install()
+            gettext.translation("paludariumpi", "locales/", languages=[self.active_language]).install()
         except:
-            gettext.translation("terrariumpi", "locales/", languages=["en_US"]).install()
+            gettext.translation("paludariumpi", "locales/", languages=["en_US"]).install()
 
         # Load the routes
         self.__routes()
@@ -218,7 +218,7 @@ class terrariumWebserver(object):
         return self.__auth_basic(
             self.engine.authenticate,
             required,
-            _("TerrariumPI") + " " + _("Authentication"),
+            _("PaludariumPI") + " " + _("Authentication"),
             _("Authenticate to make any changes"),
         )
 
@@ -501,7 +501,7 @@ class terrariumWebserver(object):
             callback=self.__logout,
             apply=auth_basic(
                 self.__clear_authentication,
-                _("TerrariumPI") + " " + _("Authentication"),
+                _("PaludariumPI") + " " + _("Authentication"),
                 _("Authenticate to make any changes"),
             ),
             name="logout",
@@ -731,7 +731,7 @@ class terrariumWebsocket(object):
                                 "type": "softwareupdate",
                                 "data": {
                                     "title": _("Software Update"),
-                                    "message": '<a href="https://github.com/theyosh/TerrariumPI/releases" target="_blank" rel="noopener">'
+                                    "message": '<a href="https://github.com/theyosh/PaludariumPI/releases" target="_blank" rel="noopener">'
                                     + _("A new version ({version}) is available!").format(
                                         version=self.webserver.engine.latest_version
                                     )

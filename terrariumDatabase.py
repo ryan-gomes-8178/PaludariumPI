@@ -12,7 +12,7 @@ import re
 import sqlite3
 import time
 
-DATABASE = "data/terrariumpi.db"
+DATABASE = "data/paludariumpi.db"
 ADVANCED_SETTINGS_FILE = "data/.database-env"
 
 db = orm.Database()
@@ -56,12 +56,12 @@ def create_defaults(version):
         {"id": "pi_wattage", "value": "5"},
         {"id": "username", "value": "admin"},
         {"id": "password", "value": terrariumUtils.generate_password("password")},
-        {"id": "profile_image", "value": "img/terrariumpi.jpg"},
+        {"id": "profile_image", "value": "img/paludariumpi.jpg"},
         {"id": "always_authenticate", "value": "0"},
         {"id": "weather_source", "value": ""},
         {"id": "language", "value": "en_US"},
         {"id": "currency", "value": "eur"},
-        {"id": "title", "value": "TerrariumPI"},
+        {"id": "title", "value": "PaludariumPI"},
         {"id": "exclude_ids", "value": ""},
         {"id": "power_price", "value": "0"},
         {"id": "water_price", "value": "0"},

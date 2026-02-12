@@ -24,11 +24,11 @@ if using that address).
 
 After rebooting, you should have up to 8 new I2C devices at the location:
 `/dev/i2c-*`.
-[You can then use the I2C address as normal but you need to add the I2C bus](/TerrariumPI/hardware/#i2c-bus).
+[You can then use the I2C address as normal but you need to add the I2C bus](/PaludariumPI/hardware/#i2c-bus).
 
 This should work for **pca9542** (2 channel), **pca9545** (4 channel), and
 **pca9548** (8 channel) devices.
 
 More info:
-[#705](https://github.com/theyosh/TerrariumPI/issues/705#issuecomment-1159766743)
+[#705](https://github.com/theyosh/PaludariumPI/issues/705#issuecomment-1159766743)
 and thanks to [@Dragonfly-terra](https://github.com/Dragonfly-terra)

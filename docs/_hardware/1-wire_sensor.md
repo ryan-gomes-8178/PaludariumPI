@@ -19,7 +19,7 @@ device_url: https://pinout.xyz/pinout/1_wire
 ## Information
 
 Using the 1-Wire bus is an easy way to add multiple sensors. This can be
-temperature or humidity sensors. During the startup of TerrariumPI all the
+temperature or humidity sensors. During the startup of PaludariumPI all the
 sensors that are connected to the 1-Wire bus will be auto detected.
 
 The 1-Wire bus is enabled by the installer and therefore, it will work out of

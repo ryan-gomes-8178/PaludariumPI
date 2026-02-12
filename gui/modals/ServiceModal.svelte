@@ -382,7 +382,7 @@
         <div class="col">
           <small class="text-muted d-none ml-2 w-100 text-center">
             {@html $_('services.settings.setup.pushover.label', {
-              default: 'Create your tokens by registering TerrariumPI as an app {link}.',
+              default: 'Create your tokens by registering PaludariumPI as an app {link}.',
               values: {
                 link: '<a href="https://pushover.net/api" target="_blank" rel="noopener">https://pushover.net/api</a>',
               },

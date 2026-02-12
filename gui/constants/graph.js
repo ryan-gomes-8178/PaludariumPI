@@ -3,7 +3,7 @@ import { get } from 'svelte/store';
 import { get_template_color } from '../helpers/color-helpers';
 import { getCustomConfig } from '../config';
 import { locale } from '../locale/i18n';
-import { isDarkInterface } from '../stores/terrariumpi';
+import { isDarkInterface } from '../stores/paludariumpi';
 
 const settings = getCustomConfig();
 

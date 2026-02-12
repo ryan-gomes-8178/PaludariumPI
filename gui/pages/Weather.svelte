@@ -24,7 +24,7 @@
   import { fetchWeatherData, fetchWeatherForecast } from '../providers/api';
   import { graphDefaultOpts, graphTypes } from '../constants/graph';
   import { get_template_color } from '../helpers/color-helpers';
-  import { isDay } from '../stores/terrariumpi';
+  import { isDay } from '../stores/paludariumpi';
 
   import Card from '../user-controls/Card.svelte';
   import LoginLink from '../components/common/LoginLink.svelte';

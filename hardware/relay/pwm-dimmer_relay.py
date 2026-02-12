@@ -139,8 +139,8 @@ class terrariumRelayDimmerDC(terrariumRelayDimmerPWM):
     NAME = "DC Dimmer"
 
     # DC dimmer settings
-    _DIMMER_FREQ = 15000  # https://github.com/theyosh/TerrariumPI/issues/178#issuecomment-413697246
-    _DIMMER_MAXDIM = 1000  # https://github.com/theyosh/TerrariumPI/issues/178#issuecomment-412667010
+    _DIMMER_FREQ = 15000  # https://github.com/theyosh/PaludariumPI/issues/178#issuecomment-413697246
+    _DIMMER_MAXDIM = 1000  # https://github.com/theyosh/PaludariumPI/issues/178#issuecomment-412667010
 
 
 class terrariumRelayDimmerIRF520(terrariumRelayDimmerPWM):
