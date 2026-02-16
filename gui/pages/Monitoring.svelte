@@ -188,14 +188,64 @@
 
   .snapshot-modal-info {
     position: absolute;
-    bottom: 12px;
+    top: 12px;
     left: 12px;
-    right: 12px;
-    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.35rem;
     color: #fff;
-    padding: 0.8rem 1rem;
-    border-radius: 0.4rem;
-    font-size: 0.85rem;
+    z-index: 2001;
+  }
+
+  .snapshot-metadata {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+  }
+
+  .snapshot-pill {
+    background: rgba(0, 0, 0, 0.6);
+    border-radius: 999px;
+    padding: 0.35rem 0.75rem;
+    font-size: 0.78rem;
+    line-height: 1;
+    display: inline-flex;
+    gap: 0.4rem;
+    align-items: center;
+    backdrop-filter: blur(6px);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  }
+
+  .snapshot-pill-label {
+    font-weight: 600;
+    opacity: 0.9;
+  }
+
+  .snapshot-nav-hint {
+    background: rgba(0, 0, 0, 0.45);
+    border-radius: 0.35rem;
+    padding: 0.3rem 0.55rem;
+    font-size: 0.7rem;
+    letter-spacing: 0.01em;
+    opacity: 0.9;
+  }
+
+  @media (max-width: 576px) {
+    .snapshot-modal-info {
+      top: 10px;
+      left: 10px;
+      gap: 0.25rem;
+    }
+
+    .snapshot-pill {
+      font-size: 0.72rem;
+      padding: 0.3rem 0.55rem;
+    }
+
+    .snapshot-nav-hint {
+      font-size: 0.65rem;
+    }
   }
 
   .date-filter-row {
@@ -1003,15 +1053,26 @@
         {/if}
 
         <div class="snapshot-modal-info">
-          <div><strong>Detected:</strong> {formatDate(selectedSnapshot.timestamp)}</div>
-          {#if selectedSnapshot.metadata?.detection_count != null}
-            <div><strong>Detections:</strong> {selectedSnapshot.metadata.detection_count}</div>
-          {:else if selectedSnapshot.count != null}
-            <div><strong>Detections:</strong> {selectedSnapshot.count}</div>
-          {/if}
+          <div class="snapshot-metadata">
+            <div class="snapshot-pill">
+              <span class="snapshot-pill-label">Detected:</span>
+              <span>{formatDate(selectedSnapshot.timestamp)}</span>
+            </div>
+            {#if selectedSnapshot.metadata?.detection_count != null}
+              <div class="snapshot-pill">
+                <span class="snapshot-pill-label">Detections:</span>
+                <span>{selectedSnapshot.metadata.detection_count}</span>
+              </div>
+            {:else if selectedSnapshot.count != null}
+              <div class="snapshot-pill">
+                <span class="snapshot-pill-label">Detections:</span>
+                <span>{selectedSnapshot.count}</span>
+              </div>
+            {/if}
+          </div>
           {#if modalSnapshots.length > 1}
-            <div style="margin-top: 0.4rem; font-size: 0.75rem; opacity: 0.8;">
-              {selectedSnapshotIndex + 1} / {modalSnapshots.length} | Arrow keys to navigate
+            <div class="snapshot-nav-hint">
+              {selectedSnapshotIndex + 1} / {modalSnapshots.length} · Arrow keys to navigate
             </div>
           {/if}
         </div>
