@@ -186,17 +186,6 @@
     right: 12px;
   }
 
-  .snapshot-modal-info {
-    position: absolute;
-    bottom: 12px;
-    left: 12px;
-    right: 12px;
-    background: rgba(0, 0, 0, 0.7);
-    color: #fff;
-    padding: 0.8rem 1rem;
-    border-radius: 0.4rem;
-    font-size: 0.85rem;
-  }
 
   .date-filter-row {
     display: flex;
@@ -1002,19 +991,6 @@
           </button>
         {/if}
 
-        <div class="snapshot-modal-info">
-          <div><strong>Detected:</strong> {formatDate(selectedSnapshot.timestamp)}</div>
-          {#if selectedSnapshot.metadata?.detection_count != null}
-            <div><strong>Detections:</strong> {selectedSnapshot.metadata.detection_count}</div>
-          {:else if selectedSnapshot.count != null}
-            <div><strong>Detections:</strong> {selectedSnapshot.count}</div>
-          {/if}
-          {#if modalSnapshots.length > 1}
-            <div style="margin-top: 0.4rem; font-size: 0.75rem; opacity: 0.8;">
-              {selectedSnapshotIndex + 1} / {modalSnapshots.length} | Arrow keys to navigate
-            </div>
-          {/if}
-        </div>
       </div>
     </div>
   {/if}
