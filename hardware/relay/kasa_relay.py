@@ -7,6 +7,8 @@ from terrariumUtils import terrariumUtils, terrariumAsync, terrariumCache
 
 # pip install python-kasa
 from kasa import Discover, Credentials
+from kasa.klaptransport import KlapTransport, KlapTransportV2
+from kasa.iot import IotPlug, IotStrip
 import asyncio
 
 # Global device cache to prevent multiple simultaneous connections to the same device
@@ -43,20 +45,34 @@ class terrariumRelayTPLinkKasa(terrariumRelay):
                 # Create new connection via discovery
                 logger.debug(f"Discovering Kasa device at {ip}")
                 device = await asyncio.wait_for(
-                    Discover.discover_single(ip, timeout=5),
+                    Discover.discover_single(ip, credentials=credentials, timeout=5),
                     timeout=10
                 )
                 logger.debug(f"Device discovered: {device}")
                 
-                # For KLAP devices, we need to set credentials (empty by default for local-only mode)
-                # If credentials are provided, they will override the empty defaults
-                if hasattr(device.protocol, '_transport'):
-                    transport = device.protocol._transport
-                    if hasattr(transport, '_credentials'):
-                        # Use provided credentials or empty credentials as default
-                        creds_to_use = credentials if credentials else Credentials(username="", password="")
-                        transport._credentials = creds_to_use
-                        logger.debug(f"Set credentials for Kasa device at {ip}")
+                # python-kasa 0.7.7 routes IOT.KLAP devices to KlapTransport (v1 MD5 hash)
+                # even when the device advertises login_version=2 (v2 SHA-based hash). HS300
+                # firmware updated mid-2026 to KLAP v2; without this swap, handshake fails with
+                # AuthenticationError. Fixed in python-kasa 0.8+ but that requires Python 3.11+.
+                if credentials is not None:
+                    ctype = device.config.connection_type
+                    if (ctype.encryption_type.value == "KLAP"
+                            and ctype.login_version == 2
+                            and type(device.protocol._transport) is KlapTransport):
+                        device.config.credentials = credentials
+                        device.protocol._transport = KlapTransportV2(config=device.config)
+                        logger.info(f"Swapped to KlapTransportV2 for {ip} (KLAP login_version=2)")
+
+                # python-kasa 0.7.7 mis-classifies multi-outlet KLAP v2 strips (e.g. HS300
+                # after mid-2026 firmware) as IotPlug, leaving children empty and causing
+                # KeyError 'relay_state' on state reads. Detect via sys_info.child_num and
+                # re-instantiate as IotStrip. Fixed in python-kasa 0.8+ (Python 3.11+ only).
+                await device.update()
+                child_num = device.sys_info.get("child_num", 0)
+                if isinstance(device, IotPlug) and child_num > 0:
+                    device = IotStrip(host=ip, config=device.config, protocol=device.protocol)
+                    await device.update()
+                    logger.info(f"Re-classified {ip} as IotStrip (child_num={child_num})")
                 
                 # Cache the device connection
                 _device_connection_cache[cache_key] = device
