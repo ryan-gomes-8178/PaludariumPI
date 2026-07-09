@@ -80,6 +80,7 @@ def create_defaults(version):
         {"id": "unsplash_query", "value": ""},
         {"id": "two_fa_enabled", "value": "false"},
         {"id": "two_fa_secret", "value": ""},
+        {"id": "nature_doc_config", "value": '{"enabled": false}'},
         {"id": "gauge_values_alarm", "value": "false"},
         {"id": "gauge_values_limit", "value": "false"},
         {"id": "gauge_values_measurements", "value": "false"},
@@ -741,6 +742,44 @@ class MonitoringEvent(db.Entity):
 
     def __repr__(self):
         return f"Monitoring event '{self.label}' in enclosure {self.enclosure}"
+
+
+class NatureDocEvent(db.Entity):
+    id = orm.PrimaryKey(str, default=terrariumUtils.generate_uuid)
+    enclosure = orm.Optional(lambda: Enclosure)
+    camera_id = orm.Required(str)
+    timestamp = orm.Required(datetime, default=datetime.now)
+    confidence = orm.Optional(float)
+    track_id = orm.Optional(str)
+    bbox = orm.Optional(orm.Json, default={})
+    meta = orm.Optional(orm.Json, default={})
+    status = orm.Required(str, default="queued")
+
+    clips = orm.Set(lambda: NatureDocClip)
+
+    def __repr__(self):
+        return f"NatureDocEvent {self.camera_id} @ {self.timestamp}"
+
+
+class NatureDocClip(db.Entity):
+    id = orm.PrimaryKey(str, default=terrariumUtils.generate_uuid)
+    event = orm.Required(lambda: NatureDocEvent)
+    enclosure = orm.Optional(lambda: Enclosure)
+    camera_id = orm.Required(str)
+    created = orm.Required(datetime, default=datetime.now)
+    start_time = orm.Required(datetime)
+    end_time = orm.Required(datetime)
+    duration = orm.Required(float)
+    confidence = orm.Optional(float)
+    filepath = orm.Required(str)
+    preview_path = orm.Optional(str)
+    metadata = orm.Optional(orm.Json, default={})
+    score = orm.Optional(float, default=0.0)
+    favorite = orm.Optional(bool, default=False)
+    status = orm.Required(str, default="ready")
+
+    def __repr__(self):
+        return f"NatureDocClip {self.camera_id} ({self.duration}s)"
 
 
 class Feeder(db.Entity):

@@ -58,6 +58,7 @@ from hardware.webcam import terrariumWebcam, terrariumWebcamLoadingException
 
 from terrariumNotification import terrariumNotification
 from terrariumAuth import terrariumAuth
+from terrariumNatureDoc import NatureDocService
 
 
 # https://docs.python.org/3/library/gettext.html#deferred-translations
@@ -152,7 +153,11 @@ class terrariumEngine(object):
 
         # Load Web server, as we need it for websocket communication (even when the web server is not yet started)
         self.webserver = terrariumWebserver(self)
-
+        
+        # Nature Documentary service
+        self.nature_doc_service = NatureDocService(self)
+        self.nature_doc_service.start()
+        
         # Loading calendar
         self.calendar = terrariumCalendar()
 
@@ -1876,6 +1881,9 @@ class terrariumEngine(object):
             self.webcams[webcam].stop()
             logger.info(f"Stopped {self.webcams[webcam]}")
 
+        if hasattr(self, "nature_doc_service"):
+            self.nature_doc_service.stop()
+
         if self.meross_cloud is not None:
             self.meross_cloud.stop()
 
@@ -2220,7 +2228,7 @@ class terrariumEngine(object):
     def _feed_with_tracking(self, feeder_id, feeder, portion):
         """
         Wrapper to feed a feeder and track completion
-        
+
         Args:
             feeder_id: ID of the feeder
             feeder: Feeder instance
@@ -2245,7 +2253,7 @@ class terrariumEngine(object):
 
                     schedule = feeder_db.schedule
                     now = datetime.datetime.now()
-                    
+
                     # Create a time window to account for missed checks
                     # Check from (now - loop_timeout - tolerance) to now
                     # This ensures we don't miss feedings even if the engine is under heavy load
@@ -2261,21 +2269,21 @@ class terrariumEngine(object):
                         scheduled_time_str = feed_config.get("time")
                         if not scheduled_time_str:
                             continue
-                            
+
                         # Parse the scheduled time (format: "HH:MM")
                         try:
                             hour, minute = map(int, scheduled_time_str.split(":"))
                             scheduled_time = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
-                            
+
                             # If the scheduled time is in the future (later today), skip it
                             # This handles the case where current time is 23:30 and schedule is 08:00
                             if scheduled_time > now:
                                 continue
-                                
+
                         except (ValueError, AttributeError):
                             logger.error(f"Invalid time format for feeder {feeder_id} schedule {feed_name}: {scheduled_time_str}")
                             continue
-                        
+
                         # Check if the scheduled time falls within our window
                         if window_start <= scheduled_time <= now:
                             # Check if we already fed for this schedule recently
@@ -2298,11 +2306,11 @@ class terrariumEngine(object):
                                         continue
                                     # Mark this feeder as being fed
                                     self._feeding_in_progress.add(feeder_id)
-                                
+
                                 portion = feed_config.get(
                                     "portion_size", feeder_db.servo_config.get("portion_size", 1.0)
                                 )
-                                
+
                                 # Run in thread to avoid blocking
                                 threading.Thread(
                                     target=self._feed_with_tracking,
