@@ -1,0 +1,2 @@
+# Development and test dependencies (not needed to run TerrariumPI)
+pytest==8.3.5
