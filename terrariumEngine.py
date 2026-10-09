@@ -645,6 +645,18 @@ class terrariumEngine(object):
                 action = "Added new"
                 value = sensor.update()
 
+                # Convert to the configured units, like the normal sensor updates do. Else the first measurement is stored in the wrong unit
+                if value is not None:
+                    if "temperature" == sensor.type.lower():
+                        if "fahrenheit" == self.settings["temperature_indicator"]:
+                            value = terrariumUtils.to_fahrenheit(value)
+                        elif "kelvin" == self.settings["temperature_indicator"]:
+                            value = terrariumUtils.to_kelvin(value)
+
+                    elif "distance" == sensor.type.lower():
+                        if "inch" == self.settings["distance_indicator"]:
+                            value = terrariumUtils.to_inches(value)
+
                 with orm.db_session():
                     try:
                         # First try to see if the Sensor does exist based on ID (means address change)
