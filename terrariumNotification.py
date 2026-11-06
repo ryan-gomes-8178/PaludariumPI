@@ -373,7 +373,11 @@ class terrariumNotification(terrariumSingleton):
                 except Exception as ex:
                     logger.error(f"Wrong message formatting {ex}")
 
-                if title is None and message is None:
+                # Skip the message when neither title nor body could be
+                # produced. 'message' here is the NotificationMessage entity
+                # and is never None; the intent was to check the rendered
+                # 'text' body, so guard on 'text' instead.
+                if title is None and text is None:
                     continue
 
                 if message.rate_limit > 0 and self.__rate_limit(title, message.rate_limit):
