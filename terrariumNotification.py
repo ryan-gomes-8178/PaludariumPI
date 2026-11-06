@@ -362,13 +362,25 @@ class terrariumNotification(terrariumSingleton):
                     logger.error(f"Wrong message formatting {ex}")
 
                 try:
-                    # Legacy text formatting using '$' sign
-                    text = message.message.replace("${", "{").format(**data)
-                    codelist = re.findall("{.*?}", text)
+                    # Legacy text formatting using '$' sign.
+                    # Replace only known {placeholders} from the data context.
+                    # The previous implementation used eval() on the raw brace
+                    # content, which allowed arbitrary code execution from a
+                    # notification message body (attacker-controlled via the
+                    # authenticated notification-message API). See CVE-style
+                    # RCE fix: interpolation must be data-driven, not eval'd.
+                    text = message.message.replace("${", "{")
 
-                    for code in codelist:
-                        result = eval(code[1:-1], {"__builtins__": {}}, {})
-                        text = text.replace(code, result)
+                    def _substitute(match):
+                        key = match.group(1)
+                        if key in data:
+                            value = data[key]
+                            return "" if value is None else str(value)
+                        # Unknown placeholder: leave the original token intact so
+                        # the message is not silently corrupted.
+                        return match.group(0)
+
+                    text = re.sub(r"\{(\w+)\}", _substitute, text)
 
                 except Exception as ex:
                     logger.error(f"Wrong message formatting {ex}")
