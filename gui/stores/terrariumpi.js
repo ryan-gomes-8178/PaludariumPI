@@ -13,6 +13,8 @@ export const lastUpdate = writable(new Date());
 export const isOnline = writable({ status: null, last_action: null });
 
 // Dashboard info boxes
+export const systemStatsReceived = writable(false);
+export const resourceStatsReceived = writable(false);
 export const uptime = writable(0);
 
 export const systemLoad = writable([0, 0, 0]);

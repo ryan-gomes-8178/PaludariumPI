@@ -1,4 +1,27 @@
 <style>
+  .brand-link {
+    display: flex;
+    align-items: center;
+    min-height: 3.55rem;
+  }
+
+  .brand-image {
+    display: grid;
+    place-items: center;
+    width: 2.05rem;
+    height: 2.05rem;
+    flex-shrink: 0;
+    margin-top: 0 !important;
+    border-radius: 0.55rem;
+    background: #96e4ba;
+    color: #142e23;
+    font-size: 1rem;
+  }
+
+  .brand-text {
+    font-weight: 700;
+  }
+
   div.user-panel {
     overflow: visible;
   }
@@ -33,8 +56,8 @@
 </script>
 
 <a href="/" class="brand-link">
-  <img src="img/AdminLTELogo.png" alt="AdminLTE Logo" class="brand-image img-circle elevation-3" style="opacity: .8" />
-  <span class="brand-text font-weight-light">{settings.name}</span>
+  <span class="brand-image" aria-hidden="true"><i class="fa-solid fa-seedling"></i></span>
+  <span class="brand-text">PaludariumPI</span>
 </a>
 <div class="user-panel mt-3 pb-3 mb-3 d-flex">
   <div class="image pt-2 pl-1">

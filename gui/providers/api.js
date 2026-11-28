@@ -697,6 +697,13 @@ export const fetchGraphData = async (type, id, period, cb, customDates = null) =
   }
 };
 
+export const fetchSensorTrend = async (id, period, signal) => {
+  const url = `${apiHost}/sensors/${encodeURIComponent(id)}/history/${period}/?preview=1`;
+  const response = await fetch(url, { headers: headers(), signal });
+  if (!response.ok) throw new Error(`Sensor history request failed (${response.status})`);
+  return (await response.json()).data;
+};
+
 export const fetchExportData = async (type, id, period, cb) => {
   period = period || 'day';
   await _getData(`${apiHost}/${type}/${id}/export/${period}/`, cb);

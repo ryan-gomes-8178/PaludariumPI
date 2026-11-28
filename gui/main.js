@@ -1,4 +1,5 @@
 import './assets/css/main.scss';
+import './assets/css/habitat.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min';
 import 'admin-lte/dist/js/adminlte';
 import App from './App.svelte';
