@@ -189,13 +189,17 @@
       if (menu.name === 'Sensors') {
         let light_submenu = menu.subroutes
           .filter((submenu) => {
-            return ['sensors_light', 'sensors_uva', 'sensors_uvb', 'sensors_uvi'].indexOf(submenu.name) !== -1;
+            return (
+              ['sensors_light', 'sensors_uva', 'sensors_uvb', 'sensors_uvc', 'sensors_uvi'].indexOf(submenu.name) !== -1
+            );
           })
           .sort((a, b) => $_(`${a.title}`).localeCompare($_(`${b.title}`)));
 
         if (light_submenu.length > 0) {
           let other_menu = menu.subroutes.filter((submenu) => {
-            return ['sensors_light', 'sensors_uva', 'sensors_uvb', 'sensors_uvi'].indexOf(submenu.name) === -1;
+            return (
+              ['sensors_light', 'sensors_uva', 'sensors_uvb', 'sensors_uvc', 'sensors_uvi'].indexOf(submenu.name) === -1
+            );
           });
           menu.subroutes = [
             {
@@ -665,7 +669,7 @@
       target="_blank"
       rel="noopener noreferrer">2014</a
     >
-    - 2025 <a target="_blank" rel="noopener noreferrer" href="https://theyosh.nl">TheYOSH</a>
+    - 2026 <a target="_blank" rel="noopener noreferrer" href="https://theyosh.nl">TheYOSH</a>
     <!-- Credits to the original builders. The least I can do -->
     <small>
       using <a target="_blank" rel="noopener noreferrer" href="https://adminlte.io">AdminLTE</a>,

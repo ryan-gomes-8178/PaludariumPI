@@ -1,4 +1,4 @@
-# TerrariumPI 4.14.0
+# TerrariumPI 4.16.0
 
 ![Latest release](https://img.shields.io/github/v/release/theyosh/terrariumpi?label=Latest%20release)
 ![GitHub Release Date](https://img.shields.io/github/release-date/theyosh/TerrariumPI)
@@ -8,6 +8,7 @@
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square)](https://github.com/prettier/prettier)
 [![Matrix](https://img.shields.io/badge/matrix.org-%23terrariumpi-blue)](https://matrix.to/#/#terrariumpi:theyosh.nl)
+[![Mastodon](https://img.shields.io/badge/Mastodon-%40TerariumPI-5638cc)](https://mastodon.theyosh.nl/@TerrariumPI)
 
 Software for cheap home automation of your reptile terrarium or any other
 enclosed environment. With this software you are able to control for example a
@@ -297,7 +298,7 @@ more information is here:
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=theyosh/TerrariumPI&type=Date)](https://star-history.com/#theyosh/TerrariumPI&Date)
+[![Star History Chart](https://star-history.dera.page/svg?repos=theyosh/TerrariumPI)](https://star-history.dera.page/#theyosh/TerrariumPI)
 
 ## Screenshots
 

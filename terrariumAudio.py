@@ -22,7 +22,7 @@ class terrariumAudio(object):
         soundcards = []
         for i in alsaaudio.card_indexes():
             try:
-                (_, longname) = alsaaudio.card_name(i)
+                _, longname = alsaaudio.card_name(i)
                 soundcards.append({"index": int(i), "name": longname})
 
             except Exception as ex:
@@ -68,32 +68,39 @@ class terrariumAudio(object):
 class terrariumAudioPlayer(object):
     CMD = "/usr/bin/ffmpeg"
 
-    def __init__(self, hw, playlists=[], shuffle=False, repeat=False):
+    def __init__(self, hw, playlists=[], shuffle: bool = False, repeat: bool = False) -> None:
         self.__hw = hw
-        self.__stop = 0
         self.__player = {"ffmpeg": None, "thread": None, "exit_status": None}
+        self.__stopping = False
+        self.__running = False
 
         self.playlists = playlists
         self.shuffle = shuffle
         self.repeat = repeat
+        self.audio_volume = 0
 
-    def __run(self):
-        self.__stop = 0
+    def __run(self) -> None:
         for playlist in self.playlists:
-            if self.__stop:
+            files = copy.copy(playlist.get("files", []))
+
+            if len(files) == 0:
                 break
 
-            files = copy.copy(playlist["files"])
+            self.shuffle = playlist.get("shuffle", False)
+            self.repeat = playlist.get("repeat", False)
+            self.audio_volume = playlist.get("volume", 80)
 
-            if playlist.get("shuffle"):
+            if self.shuffle:
                 random.shuffle(files)
 
-            self.volume(playlist.get("volume", 80))
+            self.volume(self.audio_volume)
+            first_start = True
 
-            repeat = playlist.get("repeat", False)
-            first_start = 1
-            while not self.__stop and (repeat or first_start):
-                first_start = 0
+            logger.info(
+                f"Start playing {'shuffled ' if self.shuffle else ' '}{len(files)} audio files in {'repeat' if self.repeat else 'normal'} mode at volume {self.audio_volume}"
+            )
+            while not self.__stopping and (first_start or self.repeat):
+                first_start = False
 
                 playlist = [f"file '{audiofile}'" for audiofile in files]
 
@@ -105,38 +112,59 @@ class terrariumAudioPlayer(object):
                         " "
                     )
                     self.__player["ffmpeg"] = psutil.Popen(cmd, stdout=DEVNULL)
-                    self.__player["exit_status"] = self.__player["ffmpeg"].poll()
+                    self.__player["exit_status"] = None
+
                     while self.__player["exit_status"] is None:
-                        self.__player["exit_status"] = self.__player["ffmpeg"].poll()
                         sleep(1)
+                        self.__player["exit_status"] = self.__player["ffmpeg"].poll()
+
+                if not self.__stopping and self.__player["exit_status"] != None and self.__player["exit_status"] != 0:
+                    # Player crashed or killed out-site TerrariumPI
+                    self.__running = False
+
+            if self.__stopping:
+                break
 
         self.__player["ffmpeg"] = None
 
-    def play(self):
+    def play(self) -> None:
+        self.__stopping = False
+
         if self.running:
             self.stop()
 
-        if len(self.playlists) > 0:
-            self.__player["thread"] = threading.Thread(target=self.__run)
-            self.__player["thread"].start()
+        if len(self.playlists) == 0:
+            logger.warning("No playlist(s) selected. Cannot start player.")
+            return
 
-    def stop(self):
-        self.__stop = 1
+        logger.info(f"Starting audio player with {len(self.__playlists)} playlist(s)")
+        self.__player["thread"] = threading.Thread(target=self.__run)
+        self.__player["thread"].start()
+
+        self.__running = True
+
+    def stop(self) -> None:
+        self.__stopping = True
+
         if self.running:
-            self.__player["ffmpeg"].terminate()
-            self.__player["thread"].join()
+            logger.info("Stopping audio player")
+            if self.__player["ffmpeg"] is not None:
+                self.__player["ffmpeg"].terminate()
+                self.__player["thread"].join()
+
+        self.__running = False
 
     @property
     def playlists(self):
         return self.__playlists
 
     @playlists.setter
-    def playlists(self, playlists):
+    def playlists(self, playlists) -> None:
         self.__playlists = copy.copy(playlists)
 
     @property
-    def running(self):
-        return self.__player["ffmpeg"] is not None and self.__player["ffmpeg"].poll() is None
+    def running(self) -> bool:
+        return self.__running
 
-    def volume(self, value):
+    def volume(self, value) -> None:
         terrariumAudio.volume(int(self.__hw), int(value))

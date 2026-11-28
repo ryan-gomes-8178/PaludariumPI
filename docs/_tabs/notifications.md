@@ -67,6 +67,26 @@ able to send out emails. It will auto detect TLS/SSL connection options to use.
 The receiver email address does not has to be te same as the used account for
 sending emails.
 
+### Mastodon
+
+![Mastodon icon](/assets/img/mastodon.svg){: .right width="150" }It is possible
+to send messages through Mastodon. In order to connect to Mastodon you need to
+create an `application` in the `development` section at **your** or **special
+bot account**. There you create an app with the following rights:
+
+- read:statuses
+- write:media
+- write:statuses
+
+After saving you will get all the needed keys and secrets to make the
+connection.
+
+#### Private notifications
+
+It is possible to send out private notifications. To enable this specify a list
+of Mastodon accounts that should receive the notification. When left empty, the
+notification messages will be public!
+
 ### MQTT
 
 ![MQTT icon](/assets/img/MQTT_Cloud.webp){: .right width="150" }You can use a

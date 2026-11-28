@@ -86,7 +86,7 @@ class terrariumRelayEnergenieUSB(terrariumRelay):
 
         data = []
         try:
-            data = terrariumUtils.get_script_data(cmd).decode("utf-8").strip().split("\n")
+            data = terrariumUtils.get_script_data(cmd, False).decode("utf-8").strip().split("\n")
         except subprocess.CalledProcessError:
             logger.info("No Energenie USB relays connected.")
             return False
@@ -160,7 +160,7 @@ class terrariumRelayEnergenieLAN(terrariumRelay):
 
         return status["login"] == 0
 
-    def __logout(self):
+    def __logout(self) -> None:
         status = self.device.getstatus()
         if status["login"] == 0:
             self.device.logout()
@@ -220,7 +220,7 @@ class terrariumRelayEnergenieLAN(terrariumRelay):
 
         return status
 
-    def stop(self):
+    def stop(self) -> None:
         self.__logout()
         super().stop()
 
@@ -232,7 +232,7 @@ class terrariumRelayEnergenieRF(terrariumRelay):
     def _load_hardware(self):
         return Energenie(int(self.address))
 
-    def _set_hardware_value(self, state):
+    def _set_hardware_value(self, state) -> bool:
         if state == self.ON:
             self.device.on()
         else:
@@ -243,6 +243,6 @@ class terrariumRelayEnergenieRF(terrariumRelay):
     def _get_hardware_value(self):
         return self.ON if terrariumUtils.is_true(self.device.value) else self.OFF
 
-    def stop(self):
+    def stop(self) -> None:
         self.device.close()
         super().stop()

@@ -11,7 +11,7 @@ import functools
 import re
 import base64
 import requests
-import mimetypes
+
 from PIL import Image
 from uuid import uuid4
 from pathlib import Path
@@ -42,16 +42,17 @@ from terrariumAuthAPI import terrariumAuthAPI
 
 
 class terrariumWebserver(object):
-    def __init__(self, terrariumEngine):
+    def __init__(self, terrariumEngine) -> None:
         # Define caching timeouts per url/path
         self.__caching_timeouts = [
             {"path": re.compile(r"^/webcam/.*\.m3u8$", re.I), "timeout": 2},  #  2 Seconds
             {"path": re.compile(r"^/webcam/.*\.ts$", re.I), "timeout": 10},  # 10 Seconds
-            {"path": re.compile(r"^/webcam/.*\.jpg$", re.I), "timeout": 30},  # 30 Seconds
+            {"path": re.compile(r"^/webcam/.*\.jpg(\?.*)?$", re.I), "timeout": 30},  # 30 Seconds
             {"path": re.compile(r"^/api/", re.I), "timeout": 60},  #  1 Minute
             {"path": re.compile(r"^/background", re.I), "timeout": 60 * 60},  #  1 Hour
             {"path": re.compile(r"^/(media|css|img|js|webfonts)/", re.I), "timeout": 1 * 24 * 60 * 60},  # 1 Day
             {"path": re.compile(r"^/(main\..*)", re.I), "timeout": 1 * 24 * 60 * 60},  # 1 Day
+            {"path": re.compile(r"^/favicon\.ico", re.I), "timeout": 1 * 24 * 60 * 60},  # 1 Day
         ]
 
         # This secret will change every reboot. So cookies will not work anymore after a reboot.
@@ -76,7 +77,7 @@ class terrariumWebserver(object):
         real_ip = request.get_header("X-Real-Ip")
         return request.remote_addr if real_ip is None else real_ip
 
-    def __auth_basic(self, check, required, realm="private", text="Access denied"):
+    def __auth_basic(self, check, required: bool, realm: str = "private", text: str = "Access denied"):
         """Callback decorator to require HTTP auth (basic).
         TODO: Add route(check_auth=...) parameter."""
 
@@ -147,22 +148,25 @@ class terrariumWebserver(object):
 
         return decorator
 
-    def __clear_authentication(self, user, password):
+    def __clear_authentication(self, user, password: str) -> bool:
         return True
 
-    def __add_caching_headers(self, response, fullpath):
+    def __add_caching_headers(self, response, fullpath) -> None:
         if 200 == response.status_code:
             # Add the caching headers
             for caching in self.__caching_timeouts:
                 if caching["path"].search(request.fullpath):
-                    response.expires = datetime.datetime.utcnow().timestamp() + caching["timeout"]
+                    response.expires = datetime.datetime.now().timestamp() + caching["timeout"]
                     response.set_header("Cache-Control", f'public, max-age={caching["timeout"]}')
 
-                elif "/" == request.fullpath or re.search(r"\.html$", request.fullpath, re.I):
+                elif "/" == request.fullpath or re.search(r"\.html$", request.fullpath, re.IGNORECASE):
                     response.set_header("Cache-Control", "no-cache")
-                    response.set_header("Etag", md5(response.body.encode()).hexdigest())
+                    if isinstance(response.body, str):
+                        response.set_header("Etag", md5(response.body.encode()).hexdigest())
 
     def __template_variables(self, template):
+        _ = terrariumUtils.get_translator(self.engine.active_language)
+
         def unit_variables():
             units = {}
             for unit in self.engine.units:
@@ -193,7 +197,6 @@ class terrariumWebserver(object):
             "favicon": self.engine.settings["favicon"].lstrip("/"),
             "gitversion": self.engine.settings["gitversion"],
             "docker": str(terrariumUtils.is_docker()).lower(),
-            # 'languages'     : self.engine.settings['languages'],	# Should be removed
             "units": unit_variables(),
             "available_sensor_types": list(map(lambda sensor: sensor["id"], self.engine.sensor_types_loaded)),
             "show_gauge_overview": str(self.engine.settings["all_gauges_on_single_page"]).lower(),
@@ -214,7 +217,9 @@ class terrariumWebserver(object):
 
         return variables
 
-    def authenticate(self, required=False):
+    def authenticate(self, required: bool = False):
+        _ = terrariumUtils.get_translator(self.engine.active_language)
+
         return self.__auth_basic(
             self.engine.authenticate,
             required,
@@ -222,7 +227,7 @@ class terrariumWebserver(object):
             _("Authenticate to make any changes"),
         )
 
-    def render_page(self, page="index"):
+    def render_page(self, page: str = "index"):
         page_name = None
         if page.endswith("_sensors"):
             page_name = page
@@ -267,24 +272,15 @@ class terrariumWebserver(object):
 
         return {}
 
-    def _static_file_gui(self, filename, root=""):
+    def _static_file_gui(self, filename, root: str = ""):
         return self._static_file(filename, f"public/{root}")
 
-    def _static_file(self, filename, root=""):
+    def _static_file(self, filename, root: str = ""):
         # Backwards compatibility for '/static/' folder
         if root == "static":
             filename = filename.split("/")
             root = f"public/{filename[0]}"
             filename = "/".join(filename[1:])
-
-        # Load the static file
-        if request.headers.get("Accept-Encoding") and "gzip" in request.headers.get("Accept-Encoding"):
-            mimetype, _ = mimetypes.guess_type(filename)
-            staticfile = static_file(filename + ".gz", root=root, mimetype=mimetype)
-            if not isinstance(staticfile, HTTPError):
-                staticfile.set_header("content-encoding", "gzip")
-                self.__add_caching_headers(staticfile, f"{root}/{filename}")
-                return staticfile
 
         staticfile = static_file(filename, root=root)
         if isinstance(staticfile, HTTPError):
@@ -293,6 +289,26 @@ class terrariumWebserver(object):
 
         self.__add_caching_headers(staticfile, f"{root}/{filename}")
 
+        encoding = None
+        encoding_extension = ""
+        if "br" in request.headers.get("Accept-Encoding", ""):
+            encoding = encoding_extension = "br"
+        elif "gzip" in request.headers.get("Accept-Encoding", ""):
+            encoding = "gzip"
+            encoding_extension = "gz"
+
+        if encoding is not None:
+            encoded_staticfile = static_file(
+                filename + "." + encoding_extension,
+                root=root,
+                mimetype=staticfile.get_header("Content-Type"),
+            )
+            if not isinstance(encoded_staticfile, HTTPError):
+                encoded_staticfile.set_header("content-encoding", encoding)
+                self.__add_caching_headers(encoded_staticfile, f"{root}/{filename}")
+                staticfile = encoded_staticfile
+
+        staticfile.add_header("Vary", "Accept-Encoding")
         return staticfile
 
     def _get_nocturnal_eye_stream(self):
@@ -451,7 +467,7 @@ class terrariumWebserver(object):
             logger.error(f"Error proxying Nocturnal Eye static {path}: {e}")
             return HTTPError(502, "Nocturnal Eye static unavailable")
 
-    def __file_upload(self, root="media"):
+    def __file_upload(self, root: str = "media"):
         try:
             upload_file = request.files.get("file", None)
             if upload_file is not None:
@@ -467,7 +483,9 @@ class terrariumWebserver(object):
         except Exception as ex:
             raise HTTPError(status=500, body=f"Error uploading file. {ex}")
 
-    def __routes(self):
+    def __routes(self) -> None:
+        _ = terrariumUtils.get_translator(self.engine.active_language)
+
         # Add a 404 page...
         @self.bottle.error(400)
         @self.bottle.error(404)
@@ -514,7 +532,9 @@ class terrariumWebserver(object):
 
         # Special case: Svelte main.js|css and robots.txt and favicon.ico
         self.bottle.route(
-            "/<filename:re:(robots\.txt|favicon\.ico|main\.css|main\.js)>", method="GET", callback=self._static_file_gui
+            r"/<filename:re:(robots\.txt|favicon\.ico|main\.css|main\.js)>",
+            method="GET",
+            callback=self._static_file_gui,
         )
         # Static files Svelte app
         self.bottle.route(
@@ -564,7 +584,7 @@ class terrariumWebserver(object):
             name="file_upload",
         )
 
-    def url_for(self, name, **kwargs):
+    def url_for(self, name: str, **kwargs):
         # First check the webserver for named routes
         try:
             url = self.bottle.get_url(name, **kwargs)
@@ -589,10 +609,10 @@ class terrariumWebserver(object):
 
         redirect(self.url_for("home"))
 
-    def websocket_message(self, message_type, message_data):
+    def websocket_message(self, message_type, message_data) -> None:
         self.websocket.send_message({"type": message_type, "data": message_data})
 
-    def start(self):
+    def start(self) -> None:
         # Start the webserver
         logger.info(f'Running webserver at {self.engine.settings["host"]}:{self.engine.settings["port"]}')
         print(
@@ -612,7 +632,7 @@ class terrariumWebserver(object):
 
 
 class terrariumWebsocket(object):
-    def __init__(self, terrariumWebserver):
+    def __init__(self, terrariumWebserver) -> None:
         self.webserver = terrariumWebserver
         self.clients = []
 
@@ -639,8 +659,10 @@ class terrariumWebsocket(object):
 
         return authenticated
 
-    def connect(self, socket):
-        def listen_for_messages(connection):
+    def connect(self, socket) -> None:
+        _ = terrariumUtils.get_translator(self.webserver.engine.active_language)
+
+        def listen_for_messages(connection) -> None:
             try:
                 self.clients.remove(connection)
             except Exception as ex:
@@ -752,7 +774,7 @@ class terrariumWebsocket(object):
                         avg_data["id"] = sensor_type
                         self.send_message({"type": "sensor", "data": avg_data}, connection)
 
-    def send_message(self, message, connection=None):
+    def send_message(self, message, connection=None) -> None:
         # Get all the connected websockets (get a copy of the list, as we could delete entries and change the list length during the loop)
         clients = self.clients
         # Loop over all the clients
@@ -775,5 +797,5 @@ class terrariumWebsocket(object):
 
         logger.debug(f"Websocket message {message} is send to {len(self.clients)} clients")
 
-    def stop(self):
+    def stop(self) -> None:
         self.send_message({"type": "shutdown", "data": True})

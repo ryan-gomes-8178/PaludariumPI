@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 import terrariumLogging
 
-logger = terrariumLogging.logging.getLogger("terrariumUtils")
-
 import gettext
 import re
 import datetime
@@ -28,6 +26,10 @@ import time
 import uuid
 
 
+# bcrypt 5 rejects passwords longer than bcrypt 4's implicit 72-byte limit.
+_BCRYPT_PASSWORD_BYTES = 72
+
+
 # https://stackoverflow.com/a/6798042
 # works in Python 2 & 3
 class _Singleton(type):
@@ -36,9 +38,15 @@ class _Singleton(type):
     _instances = {}
 
     def __call__(cls, *args, **kwargs):
-        if cls not in cls._instances:
-            cls._instances[cls] = super(_Singleton, cls).__call__(*args, **kwargs)
-        return cls._instances[cls]
+        index = str(cls)
+        if "io_expander.terrariumPCF857" in index:
+            # 'Hack' for supporting multiple IO expander boards
+            index += "_".join(map(str, terrariumUtils.getI2CAddress(args[0])))
+
+        if index not in cls._instances:
+            cls._instances[index] = super(_Singleton, cls).__call__(*args, **kwargs)
+
+        return cls._instances[index]
 
 
 class terrariumSingleton(_Singleton("terrariumSingletonMeta", (object,), {})):
@@ -51,8 +59,8 @@ class classproperty(property):
 
 
 class terrariumAsync(terrariumSingleton):
-    def __init__(self):
-        def __run():
+    def __init__(self) -> None:
+        def __run() -> None:
             self.async_loop.run_until_complete(self._keep_running())
             self.async_loop.close()
 
@@ -64,35 +72,35 @@ class terrariumAsync(terrariumSingleton):
         data = asyncio.run_coroutine_threadsafe(cmd, self.async_loop)
         return data.result()
 
-    def stop(self):
+    def stop(self) -> None:
         self.__running = False
 
-    async def _keep_running(self):
+    async def _keep_running(self) -> None:
         self.__running = True
         while self.__running:
             await asyncio.sleep(1)
 
 
 class terrariumCache(terrariumSingleton):
-    logger = terrariumLogging.logging.getLogger("terrariumCache")
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.__cache = {}
         self.__running = {}
-        logger.debug("Initialized cache")
+        self.logger = terrariumLogging.logging.getLogger("terrariumCache")
+        self.logger.debug("Initialized cache")
 
-    def __cleanup(self):
+    def __cleanup(self) -> None:
         now = int(time.time())
         for key in list(self.__cache.keys()):
             if self.__cache[key]["expire"] < now:
-                logger.debug(
+                self.logger.debug(
                     "Delete cache key {} with expire date {}".format(
                         key, datetime.datetime.fromtimestamp(self.__cache[key]["expire"])
                     )
                 )
                 del self.__cache[key]
 
-    def set_data(self, hash_key, data, cache_timeout=30):
+    def set_data(self, hash_key, data, cache_timeout: int = 30) -> None:
         # When cache value is negative, cache it for one year.... should be long enough.. ;)
         cache_timeout = cache_timeout if cache_timeout > 0 else int(datetime.timedelta(days=365).total_seconds())
         self.__cache[hash_key] = {
@@ -100,7 +108,7 @@ class terrariumCache(terrariumSingleton):
             "expire": int(time.time()) + cache_timeout,
             "timestamp": int(time.time()),
         }
-        logger.debug("Added new cache data with hash: {}. Total in cache: {}".format(hash_key, len(self.__cache)))
+        self.logger.debug("Added new cache data with hash: {}. Total in cache: {}".format(hash_key, len(self.__cache)))
         self.__cleanup()
 
     def get_data(self, hash_key, default=None, max_age=None):
@@ -112,11 +120,11 @@ class terrariumCache(terrariumSingleton):
 
         return default
 
-    def clear_data(self, hash_key):
+    def clear_data(self, hash_key) -> None:
         if hash_key in self.__cache:
             del self.__cache[hash_key]
 
-    def set_running(self, hash_key):
+    def set_running(self, hash_key) -> bool:
         hash_key = f"running-{hash_key}"
         if not self.is_running(hash_key):
             self.set_data(f"running-{hash_key}", True)
@@ -124,11 +132,11 @@ class terrariumCache(terrariumSingleton):
 
         return False
 
-    def is_running(self, hash_key):
+    def is_running(self, hash_key) -> bool:
         hash_key = f"running-{hash_key}"
         return self.get_data(hash_key) is not None
 
-    def clear_running(self, hash_key):
+    def clear_running(self, hash_key) -> None:
         hash_key = f"running-{hash_key}"
         if hash_key in self.__cache:
             del self.__cache[hash_key]
@@ -140,15 +148,15 @@ class terrariumUtils:
         return str(uuid.uuid4())
 
     @staticmethod
-    def generate_password(password):
-        return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode("utf8")
+    def generate_password(password: str):
+        return bcrypt.hashpw(password.encode()[:_BCRYPT_PASSWORD_BYTES], bcrypt.gensalt()).decode("utf8")
 
     @staticmethod
-    def check_password(password, passwordhash):
+    def check_password(password: str, passwordhash):
         if password is None or passwordhash is None:
             return False
 
-        return bcrypt.checkpw(password.encode(), passwordhash.encode())
+        return bcrypt.checkpw(password.encode()[:_BCRYPT_PASSWORD_BYTES], passwordhash.encode())
 
     @staticmethod
     def __encryption_key():
@@ -158,7 +166,7 @@ class terrariumUtils:
         return Fernet(salt)
 
     @staticmethod
-    def encrypt(string):
+    def encrypt(string: str):
         try:
             encryption = terrariumUtils.__encryption_key()
             return encryption.encrypt(string.encode()).decode()
@@ -166,7 +174,7 @@ class terrariumUtils:
             return string
 
     @staticmethod
-    def decrypt(string):
+    def decrypt(string: str):
         try:
             encryption = terrariumUtils.__encryption_key()
             return encryption.decrypt(string.encode()).decode()
@@ -247,7 +255,7 @@ class terrariumUtils:
         return float(current)
 
     @staticmethod
-    def is_float(value):
+    def is_float(value) -> bool:
         if value is None or "" == value:
             return False
 
@@ -258,7 +266,7 @@ class terrariumUtils:
             return False
 
     @staticmethod
-    def is_true(value):
+    def is_true(value) -> bool:
         return str(value).lower() in ["true", "1", "on", "yes"]
 
     @staticmethod
@@ -345,7 +353,7 @@ class terrariumUtils:
             return False
 
         regex = r"^((?P<scheme>https?|ftp):\/)?\/?((?P<username>.*?)(:(?P<password>.*?)|)@)?(?P<hostname>[^:\/\s]+)(:(?P<port>(\d*))?)?(?P<path>(\/\w+)*\/)(?P<filename>[-\w.]+[^#?\s]*)?(?P<query>\?([^#]*))?(#(?P<fragment>(.*))?)?$"
-        matches = re.search(regex, url.strip())
+        matches = re.search(regex, url.strip(), re.IGNORECASE)
         if matches:
             data = matches.groupdict()
             if data["query"]:
@@ -358,7 +366,7 @@ class terrariumUtils:
         return False
 
     @staticmethod
-    def is_valid_url(url):
+    def is_valid_url(url) -> bool:
         return terrariumUtils.parse_url(url) is not False
 
     @staticmethod
@@ -369,12 +377,13 @@ class terrariumUtils:
                 value = value.split(":")
                 time = "{:0>2}:{:0>2}".format(int(value[0]) % 24, int(value[1]) % 60)
             except Exception as ex:
+                logger = terrariumLogging.logging.getLogger("terrariumUtils")
                 logger.exception("Error parsing time value %s. Exception %s" % (value, ex))
 
         return time
 
     @staticmethod
-    def get_remote_data(url, timeout=3, proxy=None, json=False, post=None):
+    def get_remote_data(url, timeout: int = 3, proxy=None, json: bool = False, post=None):
         data = None
         try:
             url_data = terrariumUtils.parse_url(url)
@@ -425,12 +434,14 @@ class terrariumUtils:
                 data = None
 
         except Exception as ex:
+            logger = terrariumLogging.logging.getLogger("terrariumUtils")
             logger.exception("Error parsing remote data at url %s. Exception %s" % (url, ex))
 
         return data
 
     @staticmethod
-    def get_script_data(script):
+    def get_script_data(script, log_error: bool = True):
+        logger = terrariumLogging.logging.getLogger("terrariumUtils")
         data = None
         try:
             logger.debug("Running script: %s." % (script))
@@ -442,17 +453,18 @@ class terrariumUtils:
             )
             logger.debug("Output was: %s." % (data))
         except Exception as ex:
-            logger.exception("Error parsing script data for script %s. Exception %s" % (script, ex))
+            if log_error:
+                logger.exception("Error parsing script data for script %s. Exception %s" % (script, ex))
 
         return data
 
     @staticmethod
     # https://stackoverflow.com/a/62186053
-    def flatten_dict(dictionary, parent_key=False, separator="_"):
+    def flatten_dict(dictionary, parent_key: bool = False, separator: str = "_"):
         items = []
         for key, value in dictionary.items():
             new_key = str(parent_key) + separator + key if parent_key else key
-            if isinstance(value, collections.MutableMapping):
+            if isinstance(value, collections.abs.MutableMapping):
                 items.extend(terrariumUtils.flatten_dict(value, new_key, separator).items())
             elif isinstance(value, list):
                 for k, v in enumerate(value):
@@ -467,7 +479,9 @@ class terrariumUtils:
         return str(datetime.timedelta(seconds=int(value)))
 
     @staticmethod
-    def format_filesize(n, power=0, b=1024, u="B", pre=[""] + [p + "i" for p in "KMGTPEZY"]):
+    def format_filesize(
+        n, power: int = 0, b: int = 1024, u: str = "B", pre=[""] + [p + "i" for p in "KMGTPEZY"]
+    ) -> str:
         power, n = min(int(log(max(n * b**power, 1), b)), len(pre) - 1), n * b**power
         return "%%.%if %%s%%s" % abs(power % (-power - 1)) % (n / b ** float(power), pre[power], u)
 
@@ -482,6 +496,7 @@ class terrariumUtils:
             try:
                 logline = re.sub(search[index], replace[index], logline)
             except Exception as ex:
+                logger = terrariumLogging.logging.getLogger("terrariumUtils")
                 logger.debug(f"Could not clear with regex: {ex}")
 
         return logline
@@ -492,10 +507,10 @@ class terrariumUtils:
             return None
 
         strip_regex = r"[ ,]+$"
-        return re.sub(strip_regex, "", str(address), 0, re.MULTILINE)
+        return re.sub(strip_regex, "", str(address), flags=re.MULTILINE)
 
     @staticmethod
-    def get_translator(lang="en-US"):
+    def get_translator(lang: str = "en-US"):
         # Load language
         try:
             trans = gettext.translation("terrariumpi", "locales/", languages=(lang.replace("-", "_"),))
@@ -505,7 +520,7 @@ class terrariumUtils:
         return trans.gettext
 
     @staticmethod
-    def is_docker():
+    def is_docker() -> bool:
         path = "/proc/self/cgroup"
         if os.path.exists("/.dockerenv"):
             return True
@@ -521,19 +536,20 @@ class terrariumUtils:
     @staticmethod
     def bluetooth_available():
         cmd = "/usr/bin/hcitool dev"
-        data = terrariumUtils.get_script_data(cmd)
+        data = terrariumUtils.get_script_data(cmd, False)
         if data is None:
             return False
 
         return len(data.decode().strip().split("\n")) > 1
 
     @staticmethod
-    def kill_bluetooth_helper_processes():
+    def kill_bluetooth_helper_processes() -> None:
         cmd = "pgrep bluepy"
-        data = terrariumUtils.get_script_data(cmd)
+        data = terrariumUtils.get_script_data(cmd, False)
         if data is None:
             return
 
+        logger = terrariumLogging.logging.getLogger("terrariumUtils")
         data = data.decode().strip().split("\n")
         for process in data:
             logger.warning("Killing hanging bluetooth helper process")
@@ -543,7 +559,7 @@ class terrariumUtils:
                 logger.error(f"Error killing hanging bluetooth helper process: {ex}")
 
     @staticmethod
-    def loadHardwareDrivers(classType, className, path, pattern):
+    def loadHardwareDrivers(classType, className, path, pattern: str):
         cache = terrariumCache()
 
         data = cache.get_data(path)
@@ -566,6 +582,7 @@ class terrariumUtils:
                             setattr(sys.modules[__name__], file.stem, attribute)
                             data[attribute.HARDWARE] = attribute
                 except Exception as ex:
+                    logger = terrariumLogging.logging.getLogger("terrariumUtils")
                     logger.error(f"Error loading hardware driver file {file}: {ex}")
 
             cache.set_data(path, data, -1)
@@ -593,5 +610,5 @@ class terrariumUtils:
         return address
 
     @staticmethod
-    def isRaspberryPI5():
+    def isRaspberryPI5() -> bool:
         return "Raspberry Pi 5" in Path("/proc/device-tree/model").read_text()

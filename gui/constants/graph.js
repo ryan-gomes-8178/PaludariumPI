@@ -161,6 +161,17 @@ export const graphDefaultOpts = {
         },
       },
     },
+    zoom: {
+      zoom: {
+        drag: {
+          enabled: true,
+          backgroundColor: 'rgba(140,140,140,0.5)',
+          borderColor: 'rgba(140,140,140,1)',
+          borderWidth: 1,
+        },
+        mode: 'x',
+      },
+    },
   },
 };
 /* jslint unparam: false */

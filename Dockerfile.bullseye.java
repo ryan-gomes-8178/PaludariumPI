@@ -1,0 +1,93 @@
+# Build for raspberry pi
+# docker buildx build --platform linux/arm/v7 --progress=plain -t theyosh/terrariumpi:4.0.0 -f Dockerfile --push .
+
+# python builder, help keep image small
+FROM python:3.9-bullseye AS python_builder
+ENV PIP_DEFAULT_TIMEOUT=100 \
+    # Allow statements and log messages to immediately appear
+    PYTHONUNBUFFERED=1 \
+    # disable a pip version check to reduce run-time & log-spam
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    # cache is useless in docker image, so disable to reduce image size
+    PIP_NO_CACHE_DIR=1 \
+    # do not create __pycache__/ files
+    PYTHONDONTWRITEBYTECODE=1
+ENV PATH="/opt/venv/bin:$PATH"
+
+RUN python -m venv /opt/venv
+RUN pip install --upgrade pip==24.1.2 && pip install --upgrade wheel==0.43.0
+
+COPY requirements.txt contrib/python3-voltcraft-sem6000.patch.diff contrib/python3-as7331.patch.diff /
+
+# requirements are slightly different for docker
+# overruling does not work here, pip will exit with non 0 which will stop the build
+RUN  sed -i 's/paho-mqtt==.*//g' requirements.txt \
+  && sed -i 's/icalendar==.*//g' requirements.txt \
+  && sed -i 's/pip==.*/pip==26.0.1/g' requirements.txt \
+  && sed -i 's/setuptools==.*/setuptools==82.0.1/g' requirements.txt \
+  && sed -i 's/python-dotenv==.*/python-dotenv==1.2.1/g' requirements.txt \
+  && sed -i 's/Pillow==.*/Pillow==11.2.1/g' requirements.txt \
+  && sed -i 's/pylibftdi==.*/pylibftdi==0.23.0/g' requirements.txt \
+  && sed -i 's/Adafruit-Blinka==.*/Adafruit-Blinka==8.64.0/g' requirements.txt \
+  && sed -i 's/pywemo==.*/pywemo==1.4.0/g' requirements.txt \
+  && sed -i 's/emails==.*/emails==0.6/g' requirements.txt \
+  && sed -i 's/cbor2==.*/cbor2==5.9.0/g' requirements.txt \
+  && sed -i 's/python-telegram-bot\[socks,http2\]==.*/python-telegram-bot\[socks,http2\]==22.5/g' requirements.txt \
+  && sed -i 's/requests==.*/requests==2.32.5/g' requirements.txt \
+  && pip install smbus==1.1.post2 --extra-index-url https://www.piwheels.org/simple \
+  && pip install -r requirements.txt --extra-index-url https://www.piwheels.org/simple \
+  && find /opt/venv -type d -name "test*" | xargs rm -rf  \
+  && find /opt/venv -type d -name "__pycache__" | xargs rm -rf \
+  && find /opt/venv -type d -name ".git" | xargs rm -rf \
+  && find /opt/venv -type f -name "*.pyc" -delete
+
+WORKDIR /TerrariumPI
+# Just clone the libraries, ignore docker cache...
+RUN  git clone https://github.com/ageir/chirp-rpi.git --depth 1 "3rdparty/chirp-rpi" \
+  && git clone https://github.com/perryflynn/energenie-connect0r.git --depth 1 "3rdparty/energenie-connect0r" \
+  && git clone https://github.com/SequentMicrosystems/relay8-rpi.git --depth 1 "3rdparty/relay8-rpi" \
+  && git clone https://github.com/AtlasScientific/Raspberry-Pi-sample-code.git --depth 1 "3rdparty/AtlasScientific" \
+  && git clone https://github.com/moormaster/python3-voltcraft-sem6000.git --depth 1 "3rdparty/python3-voltcraft-sem6000" \
+  && git clone https://github.com/iorodeo/iorodeo-as7331.git --depth 1 "3rdparty/iorodeo-as7331" \
+  && patch -N -s -r /dev/null 3rdparty/python3-voltcraft-sem6000/sem6000/repeat_on_failure_decorator.py < /python3-voltcraft-sem6000.patch.diff >/dev/null \
+  && patch -N -u -l -s -r /dev/null 3rdparty/iorodeo-as7331/iorodeo_as7331/iorodeo_as7331.py < /python3-as7331.patch.diff >/dev/null \
+  && rm -Rf 3rdparty/Bright-Pi/Documents \
+  && find . -type d -name  "__pycache__" -exec rm -r {} + \
+  && find . -type f -name "*.pyc" -delete \
+  && find . -type d -name ".git" -exec rm -r {} +
+
+# Sourcecode cleanup and pre-prep
+FROM python:3.9-bullseye AS sourcecode
+WORKDIR /TerrariumPI
+COPY . .
+# remove git and 3rdparty dir from code copy to help keep image smaller
+# 3rdparty is coming from the builder image
+RUN rm -Rf .git 3rdparty gui package*.json postcss.config.js rollup.config.js .env.* html-template.js requirements.txt yarn.lock
+
+# actual image
+FROM theyosh/terrariumpi:4.15.0-bullseye-java AS finalimage
+ARG GITHUB_SHA="development"
+ENV PIP_DEFAULT_TIMEOUT=100 \
+    # Allow statements and log messages to immediately appear
+    PYTHONUNBUFFERED=1 \
+    # disable a pip version check to reduce run-time & log-spam
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    # cache is useless in docker image, so disable to reduce image size
+    PIP_NO_CACHE_DIR=1 \
+    # do not create __pycache__/ files
+    PYTHONDONTWRITEBYTECODE=1
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PATH="/opt/venv/bin:$PATH"
+
+COPY --from=python_builder /opt/venv /opt/venv
+COPY --from=python_builder /TerrariumPI/3rdparty /TerrariumPI/3rdparty
+COPY --from=sourcecode /TerrariumPI /TerrariumPI
+
+WORKDIR /TerrariumPI
+# Set git version in a temp file
+RUN echo "${GITHUB_SHA}" > .gitversion && echo '[ ! -z "$TERM" -a -r /TerrariumPI/motd.sh ] && /TerrariumPI/motd.sh' >> /etc/bash.bashrc
+
+HEALTHCHECK --interval=180s --timeout=5s --start-period=120s CMD python contrib/docker_health.py
+
+ENTRYPOINT ["/bin/bash", "/TerrariumPI/run.sh"]
+CMD ["/opt/venv/bin/python", "/TerrariumPI/terrariumPI.py"]
