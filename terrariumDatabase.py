@@ -537,12 +537,14 @@ class Sensor(db.Entity):
 
     def to_dict(self, only=None, exclude=None, with_collections=False, with_lazy=False, related_objects=False):
         data = copy.deepcopy(super().to_dict(only, exclude, with_collections, with_lazy, related_objects))
-        
-        # Fetch measurement once to avoid duplicate queries
-        measurement = self._get_latest_measurement()
-        
-        # Add extra fields
+
+        # Keep the timestamp even when the last reading is too old to use.
+        latest = self.history.order_by(orm.desc(SensorHistory.timestamp)).first()
+        cutoff = datetime.now() - timedelta(seconds=self.__MAX_VALUE_AGE)
+        measurement = latest if latest and latest.timestamp >= cutoff else None
+
         data["value"] = measurement.value if measurement else None
+        data["measured_at"] = latest.timestamp.timestamp() if latest else None
         data["offset"] = self.offset
         data["error"] = measurement.out_of_range if measurement else True
         data["alarm"] = (

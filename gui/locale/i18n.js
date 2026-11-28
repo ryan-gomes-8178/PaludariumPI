@@ -8,6 +8,7 @@ import de_AT from './de_AT.json';
 import ca from './ca.json';
 import en_GB from './en_GB.json';
 import en_US from './en_US.json';
+import habitat from './habitat.en.json';
 import es from './es.json';
 import es_AR from './es_AR.json';
 import fr_BE from './fr_BE.json';
@@ -154,6 +155,8 @@ export const changeLang = (lang) => {
 };
 
 const initialize = () => {
+  addMessages('en-GB', { habitat });
+  addMessages('en-US', { habitat });
   langs.forEach((lang) => {
     let lc = localStorage.getItem(lang.code + '-locale');
     if (lc !== null) {

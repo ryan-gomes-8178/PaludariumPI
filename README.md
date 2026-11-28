@@ -1,51 +1,39 @@
-# TerrariumPI 4.14.0
+# PaludariumPI
 
-![Latest release](https://img.shields.io/github/v/release/theyosh/terrariumpi?label=Latest%20release)
-![GitHub Release Date](https://img.shields.io/github/release-date/theyosh/TerrariumPI)
-[![Translation status](https://weblate.theyosh.nl/widgets/terrariumpi/-/svg-badge.svg)](https://weblate.theyosh.nl/engage/terrariumpi/)
-[![Docker Pulls](https://img.shields.io/docker/pulls/theyosh/terrariumpi)](https://hub.docker.com/r/theyosh/terrariumpi)
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/dba4e25f9efe4197926dd03aa6925d0f)](https://app.codacy.com/gh/theyosh/TerrariumPI?utm_source=github.com&utm_medium=referral&utm_content=theyosh/TerrariumPI&utm_campaign=Badge_Grade_Settings)
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square)](https://github.com/prettier/prettier)
-[![Matrix](https://img.shields.io/badge/matrix.org-%23terrariumpi-blue)](https://matrix.to/#/#terrariumpi:theyosh.nl)
+PaludariumPI is a Raspberry Pi controller for planted paludariums, terrariums,
+and aquariums. It builds on [TerrariumPI](https://github.com/theyosh/TerrariumPI)
+by TheYOSH. The upstream documentation covers automation, supported hardware,
+and setup. [TerrariumPI documentation](https://theyosh.github.io/TerrariumPI/)
 
-Software for cheap home automation of your reptile terrarium or any other
-enclosed environment. With this software you are able to control for example a
-terrarium so that the temperature and humidity is of a constant value.
-Controlling the temperature can be done with heat lights, external heating or
-cooling system. As long as there is one temperature sensor available the
-software is able to keep a constant temperature.
+## Habitat dashboard
 
-For humidity control there is support for a spraying system. The sprayer can be
-configured to spray for an X amount of seconds and there is a minimal period
-between two spray actions. Use at least one humidity sensors to get a constant
-humidity value. In order to lower the humidity you can add a dehumidifier.
+![PaludariumPI dashboard with simulated sensor readings](screenshots/Paludarium-Dashboard.webp)
 
-The software is that flexible that there is no limit in amount of sensors, relay
-boards or door sensors. The usage can be endless. All power switches have
-support for timers to trigger based on a time pattern.
+- Monitor individual sensors, search by name or type, and pin your most-used
+  readings. Pins are saved in the current browser.
+- See readings outside the configured alarm range, invalid or overdue readings,
+  and open or unavailable enclosure doors in a single panel.
+- Open a sensor trend for the past hour, 24 hours, or seven days. The graph
+  preserves local highs and lows while sending at most 202 points. The summary
+  uses every valid reading in the selected period.
+- Review enclosure schedules, sensor type averages, and controller power and
+  water use. SwitchBot BLE, Kasa, and the existing monitoring pages are available
+  through the same installation.
 
-Running now stable for more than
-[**10 years**](https://theyosh.github.io/TerrariumPI/posts/2024/08/01/10-year-anniversary/)!!!
+### Build the interface from this fork
 
-If you are using this software for your animals or plants,
-**[please post some pictures](https://github.com/theyosh/TerrariumPI/issues/210)**
+Run these commands from the cloned repository with Node.js and npm installed.
 
-**Full documentation** can be found at
-[https://theyosh.github.io/TerrariumPI/](https://theyosh.github.io/TerrariumPI/)
+```sh
+npm ci --force
+./gui/patch.sh
+npm run build
+```
 
-**Contact** <https://matrix.to/#/#terrariumpi:theyosh.nl>
-
-Think off:
-
-- Terrarium (wet or dry)
-- Aquarium
-- Tanks with animals or plants
-- Greenhouse
-
-And all this is controlled with a nice web interface with
-[AdminLTE 3](https://adminlte.io/) based on Bootstrap 4 made interactive with
-[Svelte 4](https://svelte.dev/).
+The Python server serves the resulting interface from `public/`. For the full
+controller setup and supported Raspberry Pi versions, see [Installation](#installation).
+The dashboard and controller should be built from the same revision so the
+controller can supply measurement timestamps and the history preview.
 
 ## Table of Contents
 
@@ -167,12 +155,9 @@ It is possible to use USB or SSD drives to speed things up:
 
 ### Docker
 
-There is a Docker image which can be used instead of the source code. This
-should make the installation a bit more easier. More information can be found
-at:
-[https://theyosh.github.io/TerrariumPI/install/#docker](https://theyosh.github.io/TerrariumPI/install/#docker)
-
-You can skip the manual installation part.
+For container installation, build from this fork after building the interface.
+The published TerrariumPI images contain the upstream controller.
+[Upstream Docker documentation](https://theyosh.github.io/TerrariumPI/install/#docker)
 
 ### Manual
 
@@ -180,10 +165,9 @@ You can skip the manual installation part.
    `ssh pi@[raspberry_ip]`
 2. Install git \
    `sudo apt -y install git`
-3. Clone this repository and submodules! \
-   `git clone --depth 1 https://github.com/theyosh/TerrariumPI.git`
-4. Enter the new TerrariumPI folder \
-   `cd TerrariumPI`
+3. Clone this fork. \
+   `git clone --recurse-submodules --depth 1 https://github.com/ryan-gomes-8178/PaludariumPI.git`
+4. Enter the `PaludariumPI` folder and [build the interface](#build-the-interface-from-this-fork).
 5. Run the installer script and wait \
    `sudo ./install.sh`
 6. Reboot Raspberry PI to get all the needed modules loaded \

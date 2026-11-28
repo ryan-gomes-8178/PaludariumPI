@@ -6,6 +6,8 @@ import {
   isDay,
   lastUpdate,
   uptime,
+  systemStatsReceived,
+  resourceStatsReceived,
   systemLoad,
   systemCPUTemp,
   systemMemory,
@@ -90,6 +92,7 @@ websocket.subscribe((message) => {
       systemCPUTemp.set(message.data.cpu_temperature);
       systemMemory.set([message.data.memory.used, message.data.memory.total]);
       systemDisk.set([message.data.storage.used, message.data.storage.total]);
+      systemStatsReceived.set(true);
       animateHourglass();
       break;
 
@@ -107,6 +110,7 @@ websocket.subscribe((message) => {
       totalWater.set(message.data.flow.total ?? get(totalWater));
       totalWaterCosts.set(message.data.flow.costs ?? get(totalWaterCosts));
       totalWaterDuration.set(message.data.flow.duration ?? get(totalWaterDuration));
+      resourceStatsReceived.set(true);
       break;
 
     case 'sensor':

@@ -1,0 +1,86 @@
+{
+  "menu": "Dashboard",
+  "title": "Habitat overview",
+  "description": "Live conditions and activity across your habitat.",
+  "connection": {
+    "live": "Controller live",
+    "offline": "Controller offline",
+    "connecting": "Connecting"
+  },
+  "controllerUpdate": "Controller update {time}",
+  "day": "Day cycle",
+  "night": "Night cycle",
+  "manageEnclosures": "Enclosures",
+  "cameras": "Cameras",
+  "manage": "Manage enclosures",
+  "retry": "Try again",
+  "sensors": "Sensor readings",
+  "sensorCount": "{count, plural, one {# configured sensor} other {# configured sensors}}",
+  "search": "Search sensors",
+  "filters": {
+    "title": "Sensor filters",
+    "all": "All",
+    "attention": "Attention",
+    "pinned": "Pinned"
+  },
+  "sensorStatus": {
+    "normal": "In range",
+    "alarm": "Outside alarm range",
+    "stale": "Reading overdue",
+    "invalid": "Invalid reading",
+    "missing": "No reading"
+  },
+  "sensorLoading": "Loading sensor readings…",
+  "sensorError": "Sensor readings are unavailable.",
+  "refreshError": "Couldn’t refresh the sensor list.",
+  "sensorEmpty": "There are no active sensors.",
+  "sensorSettings": "Go to sensors",
+  "noResults": "No sensors match these filters.",
+  "clearFilters": "Clear filters",
+  "pin": "Pin to dashboard",
+  "unpin": "Unpin from dashboard",
+  "pinSensor": "Pin {name} to dashboard",
+  "trend": {
+    "title": "Sensor history",
+    "period": "History period",
+    "hour": "Last hour",
+    "day": "Last 24 hours",
+    "week": "Last 7 days",
+    "loading": "Loading history…",
+    "empty": "No valid readings for this period.",
+    "select": "Select a sensor to see its history.",
+    "error": "Couldn’t load sensor history.",
+    "chart": "History chart for {name}",
+    "min": "Lowest",
+    "max": "Highest",
+    "mean": "Average",
+    "count": "Readings"
+  },
+  "attention": {
+    "title": "Needs attention",
+    "description": "Sensor alerts and door status",
+    "pending": "Waiting for current habitat data.",
+    "clear": "No sensor alerts or open doors.",
+    "empty": "No monitored sensors or doors yet."
+  },
+  "door": {
+    "open": "Door open",
+    "closed": "Doors closed",
+    "unknown": "Door status unavailable",
+    "unmonitored": "No door sensors"
+  },
+  "averages": "Sensor type averages",
+  "enclosureLoading": "Loading enclosures…",
+  "enclosureError": "Couldn’t refresh enclosures.",
+  "enclosureEmpty": "There are no enclosures configured.",
+  "resources": {
+    "title": "Resource usage",
+    "system": "System status",
+    "power": "Current power",
+    "flow": "Water flow",
+    "energy": "Total energy",
+    "water": "Total water",
+    "uptime": "Controller uptime",
+    "load": "System load {load}%"
+  }
+}

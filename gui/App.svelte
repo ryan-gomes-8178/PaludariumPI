@@ -54,7 +54,7 @@
   import { onDestroy, onMount, setContext } from 'svelte';
   import { fade } from 'svelte/transition';
   import { get } from 'svelte/store';
-  import Router from 'svelte-spa-router';
+  import Router, { location } from 'svelte-spa-router';
   import { _, date, time } from 'svelte-i18n';
   import {
     TopNavigation,
@@ -383,6 +383,7 @@
   $: toggleSidebarAdminActions($isAuthenticated);
 
   $: fireworks($timer);
+  $: dashboardRoute = ['/', '/dashboard', '/dashboard/'].includes($location);
 
   onMount(() => {
     try {
@@ -444,8 +445,13 @@
   }
 </script>
 
-<div class="wrapper">
+<div class="wrapper" class:habitat-shell="{dashboardRoute}">
   <TopNavigation>
+    <svelte:fragment slot="left">
+      {#if dashboardRoute}
+        <li class="habitat-top-label">{$_('habitat.menu')}</li>
+      {/if}
+    </svelte:fragment>
     <svelte:fragment slot="right">
       {#if showBirthdayCake($timer)}
         {#if showAnniversary}
@@ -548,7 +554,7 @@
           </DropdownItem>
         </DropdownMenu>
       </Dropdown>
-      <span class="nav-link text-nowrap ml-1 pl-0 pr-0">
+      <span class="nav-link text-nowrap ml-1 pl-0 pr-0 controller-clock">
         <span class="fa-stack fa-1x mr-3">
           {#if $isDay}
             <i class="fas fa-sun mr-1 fa-stack-1x" transition:fade></i>
@@ -640,12 +646,12 @@
 
   <div
     class="content-wrapper"
-    class:unsplash-background="{$unsplash.urls?.full}"
-    style="background-image: url('{$unsplash.urls?.full || ''}')"
+    class:unsplash-background="{!dashboardRoute && $unsplash.urls?.full}"
+    style:background-image="{!dashboardRoute && $unsplash.urls?.full ? `url('${$unsplash.urls.full}')` : null}"
   >
     <div class="content">
       <Router routes="{RoutePages}" on:routeLoaded="{routeLoaded}" on:routeLoaded="{updateSiteBar}" />
-      {#if $unsplash.user?.name}
+      {#if !dashboardRoute && $unsplash.user?.name}
         <div class="row">
           <div class="col text-right text-sm text-white pr-3 unsplash-credits">
             <a href="{$unsplash.links?.html}" target="_blank"

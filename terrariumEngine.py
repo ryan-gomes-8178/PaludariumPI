@@ -769,6 +769,7 @@ class terrariumEngine(object):
                             "unit",
                             "type",
                             "name",
+                            "measured_at",
                         ]
                     },
                 )
@@ -817,6 +818,7 @@ class terrariumEngine(object):
                             "unit",
                             "type",
                             "name",
+                            "measured_at",
                         ]
                     },
                 )

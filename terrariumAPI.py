@@ -47,6 +47,7 @@ from hardware.webcam import terrariumWebcam
 from weather import terrariumWeather
 
 from terrariumUtils import terrariumUtils
+from terrariumTrend import summarize_sensor_trend
 
 # Set to false in production, else every API call that uses DB will produce a logline
 DEBUG = False
@@ -1735,6 +1736,23 @@ class terrariumAPI(object):
     # Sensors
     @orm.db_session(sql_debug=DEBUG, show_values=DEBUG)
     def sensor_history(self, filter=None, action="history", period="day"):
+        # The dashboard requests an opt-in, bounded response for individual sensors.
+        if (
+            action == "history"
+            and period in ("hour", "day", "week")
+            and isinstance(filter, str)
+            and filter not in terrariumSensor.sensor_types
+            and request.query.get("preview") == "1"
+        ):
+            end = datetime.now()
+            start = end - timedelta(hours={"hour": 1, "day": 24, "week": 7 * 24}[period])
+            readings = orm.select(
+                (sh.timestamp, sh.value)
+                for sh in SensorHistory
+                if sh.sensor.id == filter and sh.timestamp >= start and sh.timestamp <= end and not sh.out_of_range
+            ).order_by(1)
+            return {"data": summarize_sensor_trend(readings, start, end)}
+
         if "hour" == period:
             period = 1 / 24
             use_custom = False
