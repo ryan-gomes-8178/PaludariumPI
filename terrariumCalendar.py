@@ -13,7 +13,7 @@ from pathlib import Path
 class terrariumCalendar(object):
     __ICS_FILE = Path(__file__).parent.joinpath("data/calendar.ics").resolve()
 
-    def __init__(self):
+    def __init__(self) -> None:
         if not self.__ICS_FILE.exists():
             self.__ical = Calendar()
             self.__ical.add("prodid", "-//TerrariumPI calendar//terrarium.theyosh.nl//")
@@ -47,6 +47,18 @@ class terrariumCalendar(object):
                 "https://theyosh.github.io/TerrariumPI/",
                 datetime(2024, 8, 1, 0, 0, 0, 0, timezone.utc),
                 datetime(2024, 8, 30, 0, 0, 0, 0, timezone.utc),
+            )
+
+        if self.get_event("terrariumpi-birthday") == False:
+            self.create_event(
+                "terrariumpi-birthday",
+                "🥳 TerrariumPI birthday 🎉",
+                "<p>TerrariumPI is yet a year older! Born in 2014.</p>",
+                "https://theyosh.github.io/TerrariumPI/",
+                datetime(2014, 8, 1, 0, 0, 0, 0, timezone.utc),
+                datetime(2014, 8, 2, 0, 0, 0, 0, timezone.utc),
+                "YEARLY",
+                1,
             )
 
     def __event_schema(self, item):
@@ -92,7 +104,7 @@ class terrariumCalendar(object):
         self,
         uid,
         summary,
-        description,
+        description: str,
         location=None,
         dtstart=None,
         dtend=None,
@@ -158,7 +170,7 @@ class terrariumCalendar(object):
 
         return False
 
-    def delete_event(self, uid):
+    def delete_event(self, uid) -> bool:
         counter = 0
         for subcomponent in self.__ical.subcomponents:
             if subcomponent.get("uid") == uid:

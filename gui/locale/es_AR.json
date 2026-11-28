@@ -843,6 +843,7 @@
       "day": "Día",
       "month": "Mes",
       "replaced": "Reemplazar",
+      "reset": "Reiniciar",
       "week": "Semana",
       "year": "Año"
     },
@@ -1497,11 +1498,19 @@
         }
       },
       "setup": {
+        "access_token": {
+          "help": "Ingrese el token de acceso a Mastodon.",
+          "label": "token de acceso"
+        },
         "address": {
           "help": "Introducir Una Dirección.",
           "invalid": "La dirección ingresada no es válida. No puede estar vacío.",
           "label": "Dirección",
           "placeholder": "Dirección"
+        },
+        "api_base_url": {
+          "help": "Ingrese la URL base de la API de Mastodon.",
+          "label": "URL base de la API"
         },
         "api_token": {
           "help": "Nombre de usuario SMTP.",
@@ -1511,6 +1520,14 @@
         },
         "buzzer": {
           "help": "Lista de canciones disponibles para usar en el asunto del mensaje."
+        },
+        "client_id": {
+          "label": "ID de cliente",
+          "placeholder": "Ingrese el ID del cliente"
+        },
+        "client_secret": {
+          "help": "Introduzca el secreto del cliente Mastodon.",
+          "invalid": "El secreto de cliente ingresado no es válido. \nNo puede estar vacío."
         },
         "green": {
           "help": "Ingrese el pasador GPIO para luz verde.",
@@ -1865,7 +1882,13 @@
         "error": "Los campos obligatorios están marcados con '%s'."
       },
       "information": "Para usar el sistema meteorológico, debe crear una cuenta gratuita en {source_link}.",
+      "open_meteo": {
+        "information": ""
+      },
       "title": "Configuraciones de la webcam",
+      "weather_provider": {
+        "help": ""
+      },
       "weather_source": {
         "help": "",
         "label": "Fuente"

@@ -25,10 +25,10 @@ ENV PIP_DEFAULT_TIMEOUT=100 \
     # do not create __pycache__/ files
     PYTHONDONTWRITEBYTECODE=1
 ENV PATH="/opt/venv/bin:$PATH"
-RUN python -m venv --system-site-packages /opt/venv
+RUN python -m venv /opt/venv
 RUN pip install --upgrade pip==24.1.2 && pip install --upgrade wheel==0.43.0
-COPY requirements.txt .
-COPY contrib/python3-voltcraft-sem6000.patch.diff .
+
+COPY requirements.txt contrib/python3-voltcraft-sem6000.patch.diff contrib/python3-as7331.patch.diff /
 
 # Some strange DNS issues with installing PGP keys. keyserver.ubuntu.com => 185.125.188.26
 RUN  apt-get -o Acquire::ForceIPv4=true update \
@@ -44,7 +44,6 @@ RUN  apt-get -o Acquire::ForceIPv4=true update \
 # overruling does not work here, pip will exit with non 0 which will stop the build
 RUN  sed -i 's/paho-mqtt==.*//g' requirements.txt \
   && sed -i 's/icalendar==.*//g' requirements.txt \
-  && sed -i 's/opencv-python-headless==.*//g' requirements.txt \
   && pip install smbus==1.1.post2 --extra-index-url https://www.piwheels.org/simple \
   && pip install -r requirements.txt --extra-index-url https://www.piwheels.org/simple \
   && find /opt/venv -type d -name "test*" | xargs rm -rf  \
@@ -59,7 +58,9 @@ RUN  git clone https://github.com/ageir/chirp-rpi.git --depth 1 "3rdparty/chirp-
   && git clone https://github.com/SequentMicrosystems/relay8-rpi.git --depth 1 "3rdparty/relay8-rpi" \
   && git clone https://github.com/AtlasScientific/Raspberry-Pi-sample-code.git --depth 1 "3rdparty/AtlasScientific" \
   && git clone https://github.com/moormaster/python3-voltcraft-sem6000.git --depth 1 "3rdparty/python3-voltcraft-sem6000" \
+  && git clone https://github.com/iorodeo/iorodeo-as7331.git --depth 1 "3rdparty/iorodeo-as7331" \
   && patch -N -s -r /dev/null 3rdparty/python3-voltcraft-sem6000/sem6000/repeat_on_failure_decorator.py < /python3-voltcraft-sem6000.patch.diff >/dev/null \
+  && patch -N -u -l -s -r /dev/null 3rdparty/iorodeo-as7331/iorodeo_as7331/iorodeo_as7331.py < /python3-as7331.patch.diff >/dev/null \
   && rm -Rf 3rdparty/Bright-Pi/Documents \
   && find . -type d -name  "__pycache__" -exec rm -r {} + \
   && find . -type f -name "*.pyc" -delete \
@@ -104,13 +105,14 @@ RUN  rm /usr/local/lib/libsispmctl.so /usr/local/lib/libsispmctl.so.0 \
 
 RUN  apt-get -o Acquire::ForceIPv4=true update \
   && apt-get -o Acquire::ForceIPv4=true full-upgrade -y --no-install-recommends \
-  && apt-get -o Acquire::ForceIPv4=true install -y --no-install-recommends sudo netcat-openbsd procps bluez pigpio ffmpeg libssl1.1 libxslt1.1 libftdi1 libatlas3-base libopenblas0 libgfortran5 libwebpdemux2 libraspberrypi-bin rpicam-apps-core ${JAVA} python3-opencv \
+  && apt-get -o Acquire::ForceIPv4=true install -y --no-install-recommends netcat-openbsd procps bluez pigpio ffmpeg libssl1.1 libxslt1.1 libftdi1 libatlas3-base libopenblas0 libgfortran5 libwebpdemux2 libraspberrypi-bin rpicam-apps-core \
   && apt-get --purge autoremove -y \
-  && apt-get autoclean \
+  && apt-get autoclean
+
+RUN apt-get -o Acquire::ForceIPv4=true install -y --no-install-recommends sudo ${JAVA} \
   && rm -rf /var/lib/apt/lists/* \
   && find /var/log/ -type f -delete \
-  && find /var/cache/ -type f -delete \
-  && ln -s /usr/lib/python3/dist-packages/cv2.cpython-311-arm-linux-gnueabihf.so /opt/venv/lib/python3.11/site-packages/cv2.cpython-311-arm-linux-gnueabihf.so
+  && find /var/cache/ -type f -delete
 
 WORKDIR /TerrariumPI
 # Set git version in a temp file

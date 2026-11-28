@@ -56,7 +56,7 @@ class terrariumOpenmeteo(terrariumWeather):
         return mapping.get(code, "Unknown")
 
     @staticmethod
-    def _weathercode_to_icon(code):
+    def _weathercode_to_icon(code) -> str:
         """
         Map Open-Meteo weather codes to OWM-style icons used by TerrariumPI.
         We always return the *day* variant (..d), TerrariumPI is fine with that.
@@ -97,7 +97,7 @@ class terrariumOpenmeteo(terrariumWeather):
         return ""
 
     def _get_data(self):
-        coordinates = re.search(terrariumOpenmeteo.VALID_SOURCE, self.address)
+        coordinates = re.search(terrariumOpenmeteo.VALID_SOURCE, self.address, re.IGNORECASE)
         self._device["geo"] = {"lat": float(coordinates.group("lat")), "long": float(coordinates.group("long"))}
         self._device["url"] = "https://open-meteo.com/"
         self._device["credits"] = "Open-Meteo.com weather data"

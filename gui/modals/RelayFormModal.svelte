@@ -286,16 +286,24 @@
 
           <div
             class="col-6 col-sm-6 col-md-6 col-lg-3"
-            class:d-none="{['nextevo-dimmer', 'dc-dimmer', 'irf520-dimmer', 'led-warrior18-dimmer'].indexOf(
-              hardware_type,
-            ) === -1}"
+            class:d-none="{[
+              'nextevo-dimmer',
+              'dc-dimmer',
+              'irf520-dimmer',
+              'led-warrior18-dimmer',
+              'pca9685-dimmer',
+            ].indexOf(hardware_type) === -1}"
           >
             <Field
               type="number"
               name="calibration.dimmer_frequency"
-              disabled="{['nextevo-dimmer', 'dc-dimmer', 'irf520-dimmer', 'led-warrior18-dimmer'].indexOf(
-                hardware_type,
-              ) === -1}"
+              disabled="{[
+                'nextevo-dimmer',
+                'dc-dimmer',
+                'irf520-dimmer',
+                'led-warrior18-dimmer',
+                'pca9685-dimmer',
+              ].indexOf(hardware_type) === -1}"
               step="1"
               min="1"
               label="{$_('relays.settings.calibration.dimmer_frequency.label', {
@@ -365,6 +373,25 @@
               invalid="{$_('relays.settings.calibration.dimmer_max_dim.invalid', {
                 default: 'Please enter a minimum value of {value}.',
                 values: { value: 0 },
+              })}"
+            />
+          </div>
+          <div class="col-6 col-sm-6 col-md-6 col-lg-3" class:d-none="{hardware_type !== 'dimmerlink-i2c-dimmer'}">
+            <Select
+              name="calibration.dimmer_curve"
+              value="{$formData.calibration?.dimmer_curve}"
+              required="{false}"
+              options="{[
+                { value: 0, text: 'Linear' },
+                { value: 1, text: 'RMS' },
+                { value: 2, text: 'Logarithmic' },
+              ]}"
+              label="{$_('relays.settings.calibration.dimmer_curve.label', { default: 'Dimmer curve' })}"
+              placeholder="{$_('relays.settings.calibration.dimmer_curve.placeholder', {
+                default: 'Select dimmer curve',
+              })}"
+              help="{$_('relays.settings.calibration.dimmer_curve.help', {
+                default: 'Select the dimmer curve to be used.',
               })}"
             />
           </div>

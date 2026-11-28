@@ -9,6 +9,7 @@ VERSION=$(grep ^__version__ "${BASEDIR}/terrariumPI.py" | cut -d' ' -f 3)
 VERSION="${VERSION//\"/}"
 OS=$(grep -ioP '^VERSION_CODENAME=(\K.*)' /etc/os-release)
 PYTHON=$(python3 -V)
+ARCH=$(dpkg-architecture --query DEB_HOST_ARCH)
 PI_HARDWARE=$(grep -ioP '^Model\s*: (\K.*)' /proc/cpuinfo)
 PI_ZERO=0
 if [[ $PI_HARDWARE == *"Pi Zero"* ]]; then
@@ -35,6 +36,19 @@ else
 fi
 
 SCRIPT_GROUP="$(id -gn ${SCRIPT_USER})"
+
+# Install dialog for further installation
+if ! hash whiptail 2>/dev/null; then
+  aptitude -y install whiptail
+fi
+
+clear
+
+if [ "${ARCH}" == "arm64" ]; then
+  whiptail --backtitle "${INSTALLER_TITLE}" --title " TerrariumPI Installer " --msgbox "TerrariumPI is not 64 bit compatible." 0 60
+
+  exit 0
+fi
 
 CLEANUP_PACKAGES="wolfram sonic-pi openbox nodered chromium-browser desktop-base gnome-desktop3-data libgnome-desktop epiphany-browser-data epiphany-browser nuscratch scratch wiringpi libreoffice"
 PYTHON_LIBS="python3-pip python3-dev python3-venv"
@@ -65,9 +79,12 @@ if [ "${OS}" == "buster" ]; then
   PIP_MODULES="${PIP_MODULES//gpiozero==+([^ ])/gpiozero==1.6.2}"
   PIP_MODULES="${PIP_MODULES//requests==+([^ ])/requests==2.31.0}"
 
+  PIP_MODULES="${PIP_MODULES//pylibftdi==+([^ ])/pylibftdi==0.23.0}"
   PIP_MODULES="${PIP_MODULES//python-kasa==+([^ ])/python-kasa==0.5.1}"
   PIP_MODULES="${PIP_MODULES//meross-iot==+([^ ])/meross-iot==0.4.7.5}"
   PIP_MODULES="${PIP_MODULES//pywemo==+([^ ])/pywemo==0.9.2}"
+
+  PIP_MODULES="${PIP_MODULES//sensirion-i2c-driver==+([^ ])/sensirion-i2c-driver==1.0.0}"
 
   PIP_MODULES="${PIP_MODULES//Adafruit-Blinka==+([^ ])/Adafruit-Blinka==8.43.0}"
 
@@ -77,32 +94,47 @@ if [ "${OS}" == "buster" ]; then
 
   PIP_MODULES="${PIP_MODULES//pyfiglet==+([^ ])/pyfiglet==0.8.post1}"
 
+  PIP_MODULES="${PIP_MODULES//emails==+([^ ])/emails==0.6}"
+  PIP_MODULES="${PIP_MODULES//cbor2==+([^ ])/cbor2==5.4.6}"
   PIP_MODULES="${PIP_MODULES//luma.oled==+([^ ])/luma.oled==3.13.0}"
 
   PIP_MODULES="${PIP_MODULES//python-telegram-bot\[socks,http2\]==+([^ ])/python-telegram-bot\[socks,http2\]==20.3}"
 
-  PIP_MODULES="${PIP_MODULES//icalendar==+([^ ])/icalendar==5.0.13}"
+  PIP_MODULES="${PIP_MODULES//icalendar==+([^ ])/icalendar==5.0.14}"
   PIP_MODULES="${PIP_MODULES//adafruit-circuitpython-typing==+([^ ])/adafruit-circuitpython-typing==1.10.1}"
   PIP_MODULES="${PIP_MODULES//pydantic==+([^ ])/pydantic==1.10.9}"
 
-  OPENCV_PACKAGES="libopenexr23 libilmbase23 liblapack3 libatlas3-base"
+  OPENCV_PACKAGES="libopenexr23 libilmbase23 liblapack3 libatlas3-base libssl1.1 ntp"
 
 elif [ "${OS}" == "bullseye" ]; then
   # Python 3.9
-  PIP_MODULES="${PIP_MODULES//gevent==+([^ ])/gevent==25.5.1}"
-  PIP_MODULES="${PIP_MODULES//gevent==+([^ ])/Pillow==11.2.1}"
+  PIP_MODULES="${PIP_MODULES//pip==+([^ ])/pip==26.0.1}"
+  PIP_MODULES="${PIP_MODULES//setuptools==+([^ ])/setuptools==82.0.1}"
+  PIP_MODULES="${PIP_MODULES//python-dotenv==+([^ ])/python-dotenv==1.2.1}"
+  PIP_MODULES="${PIP_MODULES//Pillow==+([^ ])/Pillow==11.2.1}"
+  PIP_MODULES="${PIP_MODULES//pylibftdi==+([^ ])/pylibftdi==0.23.0}"
+  PIP_MODULES="${PIP_MODULES//Adafruit-Blinka==+([^ ])/Adafruit-Blinka==8.64.0}"
+  PIP_MODULES="${PIP_MODULES//pywemo==+([^ ])/pywemo==1.4.0}"
+  PIP_MODULES="${PIP_MODULES//emails==+([^ ])/emails==0.6}"
+  PIP_MODULES="${PIP_MODULES//cbor2==+([^ ])/cbor2==5.9.0}"
+  PIP_MODULES="${PIP_MODULES//python-telegram-bot\[socks,http2\]==+([^ ])/python-telegram-bot\[socks,http2\]==22.5}"
+  PIP_MODULES="${PIP_MODULES//requests==+([^ ])/requests==2.32.5}"
+  PIP_MODULES="${PIP_MODULES//icalendar==+([^ ])/icalendar==6.3.2}"
 
-  OPENCV_PACKAGES="libopenexr25 libilmbase25 liblapack3 libatlas3-base"
+  OPENCV_PACKAGES="libopenexr25 libilmbase25 liblapack3 libatlas3-base libssl1.1 ntp"
 
 elif [ "${OS}" == "bookworm" ]; then
   # Python 3.11
-  PIP_MODULES="${PIP_MODULES//opencv-python-headless==+([^ ])/}"
   # Need a upgraded bluepy library => disabled!
   # PIP_MODULES="${PIP_MODULES//git+https:\/\/github.com\/IanHarvey\/bluepy/git+https:\/\/github.com\/Mausy5043\/bluepy3}"
 
-  # On bookworm we use the OS package versions
-  # We use the python3-opencv from the OS, as piwheels does not provide a compiled package
-  OPENCV_PACKAGES="libopenexr-3-1-30 liblapack3 libatlas3-base python3-opencv libglib2.0-dev libbluetooth-dev"
+  OPENCV_PACKAGES="libopenexr-3-1-30 liblapack3 libatlas3-base libssl1.1 libwebpdemux2 ntp"
+
+elif [ "${OS}" == "trixie" ]; then
+  # Python 3.13
+  PIP_MODULES="${PIP_MODULES//pony==+([^ ])/git+https:\/\/github.com\/ponyorm\/pony}"
+
+  OPENCV_PACKAGES="libopenexr-3-1-30 liblapack3 libatlas3-base libssl1.0.2 libwebpdemux2 chrony"
 
 else
 
@@ -112,42 +144,7 @@ else
 
 fi
 
-# if [ "${PI_ZERO}" -eq 1 ]; then
-#   # Pi Zero needs some fixed python modules
-#   PIP_MODULES="${PIP_MODULES//gevent==+([^ ])/gevent==21.8.0}"
-#   PIP_MODULES="${PIP_MODULES//bcrypt==+([^ ])/bcrypt==3.2.2}"
-#   PIP_MODULES="${PIP_MODULES//numpy==+([^ ])/numpy==1.21.4}"
-#   PIP_MODULES="${PIP_MODULES} lxml==4.6.4"
-
-#   if [ "${OS}" == "buster" ]; then
-#     PIP_MODULES="${PIP_MODULES//opencv-python-headless==+([^ ])/opencv-python-headless==4.5.4.60}"
-#     PIP_MODULES="${PIP_MODULES//cryptography==+([^ ])/cryptography==37.0.4}"
-#   elif [ "${OS}" == "bullseye" ]; then
-#     PIP_MODULES="${PIP_MODULES//opencv-python-headless==+([^ ])/opencv-python-headless==4.5.3.56}"
-#   fi
-# fi
-
-APT_PACKAGES="bc screen git watchdog i2c-tools pigpio sqlite3 ffmpeg libasound2-dev sispmctl ntp libssl1.1 libxslt1.1 libxslt1-dev libxml2-dev libglib2.0-dev libopenblas-dev ${OPENCV_PACKAGES} ${PYTHON_LIBS}"
-
-# Install dialog for further installation
-if ! hash whiptail 2>/dev/null; then
-  aptitude -y install whiptail
-fi
-
-clear
-
-# OS version check
-# if [ "${OS}" == "bookworm" ]; then
-#   whiptail --backtitle "${INSTALLER_TITLE}" --title " TerrariumPI Installer " --yesno "TerrariumPI is not Raspbian Bookworm OS compatible. Use at own risk.\n\nDo you want to continue?" 0 60
-
-#   case $? in
-#     1|255) whiptail --backtitle "${INSTALLER_TITLE}"  --title " TerrariumPI Installer " --msgbox "TerrariumPI installation is aborted" 0 60
-#       echo "TerrariumPI ${VERSION} is supported on Buster/Bullseye OS (Legacy OS)"
-#       echo "Download from: https://www.raspberrypi.com/software/operating-systems/#raspberry-pi-os-legacy"
-#       exit 0
-#     ;;
-#   esac
-# fi
+APT_PACKAGES="bc screen git watchdog i2c-tools pigpio sqlite3 ffmpeg libasound2-dev sispmctl libxslt1.1 libxslt1-dev libxml2-dev libglib2.0-dev libopenblas-dev ${OPENCV_PACKAGES} ${PYTHON_LIBS}"
 
 whiptail --backtitle "${INSTALLER_TITLE}" --title " TerrariumPI Installer " --yesno "TerrariumPI is going to be installed to run with user '${SCRIPT_USER}'. If this is not the right user stop the installation now!\n\nDo you want to continue?" 0 60
 
@@ -177,7 +174,7 @@ if [ "${CLEANUP}" -eq 1 ]; then
 fi
 
 # Install required packages to get the terrarium software running
-debconf-apt-progress -- apt-get -y autoremove
+debconf-apt-progress -- apt-get -y --purge autoremove
 debconf-apt-progress -- apt-get -y -o Acquire::ForceIPv4=true update
 debconf-apt-progress -- apt-get -y -o Acquire::ForceIPv4=true full-upgrade
 debconf-apt-progress -- apt-get -y -o Acquire::ForceIPv4=true install ${APT_PACKAGES}
@@ -191,7 +188,7 @@ if [ -f /etc/modules ]; then
 fi
 
 BOOTCONFIG="/boot/config.txt"
-if [ "${OS}" == "bookworm" ]; then
+if [ "${OS}" == "bookworm" ] || [ "${OS}" == "trixie" ]; then
   BOOTCONFIG="/boot/firmware/config.txt"
 fi
 
@@ -212,7 +209,7 @@ if [ -f "${BOOTCONFIG}" ]; then
     echo "enable_uart=1" >> "${BOOTCONFIG}"
   fi
 
-  if [ "${OS}" != "bookworm" ]; then
+  if [ "${OS}" != "bookworm" ] || [ "${OS}" != "trixie" ]; then
 
     # Enable camera
     if [ $(grep -ic "^gpu_mem=" "${BOOTCONFIG}") -eq 0 ]; then
@@ -236,7 +233,7 @@ fi
 
 # Disable serial debug to enable CO2 sensors
 CMDLINE="/boot/cmdline.txt"
-if [ "${OS}" == "bookworm" ]; then
+if [ "${OS}" == "bookworm" ] || [ "${OS}" == "trixie" ]; then
   CMDLINE="/boot/firmware/cmdline.txt"
 fi
 
@@ -311,6 +308,7 @@ XXX
 EOF
 git submodule update 2> /dev/null && rm -rf 3rdparty/4relay-rpi && rm -rf 3rdparty/4relind-rpi && rm -rf 3rdparty/8relind-rpi && rm -rf 3rdparty/Bright-Pi
 patch -N -s -r /dev/null 3rdparty/python3-voltcraft-sem6000/sem6000/repeat_on_failure_decorator.py < contrib/python3-voltcraft-sem6000.patch.diff >/dev/null
+patch -N -u -l -s -r /dev/null 3rdparty/iorodeo-as7331/iorodeo_as7331/iorodeo_as7331.py < contrib/python3-as7331.patch.diff >/dev/null
 
 PROGRESS=$((PROGRESS + 1))
 cat <<EOF
@@ -326,6 +324,8 @@ if [ -f venv/pyvenv.cfg ]; then
     sed -i "venv/pyvenv.cfg" -e "s@^include-system-site-packages.*@include-system-site-packages = false@"
 fi
 python3 -m venv venv
+mkdir -p venv/lib/python3.13/site-packages/pipes/
+cp contrib/pipes/* venv/lib/python3.13/site-packages/pipes/
 source venv/bin/activate
 
 # Install python modules inside the virtual env of Python
@@ -377,9 +377,9 @@ EOF
 
 done
 
-if [ "${OS}" == "bookworm" ]; then
-  sed -i "venv/pyvenv.cfg" -e "s@^include-system-site-packages.*@include-system-site-packages = true@"
-fi
+#if [ "${OS}" == "trixie" ]; then
+#  sed -i "venv/pyvenv.cfg" -e "s@^include-system-site-packages.*@include-system-site-packages = true@"
+#fi
 
 PROGRESS=$((MODULE_MAX + 3))
 cat <<EOF
@@ -412,6 +412,10 @@ fi
 if [ -f terrariumpi.db ]; then
   mv terrariumpi.db* data
 fi
+
+# Clear python pip cache and apt cache
+pip cache purge
+apt-get -y autoclean
 
 # Set file owner rights
 chown "${SCRIPT_USER}": .

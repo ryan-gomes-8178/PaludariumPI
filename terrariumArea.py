@@ -62,13 +62,13 @@ class terrariumArea(object):
         ]
 
     # Return polymorph area....
-    def __new__(cls, area_id, enclosure, area_type, name="", mode=None, setup=None):
+    def __new__(cls, area_id, enclosure, area_type, name: str = "", mode=None, setup=None):
         try:
             return super(terrariumArea, cls).__new__(terrariumArea.__TYPES[area_type]["class"]())
         except:
             raise terrariumAreaException(f"Area of type {area_type} is unknown.")
 
-    def __init__(self, area_id, enclosure, area_type, name, mode, setup):
+    def __init__(self, area_id, enclosure, area_type, name: str, mode, setup) -> None:
         if area_id is None:
             area_id = terrariumUtils.generate_uuid()
 
@@ -84,7 +84,7 @@ class terrariumArea(object):
         self.state = {}
         self.load_setup(setup)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """
         Show the area in a nice way
 
@@ -105,8 +105,8 @@ class terrariumArea(object):
         logger.debug(f"Area {self} is powered: {powered}")
         return powered
 
-    def _time_table(self):
-        def make_time_table(begin, end, on_period=0, off_period=0):
+    def _time_table(self) -> bool:
+        def make_time_table(begin, end, on_period: int = 0, off_period: int = 0):
             logger.debug(
                 f"Make new time table for {self}. Begin: {begin}, End: {end}, On: {on_period}, Off: {off_period}"
             )
@@ -290,7 +290,7 @@ class terrariumArea(object):
 
         return True
 
-    def load_setup(self, data):
+    def load_setup(self, data) -> None:
         self.setup = copy.deepcopy(data)
         self.setup["day_night_difference"] = (
             0.0
@@ -364,7 +364,7 @@ class terrariumArea(object):
 
         self.state["powered"] = self._powered
 
-    def _setup_variation_data(self):
+    def _setup_variation_data(self) -> None:
         # Thanks to HTPProXy https://github.com/theyosh/TerrariumPI/issues/1009#issuecomment-2896732294
         def parse_period_to_time(period_str):
             """Parst verschiedene Zeit-Eingabeformate zu HH:MM"""
@@ -484,7 +484,7 @@ class terrariumArea(object):
         logger.debug(f"Area {self} does not know if it is time.... Should update new timetable for next day?")
         return None
 
-    def _update_variation(self):
+    def _update_variation(self) -> None:
         # !! This variation updates will interfere with the 'day/night difference' setting !!
         if ("variation" not in self.state) or (not self.state["variation"]["active"]):
             return
@@ -681,7 +681,7 @@ class terrariumArea(object):
     def get_setup_setting(self, setting):
         return self.setup.get(setting, None)
 
-    def update(self, read_only=False):
+    def update(self, read_only: bool = False):
         if self.mode == "disabled":
             # Make it readonly, so sensors and relay changes are still shown
             read_only = True
@@ -871,7 +871,7 @@ class terrariumArea(object):
                     # This is a poor fix for wrongly recalculating time tables based on weather data
                     continue
 
-                if time_elapsed <= self.setup[period]["settle_time"]:
+                if self.setup[period]["settle_time"] > 0.0 and time_elapsed <= self.setup[period]["settle_time"]:
                     logger.info(
                         f'Relays for {self} period {period} are not switched on because we have to wait for {self.setup[period]["settle_time"]-time_elapsed} more seconds of the total settle time of {self.setup[period]["settle_time"]} seconds.'
                     )
@@ -884,7 +884,10 @@ class terrariumArea(object):
                     time_elapsed = abs(
                         int(datetime.datetime.now().timestamp()) - self.state[other_period]["last_powered_on"]
                     )
-                    if time_elapsed <= self.setup[other_period]["settle_time"]:
+                    if (
+                        self.setup[period]["settle_time"] > 0.0
+                        and time_elapsed <= self.setup[other_period]["settle_time"]
+                    ):
                         logger.info(
                             f'Relays for {self} period {period} are not switched on because of the other period {other_period} settle time. We have to wait for {self.setup[other_period]["settle_time"]-time_elapsed} more seconds of the total settle time of {self.setup[other_period]["settle_time"]} seconds.'
                         )
@@ -953,7 +956,7 @@ class terrariumArea(object):
 
         return sensor_values
 
-    def relays_state(self, part, state=True):
+    def relays_state(self, part, state: bool = True) -> bool:
         old_state = self.state[part].get("powered", None)
 
         relay_states = []
@@ -971,11 +974,14 @@ class terrariumArea(object):
             state is True and old_state is True and new_state is False
         ):
             # Somewhere the power is turned off. Store the time for settle calculation
+            logger.debug(
+                f"Some relays for area {self} part {part} where not in right state. This should be corrected now..."
+            )
             self.state[part]["last_powered_on"] = int(datetime.datetime.now().timestamp())
 
         return new_state
 
-    def relays_toggle(self, part, on):
+    def relays_toggle(self, part, on) -> None:
         log_line = f'Toggle the relays for area {self} part {part} to state {("on" if on else "off")}'
         power_on_time = self.setup[part].get("power_on_time", 0.0)
         if on and power_on_time > 0.0:
@@ -1003,19 +1009,19 @@ class terrariumArea(object):
         self.state[part]["powered"] = on
         self.state["powered"] = self._powered
 
-    def _relay_action(self, part, relay, action):
+    def _relay_action(self, part, relay, action) -> None:
         if relay.id in self.enclosure.relays:
             logger.info(f"Set the relay {relay.name} to {relay.ON if action else relay.OFF}")
             self.enclosure.relays[f"{relay.id}"].on(relay.ON if action else relay.OFF)
 
-    def stop(self):
+    def stop(self) -> None:
         logger.info(f"Stopped Area {self}")
 
 
 class terrariumAreaLights(terrariumArea):
     PERIODS = ["day", "night"]
 
-    def _relay_action(self, part, relay, action):
+    def _relay_action(self, part, relay, action) -> None:
         if relay.id not in self.enclosure.relays:
             return
 
@@ -1055,7 +1061,7 @@ class terrariumAreaLights(terrariumArea):
                     f"Set the relay {relay.name} to {relay.ON if action else relay.OFF} with a delay of {delay/60:.2f} minutes"
                 )
 
-    def load_setup(self, data):
+    def load_setup(self, data) -> None:
         super().load_setup(data)
 
         # Check and load optional light detecting sensors
@@ -1153,7 +1159,7 @@ class terrariumAreaLights(terrariumArea):
 
         self.state["powered"] = self._powered
 
-    def update(self, read_only=False):
+    def update(self, read_only: bool = False):
         super().update(read_only)
 
         if read_only or self.mode == "disabled":
@@ -1277,7 +1283,7 @@ class terrariumAreaLights(terrariumArea):
 
 
 class terrariumAreaHeater(terrariumArea):
-    def __init__(self, area_id, enclosure, type, name, mode, setup):
+    def __init__(self, area_id, enclosure, type, name: str, mode, setup) -> None:
         self.__dimmers = {}
         super().__init__(area_id, enclosure, type, name, mode, setup)
 
@@ -1290,9 +1296,10 @@ class terrariumAreaHeater(terrariumArea):
 
             powered = powered or (not self.relays_state(period, False))
 
+        logger.debug(f"Area {self} is powered: {powered}")
         return powered
 
-    def load_setup(self, data):
+    def load_setup(self, data) -> None:
         super().load_setup(data)
 
         # Restore running dimmers with PID if running in sensor mode
@@ -1311,7 +1318,7 @@ class terrariumAreaHeater(terrariumArea):
 
         self.state["powered"] = self._powered
 
-    def update(self, read_only=False):
+    def update(self, read_only: bool = False):
         super().update(read_only)
 
         if not read_only and self.mode != "disabled" and len(self.__dimmers) > 0:
@@ -1337,7 +1344,7 @@ class terrariumAreaHeater(terrariumArea):
         self.state["powered"] = self._powered
         return self.state
 
-    def _relay_action(self, part, relay, action):
+    def _relay_action(self, part, relay, action) -> None:
         if relay.id in self.enclosure.relays:
             if action:
                 if relay.id in self.__dimmers:
@@ -1457,7 +1464,7 @@ class terrariumAreaWatertank(terrariumArea):
 class terrariumAreaAudio(terrariumArea):
     PERIODS = ["day", "night"]
 
-    def load_setup(self, data):
+    def load_setup(self, data) -> None:
         data = copy.deepcopy(data)
 
         # Rename the playlists variables back to relays so the rest of the code will work...
@@ -1486,21 +1493,29 @@ class terrariumAreaAudio(terrariumArea):
 
             self.setup[period]["player"] = terrariumAudioPlayer(self.setup["soundcard"], playlists)
 
-    def relays_state(self, period, state=True):
-        # We do not check if the player is actual running. This will cause an unwanted repeat functionality
-        return period in self.state and self.state[period].get("powered", False)
-
-    def relays_toggle(self, period, on):
-        if period not in self.setup:
+    def relays_state(self, part, state: bool = True) -> bool:
+        if not part in self.setup:
             return False
 
-        if self.state[period]["powered"] != on:
-            logger.info(f'Toggle the player for area {self} period {period} to state {("on" if on else "off")}.')
+        if "player" not in self.setup[part]:
+            return False
+
+        self.state[part]["powered"] = self.setup[part]["player"].running
+
+        return self.state[part]["powered"] == state
+
+    def relays_toggle(self, part, on) -> None:
+        if part not in self.setup:
+            logger.debug(f"Part {part} is not enabled for {self}")
+            return
+
+        if self.state[part]["powered"] != on:
+            logger.info(f'Toggle the player for area {self} period {part} to state {("on" if on else "off")}.')
 
         if on:
             # As we can only have one player running, we have to make sure that there is not a player still running from the other period
             other_period = copy.copy(self.PERIODS)
-            other_period.remove(period)
+            other_period.remove(part)
             other_period = other_period[0]
 
             if other_period in self.setup and self.state[other_period]["powered"]:
@@ -1508,15 +1523,17 @@ class terrariumAreaAudio(terrariumArea):
                 self.setup[other_period]["player"].stop()
                 self.state[other_period]["powered"] = False
 
-            self.setup[period]["player"].play()
+            self.setup[part]["player"].play()
 
         else:
-            self.setup[period]["player"].stop()
+            logger.info(f"Stopping (toggle off) audio player {self}")
+            self.setup[part]["player"].stop()
 
-        self.state[period]["powered"] = on
+        self.state[part]["powered"] = on
         self.state["powered"] = self._powered
 
-    def stop(self):
+    def stop(self) -> None:
+        logger.info(f"Stopping player {self}")
         for period in self.PERIODS:
             if period not in self.setup:
                 continue
